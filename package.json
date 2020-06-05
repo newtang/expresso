@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
+    "express": "^4.17.1",
     "typescript": "^3.9.3"
   },
   "scripts": {
