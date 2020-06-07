@@ -17,18 +17,21 @@
     ],
     "rules": {
         "array-callback-return": ["error"],
+        "arrow-spacing": ["error", { "before": true, "after": true }],
         "comma-spacing": "off", //handled by ts rule
         "func-call-spacing": "off", //handled by ts rule
         "indent": "off", //handled by ts rule
         "linebreak-style": ["error", "unix"],
         "no-extra-parens": "off", //handled by ts rule
+        "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 1}],
         "no-return-await": "error",
         "no-shadow": ["error", {"builtinGlobals": true, "hoist": "never"}],
         "no-template-curly-in-string": ["error"],
         "no-unused-vars": "off", //handled by ts rule
         "no-unused-expressions": "off", //handled by ts rule
-        "require-atomic-updates": ["error"],
+        "object-curly-spacing": ["error", "always"],
         "quotes": "off", //handled by ts rule.
+        "require-atomic-updates": ["error"],
         "semi": "off", //handled by ts rule
         "sort-keys": ["error", "asc", {"minKeys": 6}],
         "space-before-function-paren": "off", //handled by ts rule
