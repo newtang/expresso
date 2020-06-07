@@ -22,6 +22,7 @@
         "func-call-spacing": "off", //handled by ts rule
         "indent": "off", //handled by ts rule
         "linebreak-style": ["error", "unix"],
+        "max-len": ["error", {"code": 100}],
         "no-extra-parens": "off", //handled by ts rule
         "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 1}],
         "no-return-await": "error",
