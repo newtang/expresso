@@ -1,13 +1,14 @@
 import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
+import type { Request, Response } from 'express';
 
 test('getting started', async () => {
 	const app = express();
 	const router = expresso();
 	const msg = 'success';
 
-	router.get('/test', (req, res) => res.send(msg));
+	router.get('/test', (req: Request, res: Response) => res.send(msg));
 	app.use(router);
 
 	const res = await request(app).get('/test');
