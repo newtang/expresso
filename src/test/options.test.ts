@@ -4,7 +4,11 @@ import expresso from '../index';
 import type { Request, Response } from 'express';
 
 describe('options tests', () => {
-	test.each([{strict:false}, undefined])('strict:false', async (options) => {
+	beforeAll(() => {
+		console.error = jest.fn();
+	});
+
+	test.each([{ strict:false }, undefined])('strict:false', async (options) => {
 		const app = express();
 		const router = expresso(options);
 		const msg = 'success';
@@ -37,7 +41,6 @@ describe('options tests', () => {
 		expect(otherResTrailingSlash.text).toBe(otherMsg);
 		expect(otherResTrailingSlash.status).toBe(200);
 
-
 		const slashRes = await request(app).get('/');
 		expect(slashRes.text).toBe(slashSuccess);
 		expect(slashRes.status).toBe(200);
@@ -66,11 +69,11 @@ describe('options tests', () => {
 		expect(res.text).toBe(msg);
 		expect(res.status).toBe(200);
 
-		// const resTrailingSlash = await request(app).get('/test/');
-		// expect(resTrailingSlash.status).toBe(404);
+		const resTrailingSlash = await request(app).get('/test/');
+		expect(resTrailingSlash.status).toBe(500);
 
-		// const otherRes = await request(app).get('/othertest');
-		// expect(otherRes.status).toBe(404);
+		const otherRes = await request(app).get('/othertest');
+		expect(otherRes.status).toBe(500);
 
 		const otherResTrailingSlash = await request(app).get('/othertest/');
 		expect(otherResTrailingSlash.text).toBe(otherMsg);
