@@ -27,28 +27,53 @@ export default function buildRouter(userOptions?: RouterUserOptions): any {
 	return Object.assign(handleRequest.bind(null, routes), routerObj);
 }
 
-function handleRequest(routes: RouteMap, req: Request, res: Response, next: NextFunction): void {
+function handleRequest(routes: RouteMap, req: Request, res: Response, done: NextFunction): void {
 	const verb = req.method.toLowerCase();
-	let err = false;
+	let notFound = false;
 	const pathRoutes = routes[req.path];
+
 	if(pathRoutes){
-		const verbRoutes = pathRoutes[verb];
-		if(verbRoutes && verbRoutes[0]){
-			verbRoutes[0](req, res, next);
+		const handlers = pathRoutes[verb];
+		if(handlers && handlers[0]){
+			executeHandlers(req, res, done, handlers);
 		}
 		else{
-			err = true;
+			notFound = true;
 		}
 	}
 	else{
-		err = true;
+		notFound = true;
 	}
 
-	if(err){
-		return next(new Error('404'));
+	if(notFound){
+		return done(new Error('404'));
 	}
 
 } 
+
+function executeHandlers(req: Request, res: Response, done: NextFunction, 
+	handlerStack: Array<NextHandleFunction>): void{
+	let index = 0;
+	next();
+	function next(err?: Error): void{
+		if(err){
+			return done(err);
+		}
+		const nextHandler = handlerStack[index++];
+		if(nextHandler){
+			try{
+				nextHandler(req, res, next);
+			}
+			catch(handlerException){
+				return done(handlerException);
+			}
+			
+		}
+		else{
+			done();
+		}	
+	}
+}
 
 function buildRouterMethods(
 	routes: RouteMap,

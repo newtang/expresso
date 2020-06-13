@@ -45,6 +45,33 @@ describe('basic tests', () => {
 		expect(res.status).toBe(404);
 	});
 
+	test('with middlewares', async () => {
+		const app = express();
+		const router = expresso();
+		const msg = 'success';
+
+		let middleware1Called = false;
+		let middleware2Called = false;
+
+		router.get('/test', 
+			(req: Request, res: Response, next: NextFunction) => {
+				middleware1Called = true; 
+				next();
+			},
+			(req: Request, res: Response, next: NextFunction) => {
+				middleware2Called = true; 
+				next();
+			},
+			(req: Request, res: Response) => res.send(msg));
+		app.use(router);
+
+		const res = await request(app).get('/test');
+		expect(middleware1Called).toBe(true);
+		expect(middleware2Called).toBe(true);
+		expect(res.text).toBe(msg);
+		expect(res.status).toBe(200);
+	});
+
 	test.each(METHODS)('all methods %s', async (capsMethod) => {
 		if(capsMethod === 'CONNECT'){
 			return;
