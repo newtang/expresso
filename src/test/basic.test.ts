@@ -28,6 +28,26 @@ describe('basic tests', () => {
 
 	});
 
+	test('same routes, different verb', async () => {
+		const app = express();
+		const router = expresso();
+		const getMsg = 'success';
+		const patchMsg = 'patchSuccess';
+
+		router.get('/test', (req: Request, res: Response) => res.send(getMsg));
+		router.patch('/test', (req: Request, res: Response) => res.send(patchMsg));
+		app.use(router);
+
+		const getRes = await request(app).get('/test');
+		expect(getRes.text).toBe(getMsg);
+		expect(getRes.status).toBe(200);
+
+		const patchRes = await request(app).patch('/test');
+		expect(patchRes.text).toBe(patchMsg);
+		expect(patchRes.status).toBe(200);
+
+	});
+
 	test('with error handler', async () => {
 		const app = express();
 		const router = expresso();

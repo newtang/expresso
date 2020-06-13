@@ -97,9 +97,10 @@ function addRoute(method: string, routes: RouteMap, options: RouterOptions,
 		: getNonStrictPaths(path);
 
 	for(const p of validPaths){
-		routes[p] = {
-			[method]: handlers
-		};
+		if(!routes[p]){
+			routes[p] = {};
+		}
+		routes[p][method] = handlers;
 	}
 }
 
