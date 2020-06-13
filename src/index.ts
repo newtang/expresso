@@ -5,10 +5,12 @@ import { METHODS } from 'http';
 
 interface RouterUserOptions {
 	strict?: boolean;
+	caseSensitive?: boolean;
 }
 
 interface RouterOptions {
 	strict: boolean;
+	caseSensitive: boolean;
 }
 
 interface RouteMap {
@@ -16,21 +18,30 @@ interface RouteMap {
 }
 
 const defaultOptions: RouterOptions = {
-	strict: false
+	strict: false,
+	caseSensitive: false,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function buildRouter(userOptions?: RouterUserOptions): any {
+function buildRouter(userOptions?: RouterUserOptions): any {
 	const options = Object.assign({}, defaultOptions, userOptions);
 	const routes: RouteMap = {};
 	const routerObj = buildRouterMethods(routes, options);
-	return Object.assign(handleRequest.bind(null, routes), routerObj);
+	return Object.assign(handleRequest.bind(null, routes, options), routerObj);
 }
 
-function handleRequest(routes: RouteMap, req: Request, res: Response, done: NextFunction): void {
+export = buildRouter;
+
+function handleRequest(routes: RouteMap, options: RouterOptions, 
+	req: Request, res: Response, done: NextFunction): void {
+
 	const verb = req.method.toLowerCase();
 	let notFound = false;
-	const pathRoutes = routes[req.path];
+	const path = options.caseSensitive
+		? req.path
+		: req.path.toLowerCase();
+
+	const pathRoutes = routes[path];
 
 	if(pathRoutes){
 		const handlers = pathRoutes[verb];
@@ -92,9 +103,7 @@ function buildRouterMethods(
 
 function addRoute(method: string, routes: RouteMap, options: RouterOptions, 
 	path: string, ...handlers: Array<NextHandleFunction>): void {
-	const validPaths = options.strict
-		? [path]
-		: getNonStrictPaths(path);
+	const validPaths = getValidPaths(path, options);
 
 	for(const p of validPaths){
 		if(!routes[p]){
@@ -102,6 +111,17 @@ function addRoute(method: string, routes: RouteMap, options: RouterOptions,
 		}
 		routes[p][method] = handlers;
 	}
+}
+
+function getValidPaths(userPath: string, options: RouterOptions): Array<string>{
+	const validPaths = options.strict
+		? [userPath]
+		: getNonStrictPaths(userPath);
+
+	if(!options.caseSensitive){
+		return validPaths.map(p => p.toLowerCase());
+	}
+	return validPaths;
 }
 
 function getNonStrictPaths(path: string): Array<string>{
