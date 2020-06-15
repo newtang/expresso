@@ -87,7 +87,7 @@ describe('options tests', () => {
 	test.each([{ caseSensitive:false }, undefined])('caseSensitive:false', async (options) => {
 		const app = express();
 		const router = expresso(options);
-		const msg = "success!";
+		const msg = 'success!';
 		
 		router.get('/test', (req: Request, res: Response) => res.send(msg));
 
@@ -109,9 +109,9 @@ describe('options tests', () => {
 
 	test('caseSensitive:true', async () => {
 		const app = express();
-		const router = expresso({caseSensitive: true});
-		const msg = "success!";
-		const msg2 = "also success";
+		const router = expresso({ caseSensitive: true });
+		const msg = 'success!';
+		const msg2 = 'also success';
 		
 		router.get('/test', (req: Request, res: Response) => res.send(msg));
 
@@ -129,7 +129,6 @@ describe('options tests', () => {
 		res = await request(app).get('/tEsT/');
 		expect(res.status).toBe(500);
 
-
 		let otherRes = await request(app).get('/OtHeR');
 		expect(otherRes.text).toBe(msg2);
 		expect(otherRes.status).toBe(200);
@@ -144,8 +143,5 @@ describe('options tests', () => {
 		expect(otherRes.status).toBe(500);
 
 	});
-
-
-
 
 });

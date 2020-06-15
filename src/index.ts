@@ -103,6 +103,10 @@ function buildRouterMethods(
 
 function addRoute(method: string, routes: RouteMap, options: RouterOptions, 
 	path: string, ...handlers: Array<NextHandleFunction>): void {
+
+	validatePath(path);
+	validateHandlers(path, handlers);
+
 	const validPaths = getValidPaths(path, options);
 
 	for(const p of validPaths){
@@ -110,6 +114,35 @@ function addRoute(method: string, routes: RouteMap, options: RouterOptions,
 			routes[p] = {};
 		}
 		routes[p][method] = handlers;
+	}
+}
+
+function validatePath(path: string): void{
+	if(!path || typeof path !== 'string'){
+		throw new Error(`Invalid path: ${path}`);
+	}
+
+	if(path[0] !== '/'){
+		throw new Error(`First character in path, must be a slash. ${path}`);
+	}
+
+	//allowable characters
+	const pass = /^\/[a-zA-Z0-9$\-_.+!*'(),/~]*$/gi.test(path);
+	if(!pass){
+		throw new Error(`Invalid path: ${path}`);
+	}
+
+	const fail = /\/\//gi.test(path);
+	if(fail){
+		throw new Error(`Invalid path. Contains consecutive '//', ${path}`); 
+	}
+}
+
+function validateHandlers(path: string, handlers: Array<NextHandleFunction>): void{
+	for(const handler of handlers){
+		if(typeof handler !== 'function'){
+			throw new Error(`Non function handler found for path: ${path}`);
+		}
 	}
 }
 

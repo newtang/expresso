@@ -39,7 +39,6 @@
         "@typescript-eslint/comma-spacing": ["error", { "before": false, "after": true }],
         "@typescript-eslint/explicit-function-return-type": ["error"],
         "@typescript-eslint/explicit-module-boundary-types": ["error"],
-        "@typescript-eslint/func-call-spacing": ["error", "never"],
         "@typescript-eslint/indent": ["error", "tab"],
         "@typescript-eslint/member-delimiter-style": ["error"],
         "@typescript-eslint/no-explicit-any": ["error"],
