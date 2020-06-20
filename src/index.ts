@@ -3,6 +3,8 @@ import type { Request, Response, NextFunction } from 'express';
 
 import { METHODS } from 'http';
 
+import { Tree } from 'radix-tree';
+
 interface RouterUserOptions {
 	strict?: boolean;
 	caseSensitive?: boolean;
@@ -26,13 +28,15 @@ const defaultOptions: RouterOptions = {
 function buildRouter(userOptions?: RouterUserOptions): any {
 	const options = Object.assign({}, defaultOptions, userOptions);
 	const routes: RouteMap = {};
-	const routerObj = buildRouterMethods(routes, options);
-	return Object.assign(handleRequest.bind(null, routes, options), routerObj);
+	const routeTree = new Tree();
+	routeTree.log = () => {};
+	const routerObj = buildRouterMethods(routes, routeTree, options);
+	return Object.assign(handleRequest.bind(null, routes, routeTree, options), routerObj);
 }
 
 export = buildRouter;
 
-function handleRequest(routes: RouteMap, options: RouterOptions, 
+function handleRequest(routes: RouteMap, routeTree: Tree, options: RouterOptions, 
 	req: Request, res: Response, done: NextFunction): void {
 
 	const verb = req.method.toLowerCase();
@@ -41,10 +45,11 @@ function handleRequest(routes: RouteMap, options: RouterOptions,
 		? req.path
 		: req.path.toLowerCase();
 
-	const pathRoutes = routes[path];
+	// const pathRoutes = routes[path];
+	const pathRoutes = routeTree.find(path);
 
 	if(pathRoutes){
-		const handlers = pathRoutes[verb];
+		const handlers = pathRoutes.data[verb];
 		if(handlers && handlers[0]){
 			executeHandlers(req, res, done, handlers);
 		}
@@ -88,6 +93,7 @@ function executeHandlers(req: Request, res: Response, done: NextFunction,
 
 function buildRouterMethods(
 	routes: RouteMap,
+	routeTree: Tree,
 	options: RouterOptions): 
 	{[key: string]: (path: string, ...handlers: Array<NextHandleFunction>)=> void}
 	
@@ -96,12 +102,12 @@ function buildRouterMethods(
 	(path: string, ...handlers: Array<NextHandleFunction>)=> void;} = {};
 	for(const capsMethod of METHODS){
 		const method = capsMethod.toLowerCase();
-		routerObj[method] = addRoute.bind(null, method, routes, options);
+		routerObj[method] = addRoute.bind(null, method, routes, routeTree, options);
 	}
 	return routerObj;
 }
 
-function addRoute(method: string, routes: RouteMap, options: RouterOptions, 
+function addRoute(method: string, routes: RouteMap, routeTree: Tree, options: RouterOptions, 
 	path: string, ...handlers: Array<NextHandleFunction>): void {
 
 	validatePath(path);
@@ -110,10 +116,21 @@ function addRoute(method: string, routes: RouteMap, options: RouterOptions,
 	const validPaths = getValidPaths(path, options);
 
 	for(const p of validPaths){
-		if(!routes[p]){
-			routes[p] = {};
+		const added = routeTree.find(p);
+		if(added && added.data){
+			added.data[method] = handlers;
 		}
-		routes[p][method] = handlers;
+		else{
+			routeTree.add(p, { [method]: handlers });
+		}
+
+		
+
+		// if(!routes[p]){
+		// 	routes[p] = {};
+		// }
+		// routes[p][method] = handlers;
+
 	}
 }
 

@@ -11,7 +11,24 @@ describe('basic tests', () => {
 		console.error = jest.fn();
 	});
 
-	test('getting started', async () => {
+	test('slash route', async () => {
+		const app = express();
+		const router = expresso();
+		const msg = 'success';
+
+		router.get('/', (req: Request, res: Response) => res.send(msg));
+		app.use(router);
+
+		const res = await request(app).get('/');
+		expect(res.text).toBe(msg);
+		expect(res.status).toBe(200);
+
+		const resWithError = await request(app).get('/error');
+		expect(resWithError.status).toBe(500);
+
+	});
+
+	test('basic route', async () => {
 		const app = express();
 		const router = expresso();
 		const msg = 'success';
