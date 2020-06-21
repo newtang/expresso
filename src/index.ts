@@ -1,7 +1,9 @@
 import { NextHandleFunction } from 'connect';
 import type { Request, Response, NextFunction } from 'express';
 import { Storage } from './interfaces';
+import KoaRadixTreeStorage from './koaRadixTreeStorage';
 import RadixTreeStorage from './radixTreeStorage';
+import StaticStorage from './staticStorage';
 import { METHODS } from 'http';
 
 interface RouterUserOptions {
@@ -14,10 +16,6 @@ interface RouterOptions {
 	caseSensitive: boolean;
 }
 
-interface RouteMap {
-	[key: string]: {[key: string]: Array<NextHandleFunction>};
-}
-
 const defaultOptions: RouterOptions = {
 	strict: false,
 	caseSensitive: false,
@@ -26,15 +24,18 @@ const defaultOptions: RouterOptions = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: RouterUserOptions): any {
 	const options = Object.assign({}, defaultOptions, userOptions);
-	const routes: RouteMap = {};
-	const routeStorage = new RadixTreeStorage();
-	const routerObj = buildRouterMethods(routes, routeStorage, options);
-	return Object.assign(handleRequest.bind(null, routes, routeStorage, options), routerObj);
+	// const routeStorage = new StaticStorage();
+	// const routeStorage = new RadixTreeStorage();
+	const routeStorage = new KoaRadixTreeStorage();
+	
+
+	const routerObj = buildRouterMethods(routeStorage, options);
+	return Object.assign(handleRequest.bind(null, routeStorage, options), routerObj);
 }
 
 export = buildRouter;
 
-function handleRequest(routes: RouteMap, routeStorage: Storage, options: RouterOptions, 
+function handleRequest(routeStorage: Storage, options: RouterOptions, 
 	req: Request, res: Response, done: NextFunction): void {
 
 	const verb = req.method.toLowerCase();
@@ -43,7 +44,6 @@ function handleRequest(routes: RouteMap, routeStorage: Storage, options: RouterO
 		? req.path
 		: req.path.toLowerCase();
 
-	// const pathRoutes = routes[path];
 	const handlers = routeStorage.find(verb, path);
 	if(handlers && handlers[0]){
 		executeHandlers(req, res, done, handlers);
@@ -83,7 +83,6 @@ function executeHandlers(req: Request, res: Response, done: NextFunction,
 }
 
 function buildRouterMethods(
-	routes: RouteMap,
 	routeStorage: Storage,
 	options: RouterOptions): 
 	{[key: string]: (path: string, ...handlers: Array<NextHandleFunction>)=> void}
@@ -93,12 +92,12 @@ function buildRouterMethods(
 	(path: string, ...handlers: Array<NextHandleFunction>)=> void;} = {};
 	for(const capsMethod of METHODS){
 		const method = capsMethod.toLowerCase();
-		routerObj[method] = addRoute.bind(null, method, routes, routeStorage, options);
+		routerObj[method] = addRoute.bind(null, method, routeStorage, options);
 	}
 	return routerObj;
 }
 
-function addRoute(method: string, routes: RouteMap, routeStorage: Storage, options: RouterOptions, 
+function addRoute(method: string, routeStorage: Storage, options: RouterOptions, 
 	path: string, ...handlers: Array<NextHandleFunction>): void {
 
 	validatePath(path);
@@ -108,11 +107,6 @@ function addRoute(method: string, routes: RouteMap, routeStorage: Storage, optio
 
 	for(const p of validPaths){
 		routeStorage.add(method, p, handlers);
-
-		// if(!routes[p]){
-		// 	routes[p] = {};
-		// }
-		// routes[p][method] = handlers;
 
 	}
 }

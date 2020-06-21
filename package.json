@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "",
   "author": "Jonathan New",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/newtang/expresso.git"
@@ -17,7 +18,8 @@
     "build": "tsc",
     "lint": "eslint --ext .ts .",
     "lint:fix": "eslint --fix --ext .ts .",
-    "test": "npm run build; jest --env node"
+    "test": "npm run build; jest --env node",
+    "prepublish": "npm run build"
   },
   "jest": {
     "collectCoverage": true,
@@ -40,8 +42,10 @@
   "dependencies": {
     "@types/jest": "^25.2.3",
     "eslint-plugin-jest": "^23.13.2",
+    "koa-tree-router": "^0.6.0",
     "radix-tree": "^0.3.4",
-    "ts-jest": "^26.1.0"
+    "ts-jest": "^26.1.0",
+    "tslib": "^2.0.0"
   },
   "devDependencies": {
     "@types/connect": "^3.4.33",
