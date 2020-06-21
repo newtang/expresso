@@ -1,9 +1,8 @@
 import { NextHandleFunction } from 'connect';
 import type { Request, Response, NextFunction } from 'express';
-
+import { Storage } from './interfaces';
+import RadixTreeStorage from './radixTreeStorage';
 import { METHODS } from 'http';
-
-import { Tree } from 'radix-tree';
 
 interface RouterUserOptions {
 	strict?: boolean;
@@ -28,15 +27,14 @@ const defaultOptions: RouterOptions = {
 function buildRouter(userOptions?: RouterUserOptions): any {
 	const options = Object.assign({}, defaultOptions, userOptions);
 	const routes: RouteMap = {};
-	const routeTree = new Tree();
-	routeTree.log = () => {};
-	const routerObj = buildRouterMethods(routes, routeTree, options);
-	return Object.assign(handleRequest.bind(null, routes, routeTree, options), routerObj);
+	const routeStorage = new RadixTreeStorage();
+	const routerObj = buildRouterMethods(routes, routeStorage, options);
+	return Object.assign(handleRequest.bind(null, routes, routeStorage, options), routerObj);
 }
 
 export = buildRouter;
 
-function handleRequest(routes: RouteMap, routeTree: Tree, options: RouterOptions, 
+function handleRequest(routes: RouteMap, routeStorage: Storage, options: RouterOptions, 
 	req: Request, res: Response, done: NextFunction): void {
 
 	const verb = req.method.toLowerCase();
@@ -46,16 +44,9 @@ function handleRequest(routes: RouteMap, routeTree: Tree, options: RouterOptions
 		: req.path.toLowerCase();
 
 	// const pathRoutes = routes[path];
-	const pathRoutes = routeTree.find(path);
-
-	if(pathRoutes){
-		const handlers = pathRoutes.data[verb];
-		if(handlers && handlers[0]){
-			executeHandlers(req, res, done, handlers);
-		}
-		else{
-			notFound = true;
-		}
+	const handlers = routeStorage.find(verb, path);
+	if(handlers && handlers[0]){
+		executeHandlers(req, res, done, handlers);
 	}
 	else{
 		notFound = true;
@@ -93,7 +84,7 @@ function executeHandlers(req: Request, res: Response, done: NextFunction,
 
 function buildRouterMethods(
 	routes: RouteMap,
-	routeTree: Tree,
+	routeStorage: Storage,
 	options: RouterOptions): 
 	{[key: string]: (path: string, ...handlers: Array<NextHandleFunction>)=> void}
 	
@@ -102,12 +93,12 @@ function buildRouterMethods(
 	(path: string, ...handlers: Array<NextHandleFunction>)=> void;} = {};
 	for(const capsMethod of METHODS){
 		const method = capsMethod.toLowerCase();
-		routerObj[method] = addRoute.bind(null, method, routes, routeTree, options);
+		routerObj[method] = addRoute.bind(null, method, routes, routeStorage, options);
 	}
 	return routerObj;
 }
 
-function addRoute(method: string, routes: RouteMap, routeTree: Tree, options: RouterOptions, 
+function addRoute(method: string, routes: RouteMap, routeStorage: Storage, options: RouterOptions, 
 	path: string, ...handlers: Array<NextHandleFunction>): void {
 
 	validatePath(path);
@@ -116,15 +107,7 @@ function addRoute(method: string, routes: RouteMap, routeTree: Tree, options: Ro
 	const validPaths = getValidPaths(path, options);
 
 	for(const p of validPaths){
-		const added = routeTree.find(p);
-		if(added && added.data){
-			added.data[method] = handlers;
-		}
-		else{
-			routeTree.add(p, { [method]: handlers });
-		}
-
-		
+		routeStorage.add(method, p, handlers);
 
 		// if(!routes[p]){
 		// 	routes[p] = {};
