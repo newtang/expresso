@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/newtang/expresso#readme",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist; tsc",
     "lint": "eslint --ext .ts .",
     "lint:fix": "eslint --fix --ext .ts .",
     "test": "npm run build; jest --env node",

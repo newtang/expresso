@@ -38,7 +38,7 @@ export = buildRouter;
 function handleRequest(routeStorage: Storage, options: RouterOptions, 
 	req: Request, res: Response, done: NextFunction): void {
 
-	const verb = req.method.toLowerCase();
+	const verb = req.method;
 	let notFound = false;
 	const path = options.caseSensitive
 		? req.path
@@ -92,7 +92,12 @@ function buildRouterMethods(
 	(path: string, ...handlers: Array<NextHandleFunction>)=> void;} = {};
 	for(const capsMethod of METHODS){
 		const method = capsMethod.toLowerCase();
-		routerObj[method] = addRoute.bind(null, method, routeStorage, options);
+		/**
+		  * The value of the method property on req always seems to be capitalized.
+		  * Using the capitalized method (as opposed to lowercasing it on every request)
+		  * is actually a relatively significant optimization
+		 **/
+		routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, options);
 	}
 	return routerObj;
 }
