@@ -39,23 +39,17 @@ function handleRequest(routeStorage: Storage, options: RouterOptions,
 	req: Request, res: Response, done: NextFunction): void {
 
 	const verb = req.method;
-	let notFound = false;
 	const path = options.caseSensitive
 		? req.path
 		: req.path.toLowerCase();
 
 	const handlers = routeStorage.find(verb, path);
-	if(handlers && handlers[0]){
+	if(handlers){
 		executeHandlers(req, res, done, handlers);
 	}
 	else{
-		notFound = true;
-	}
-
-	if(notFound){
 		return done(new Error('404'));
 	}
-
 } 
 
 function executeHandlers(req: Request, res: Response, done: NextFunction, 
