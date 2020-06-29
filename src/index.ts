@@ -24,9 +24,9 @@ const defaultOptions: RouterOptions = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: RouterUserOptions): any {
 	const options = Object.assign({}, defaultOptions, userOptions);
-	// const routeStorage = new StaticStorage();
+	const routeStorage = new StaticStorage();
 	// const routeStorage = new RadixTreeStorage();
-	const routeStorage = new KoaRadixTreeStorage();
+	// const routeStorage = new KoaRadixTreeStorage();
 	
 
 	const routerObj = buildRouterMethods(routeStorage, options);
@@ -36,7 +36,7 @@ function buildRouter(userOptions?: RouterUserOptions): any {
 export = buildRouter;
 
 function handleRequest(routeStorage: Storage, options: RouterOptions, 
-	req: Request, res: Response, done: NextFunction): void {
+	req: Request, res: Response, done: NextFunction): Array<NextHandleFunction> | null{
 
 	const verb = req.method;
 	const path = options.caseSensitive
@@ -45,10 +45,12 @@ function handleRequest(routeStorage: Storage, options: RouterOptions,
 
 	const handlers = routeStorage.find(verb, path);
 	if(handlers){
-		executeHandlers(req, res, done, handlers);
+		return handlers;
+		// executeHandlers(req, res, done, handlers); 
 	}
 	else{
-		return done(new Error('404'));
+		// return done(new Error('404'));
+		return null;
 	}
 } 
 
