@@ -4,6 +4,13 @@ export interface ReturnValue<T> {
 	params: {[param: string]: string};
 }
 
+/**
+ * This functions as a Radix Tree of nodes. If a node has
+ * payload set, it is the end of a full, legitimate path
+ *
+ * Except for edges in the root node, roots do not begin with '/'
+**/	
+
 export default class Node<T> {
 	edges: Map<string, Node<T>>;
 	paramNames?: Array<string>;
@@ -27,7 +34,7 @@ export default class Node<T> {
 			const paramNode = currentNode.edges.get(':');
 			if(paramNode){
 				currentNode = paramNode;
-				
+
 				//prevents matching with a starting slash
 				const sliceIndex = path.indexOf('/', 1);
 
@@ -51,13 +58,14 @@ export default class Node<T> {
 		}
 
 		const paramIndex = path.indexOf(':');
-		let prefix = paramIndex === -1
-			? path
-			: path.slice(0, paramIndex);
+		let [prefix, suffix] = splitAtIndex(path, paramIndex);
+		// let prefix = paramIndex === -1
+		// 	? path
+		// 	: path.slice(0, paramIndex);
 
-		let suffix = paramIndex === -1
-			? ''
-			: path.slice(paramIndex);
+		// let suffix = paramIndex === -1
+		// 	? ''
+		// 	: path.slice(paramIndex);
 
 		if(paramIndex === 0){
 			prefix = ':';
@@ -70,9 +78,6 @@ export default class Node<T> {
 			suffix = path.slice(paramEndIndex);
 		}
 
-		//consider leaving colon in, and the constructor determines if it's building a 
-		// a param edge (if the first char is a ':')
-
 		//if edges
 		//	find match
 		//     if no match, create one up to param
@@ -84,15 +89,37 @@ export default class Node<T> {
 				(this.edges.get(prefix) as Node<T>).insert(suffix, payload, paramNames);
 			}
 			else{
-				// const [commonPrefix, otherNode] = longestCommonPrefix(prefix, this.edges);
-				// if(commonPrefix){
+				const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
 
-				// }
-				// else{
-				const newNode = new Node<T>();
-				newNode.insert(suffix, payload, paramNames);
-				this.edges.set(prefix, newNode);
-				// }
+				if(commonPrefix){
+
+					if(this.edges.has(commonPrefix)){
+						(this.edges.get(commonPrefix) as Node<T>).insert(path.slice(commonPrefix.length), payload, paramNames);
+					}
+					else{
+						//remove edge this node to old node
+						const oldNode:Node<T> = this.edges.get(similarEdge) as Node<T>;
+						this.edges.delete(similarEdge);
+
+						//create new node. Point common prefix to it. 
+						//set up old node
+						//continue inserting the original node
+						const newNode = new Node<T>();
+						this.edges.set(commonPrefix, newNode);
+						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
+						
+
+						newNode.insert(path.slice(commonPrefix.length), payload, paramNames);
+					}
+
+					
+				}
+				else{
+					console.log("inserting new node", "prefix", prefix, 'suffix', suffix)
+					const newNode = new Node<T>();
+					newNode.insert(suffix, payload, paramNames);
+					this.edges.set(prefix, newNode);
+				}
 			}
 		}
 		else{
@@ -104,11 +131,6 @@ export default class Node<T> {
 			this.edges.set(prefix, newNode);
 			
 		}
-
-		// for(const [path, n] of Array.from(node.edges)){
-
-		// }
-
 		/*
 			/v1/api/users/:userId
 			/v1/api/users/:userId/settings
@@ -119,6 +141,23 @@ export default class Node<T> {
 		*/
 
 	}
+}
+
+function longestCommonPrefix<T>(str:string, edges: Map<string, Node<T>>): [string, string]{
+	while(str && str !== '/'){
+		// go slash by slash
+		str = str.slice(0, str.lastIndexOf('/', str.length-2) + 1)
+		for(const [edge, node] of edges){
+			if(edge.startsWith(str)){
+				return [str, edge];
+			}
+		}
+	}
+
+	//I think we never get here. At some point `str` is "" which is valid
+
+	return ["", ""];
+	
 }
 
 function endOfPath<T>(node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
