@@ -1,24 +1,22 @@
 
+export interface ReturnValue<T> {
+	payload: T;
+	params: {[param: string]: string};
+}
+
 export default class Node<T> {
-	edges:Map<string, Node<T>>;
-	paramNames?:Array<string>;
-	payload?:T;
+	edges: Map<string, Node<T>>;
+	paramNames?: Array<string>;
+	payload?: T;
 	constructor() {
 		this.edges = new Map();
 	}
-	
-	search(path:string): T | false{
-		let currentNode: Node<T> = this;
+
+	search(path: string): ReturnValue<T> | false {
+		let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
+		const paramValues = [];
 		walk:
-		while(true){
-			if(!path){
-				if(currentNode.payload){
-					return currentNode.payload;
-				}
-				else{
-					return false;
-				}
-			}
+		while(path){
 			for(const [key, node] of currentNode.edges){
 				if(key !== ':' && path.startsWith(key)){
 					currentNode = node;
@@ -29,24 +27,22 @@ export default class Node<T> {
 			const paramNode = currentNode.edges.get(':');
 			if(paramNode){
 				currentNode = paramNode;
+				
 				//prevents matching with a starting slash
 				const sliceIndex = path.indexOf('/', 1);
-				if(sliceIndex === -1){
-					path = "";
-				}
-				else{
-					path = path.slice(sliceIndex);
-				}
-				
+
+				const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
+				path = newPath;
+				paramValues.push(paramValue);
 			}
 			else{
 				return false;
 			}
-
-
 		}
+
+		return endOfPath<T>(currentNode, paramValues);
 	}
-	insert(path:string, payload:T, paramNames:Array<string> = []): void {
+	insert(path: string, payload: T, paramNames: Array<string> = []): void {
 		
 		if(!path){
 			this.payload = payload;
@@ -78,10 +74,10 @@ export default class Node<T> {
 		// a param edge (if the first char is a ':')
 
 		//if edges
-			//	find match
-			//     if no match, create one up to param
-			//     if match, exactly, use it
-			//	   if match partially, create a new edge with longest common prefix
+		//	find match
+		//     if no match, create one up to param
+		//     if match, exactly, use it
+		//	   if match partially, create a new edge with longest common prefix
 
 		if(this.edges.size){
 			if(this.edges.has(prefix)){
@@ -93,31 +89,25 @@ export default class Node<T> {
 
 				// }
 				// else{
-					const newNode = new Node<T>();
-					newNode.insert(suffix, payload, paramNames);
-					this.edges.set(prefix, newNode);
+				const newNode = new Node<T>();
+				newNode.insert(suffix, payload, paramNames);
+				this.edges.set(prefix, newNode);
 				// }
 			}
 		}
 		else{
 
 			//if no edges, create one up to param
-			
-				
-
 
 			const newNode = new Node<T>();
 			newNode.insert(suffix, payload, paramNames);
 			this.edges.set(prefix, newNode);
-
 			
 		}
 
 		// for(const [path, n] of Array.from(node.edges)){
 
 		// }
-
-
 
 		/*
 			/v1/api/users/:userId
@@ -128,6 +118,33 @@ export default class Node<T> {
 		
 		*/
 
-
 	}
 }
+
+function endOfPath<T>(node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
+	if(node.payload){
+		return {
+			payload: node.payload,
+			params: buildObject(node.paramNames as Array<string>, paramValues)
+		};
+	}
+	else{
+		return false;
+	}
+}
+
+function buildObject(keys: Array<string>, values: Array<string>): {[key: string]: string} {
+	const obj: {[key: string]: string} = {};
+	for(let i=0; i<keys.length; ++i){
+		obj[keys[i]] = values[i];
+	}
+	return obj;
+}
+
+function splitAtIndex(str: string, index: number): [string, string] {
+	if(index === -1){
+		return [str, ''];
+	}
+	return [str.substring(0, index), str.substring(index)];
+}
+

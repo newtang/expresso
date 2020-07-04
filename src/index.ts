@@ -27,7 +27,6 @@ function buildRouter(userOptions?: RouterUserOptions): any {
 	const routeStorage = new StaticStorage();
 	// const routeStorage = new RadixTreeStorage();
 	// const routeStorage = new KoaRadixTreeStorage();
-	
 
 	const routerObj = buildRouterMethods(routeStorage, options);
 	return Object.assign(handleRequest.bind(null, routeStorage, options), routerObj);

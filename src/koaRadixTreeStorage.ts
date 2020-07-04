@@ -1,4 +1,4 @@
-const Node = require("./koaTreeNode");
+const Node = require('./koaTreeNode');
 
 import { Storage } from './interfaces';
 import type { NextHandleFunction } from 'connect';
@@ -8,8 +8,8 @@ interface TreeMap {
 }
 
 interface NodeTree {
-	addRoute: (path:string, handlers:Array<NextHandleFunction>) => void;
-	search: (path:string) => { handle: Array<NextHandleFunction> };
+	addRoute: (path: string, handlers: Array<NextHandleFunction>)=> void;
+	search: (path: string)=> { handle: Array<NextHandleFunction> };
 }
 
 export default class KoaRadixTreeStorage implements Storage {
