@@ -8,11 +8,9 @@ export default class Node<T> {
 	}
 	
 	search(path:string): T | false{
-
 		let currentNode: Node<T> = this;
 		walk:
 		while(true){
-			console.log("search path", path);
 			if(!path){
 				if(currentNode.payload){
 					return currentNode.payload;
