@@ -13,13 +13,12 @@ export interface ReturnValue<T> {
 
 export default class Node<T> {
 	edges: Map<string, Node<T>>;
-	paramNames?: Array<string>;
-	payload?: T;
+	methodToPayload?: {[method:string]: {payload: T, paramNames: Array<string>} };
 	constructor() {
 		this.edges = new Map();
 	}
 
-	search(path: string): ReturnValue<T> | false {
+	search(method: string, path: string): ReturnValue<T> | false {
 		let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
 		const paramValues = [];
 		walk:
@@ -47,13 +46,19 @@ export default class Node<T> {
 			}
 		}
 
-		return endOfPath<T>(currentNode, paramValues);
+		return endOfPath<T>(method, currentNode, paramValues);
 	}
-	insert(path: string, payload: T, paramNames: Array<string> = []): void {
+	insert(method:string, path: string, payload: T, paramNames: Array<string> = []): void {
 		
 		if(!path){
-			this.payload = payload;
-			this.paramNames = paramNames;
+
+			if(!this.methodToPayload){
+				this.methodToPayload = {};
+			}
+
+			this.methodToPayload[method] = {
+				payload, paramNames
+			};
 			return;
 		}
 
@@ -86,7 +91,7 @@ export default class Node<T> {
 
 		if(this.edges.size){
 			if(this.edges.has(prefix)){
-				(this.edges.get(prefix) as Node<T>).insert(suffix, payload, paramNames);
+				(this.edges.get(prefix) as Node<T>).insert(method, suffix, payload, paramNames);
 			}
 			else{
 				const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
@@ -95,7 +100,7 @@ export default class Node<T> {
 
 					if(this.edges.has(commonPrefix)){
 						(this.edges.get(commonPrefix) as Node<T>)
-							.insert(path.slice(commonPrefix.length), payload, paramNames);
+							.insert(method, path.slice(commonPrefix.length), payload, paramNames);
 					}
 					else{
 						//remove edge this node to old node
@@ -110,17 +115,17 @@ export default class Node<T> {
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
 						//continue inserting the original node
-						newNode.insert(path.slice(commonPrefix.length), payload, paramNames);
+						newNode.insert(method, path.slice(commonPrefix.length), payload, paramNames);
 					}
 				}
 				else{
-					newChild<T>(this, prefix, suffix, payload, paramNames);
+					newChild<T>(this, method, prefix, suffix, payload, paramNames);
 				}
 			}
 		}
 		else{
 			//if no edges, create one up to param
-			newChild<T>(this, prefix, suffix, payload, paramNames);
+			newChild<T>(this, method, prefix, suffix, payload, paramNames);
 		}
 		/*
 			/v1/api/users/:userId
@@ -135,11 +140,11 @@ export default class Node<T> {
 }
 
 function newChild<T>(
-	parentNode: Node<T>, prefix: string, 
+	parentNode: Node<T>, method:string, prefix: string, 
 	suffix: string, payload: T, paramNames: Array<string>): void {
 
 	const newNode = new Node<T>();
-	newNode.insert(suffix, payload, paramNames);
+	newNode.insert(method, suffix, payload, paramNames);
 	parentNode.edges.set(prefix, newNode);
 }
 
@@ -159,12 +164,18 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
 	return ['', ''];
 }
 
-function endOfPath<T>(node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
-	if(node.payload){
-		return {
-			payload: node.payload,
-			params: buildObject(node.paramNames as Array<string>, paramValues)
-		};
+function endOfPath<T>(method:string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
+	if(node.methodToPayload){
+		const end = node.methodToPayload[method];
+		if(end){
+			return {
+				payload: end.payload,
+				params: buildObject(end.paramNames as Array<string>, paramValues)
+			};
+		}
+		else{
+			return false;
+		}
 	}
 	else{
 		return false;
