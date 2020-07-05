@@ -78,7 +78,7 @@ describe('param radix tree storage tests', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('/v1/api/users/:userId', 'jackpot1');
 		node.insert('/v1/api/users/:someOtherId/path', 'jackpot2');
-		expect(node.search('/v1/api/users/id1')).toStrictEqual({ payload: 'jackpot1', params:{ userId:'id1'} });
+		expect(node.search('/v1/api/users/id1')).toStrictEqual({ payload: 'jackpot1', params:{ userId:'id1' } });
 		expect(node.search('/v1/api/users/id2/path')).toStrictEqual({ payload: 'jackpot2', params:{ someOtherId:'id2' } });
 
 		expect(node.search('/v1/api/users/id2/1234/settings/')).toStrictEqual(false);
@@ -94,7 +94,7 @@ describe('param radix tree storage tests', () => {
 		// console.log(JSON.stringify(stringify(node), null, 2));
 
 		expect(node.search('/v1/yo')).toStrictEqual({ payload: 'jackpot1', params:{ test:'yo' } });
-		expect(node.search('/v1/api/users/id1')).toStrictEqual({ payload: 'jackpot2', params:{ id:'id1'} });
+		expect(node.search('/v1/api/users/id1')).toStrictEqual({ payload: 'jackpot2', params:{ id:'id1' } });
 		expect(node.search('/v1/api')).toStrictEqual({ payload: 'jackpot1', params:{ test:'api' } });
 
 		expect(node.search('/v1/api/')).toStrictEqual(false);
@@ -111,8 +111,7 @@ describe('param radix tree storage tests', () => {
 		// console.log(JSON.stringify(stringify(node), null, 2));
 
 		expect(node.search('/v1/a/b/c/yo')).toStrictEqual({ payload: 'jackpot1', params:{ id:'yo' } });
-		expect(node.search('/v1/a/bbb/users/id1')).toStrictEqual({ payload: 'jackpot2', params:{ id:'id1'} });
-	
+		expect(node.search('/v1/a/bbb/users/id1')).toStrictEqual({ payload: 'jackpot2', params:{ id:'id1' } });
 
 		expect(node.search('/')).toStrictEqual(false);
 		expect(node.search('/v1/a')).toStrictEqual(false);
@@ -138,7 +137,7 @@ describe('param radix tree storage tests', () => {
 		// console.log(JSON.stringify(stringify(node), null, 2));
 
 		expect(node.search('/v1/hi')).toStrictEqual({ payload: 'jackpot1', params:{ id:'hi' } });
-		expect(node.search('/v2/hello')).toStrictEqual({ payload: 'jackpot2', params:{ id:'hello'} });
+		expect(node.search('/v2/hello')).toStrictEqual({ payload: 'jackpot2', params:{ id:'hello' } });
 		
 		expect(node.search('/')).toStrictEqual(false);
 		expect(node.search('/v1')).toStrictEqual(false);
@@ -155,9 +154,9 @@ describe('param radix tree storage tests', () => {
 		node.insert('/api/v1/food/breakfasts/cereal/:id', 'jackpot4');
 		
 		expect(node.search('/api/v1/food/desserts/cookies/1')).toStrictEqual({ payload: 'jackpot1', params:{ id:'1' } });
-		expect(node.search('/api/v1/food/dinners/pasta/2')).toStrictEqual({ payload: 'jackpot2', params:{ id:'2'} });
-		expect(node.search('/api/v1/food/desserts/icecream/3')).toStrictEqual({ payload: 'jackpot3', params:{ id:'3'} });
-		expect(node.search('/api/v1/food/breakfasts/cereal/4')).toStrictEqual({ payload: 'jackpot4', params:{ id:'4'} });
+		expect(node.search('/api/v1/food/dinners/pasta/2')).toStrictEqual({ payload: 'jackpot2', params:{ id:'2' } });
+		expect(node.search('/api/v1/food/desserts/icecream/3')).toStrictEqual({ payload: 'jackpot3', params:{ id:'3' } });
+		expect(node.search('/api/v1/food/breakfasts/cereal/4')).toStrictEqual({ payload: 'jackpot4', params:{ id:'4' } });
 		
 		expect(node.search('/api/v1/food/desserts/cookies/')).toStrictEqual(false);
 		expect(node.search('/api/v1/food/dinners/pasta/')).toStrictEqual(false);
@@ -165,7 +164,6 @@ describe('param radix tree storage tests', () => {
 		expect(node.search('/api/v1/food/breakfasts/cereal/')).toStrictEqual(false);
 		expect(node.search('/api/v1/food/')).toStrictEqual(false);
 	});
-
 
 });
 

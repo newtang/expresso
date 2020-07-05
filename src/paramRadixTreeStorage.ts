@@ -94,42 +94,33 @@ export default class Node<T> {
 				if(commonPrefix){
 
 					if(this.edges.has(commonPrefix)){
-						(this.edges.get(commonPrefix) as Node<T>).insert(path.slice(commonPrefix.length), payload, paramNames);
+						(this.edges.get(commonPrefix) as Node<T>)
+							.insert(path.slice(commonPrefix.length), payload, paramNames);
 					}
 					else{
 						//remove edge this node to old node
-						const oldNode:Node<T> = this.edges.get(similarEdge) as Node<T>;
+						const oldNode: Node<T> = this.edges.get(similarEdge) as Node<T>;
 						this.edges.delete(similarEdge);
 
 						//create new node. Point common prefix to it. 
 						//set up old node
-						//continue inserting the original node
+						
 						const newNode = new Node<T>();
 						this.edges.set(commonPrefix, newNode);
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
-
+						//continue inserting the original node
 						newNode.insert(path.slice(commonPrefix.length), payload, paramNames);
 					}
-
-					
 				}
 				else{
-					console.log("inserting new node", "prefix", prefix, 'suffix', suffix)
-					const newNode = new Node<T>();
-					newNode.insert(suffix, payload, paramNames);
-					this.edges.set(prefix, newNode);
+					newChild<T>(this, prefix, suffix, payload, paramNames);
 				}
 			}
 		}
 		else{
-
 			//if no edges, create one up to param
-
-			const newNode = new Node<T>();
-			newNode.insert(suffix, payload, paramNames);
-			this.edges.set(prefix, newNode);
-			
+			newChild<T>(this, prefix, suffix, payload, paramNames);
 		}
 		/*
 			/v1/api/users/:userId
@@ -143,11 +134,20 @@ export default class Node<T> {
 	}
 }
 
-function longestCommonPrefix<T>(str:string, edges: Map<string, Node<T>>): [string, string]{
+function newChild<T>(
+	parentNode: Node<T>, prefix: string, 
+	suffix: string, payload: T, paramNames: Array<string>): void {
+
+	const newNode = new Node<T>();
+	newNode.insert(suffix, payload, paramNames);
+	parentNode.edges.set(prefix, newNode);
+}
+
+function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [string, string]{
 	while(str && str !== '/'){
 		// go slash by slash
-		str = str.slice(0, str.lastIndexOf('/', str.length-2) + 1)
-		for(const [edge, node] of edges){
+		str = str.slice(0, str.lastIndexOf('/', str.length-2) + 1);
+		for(const [edge] of edges){
 			if(edge.startsWith(str)){
 				return [str, edge];
 			}
@@ -156,8 +156,7 @@ function longestCommonPrefix<T>(str:string, edges: Map<string, Node<T>>): [strin
 
 	//I think we never get here. At some point `str` is "" which is valid
 
-	return ["", ""];
-	
+	return ['', ''];
 }
 
 function endOfPath<T>(node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
