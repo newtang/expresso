@@ -1,7 +1,7 @@
 import type { NextHandleFunction } from 'connect';
-import { Storage, RouterOptions } from './interfaces';
-import StaticStorage from './staticStorage';
-import ParamRadixTreeStorage from './paramRadixTreeStorage';
+import { Storage, RouterOptions } from '../interfaces';
+import StaticStorage from './StaticStorage';
+import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 
 export default class CompositeStorage implements Storage {
 	staticStorage: Storage;

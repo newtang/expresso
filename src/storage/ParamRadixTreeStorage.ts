@@ -1,4 +1,4 @@
-import { Storage } from './interfaces';
+import { Storage } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
 
 export interface ReturnValue<T> {

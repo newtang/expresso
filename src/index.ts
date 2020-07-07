@@ -2,7 +2,7 @@ import { NextHandleFunction } from 'connect';
 import type { Request, Response, NextFunction } from 'express';
 import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
-import CompositeStorage from './CompositeStorage';
+import CompositeStorage from './storage/CompositeStorage';
 
 interface RouterUserOptions {
 	strict?: boolean;
