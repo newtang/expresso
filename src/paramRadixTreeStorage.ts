@@ -1,3 +1,5 @@
+import { Storage } from './interfaces';
+import type { NextHandleFunction } from 'connect';
 
 export interface ReturnValue<T> {
 	payload: T;
@@ -11,9 +13,29 @@ export interface ReturnValue<T> {
  * Except for edges in the root node, roots do not begin with '/'
 **/	
 
-export default class Node<T> {
+export default class ParamRadixTreeStorage implements Storage {
+	root: Node<Array<NextHandleFunction>>;
+	constructor() {
+		this.root = new Node<Array<NextHandleFunction>>();
+	}
+
+	add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
+		this.root.insert(method, path, handlers);
+	}
+
+	find(method: string, path: string): Array<NextHandleFunction> | false{
+		const result = this.root.search(method, path);
+		if(result){
+			return result.payload;
+		}
+		return false;
+	}
+
+}
+
+export class Node<T> {
 	edges: Map<string, Node<T>>;
-	methodToPayload?: {[method:string]: {payload: T, paramNames: Array<string>} };
+	methodToPayload?: {[method: string]: {payload: T; paramNames: Array<string>} };
 	constructor() {
 		this.edges = new Map();
 	}
@@ -48,7 +70,7 @@ export default class Node<T> {
 
 		return endOfPath<T>(method, currentNode, paramValues);
 	}
-	insert(method:string, path: string, payload: T, paramNames: Array<string> = []): void {
+	insert(method: string, path: string, payload: T, paramNames: Array<string> = []): void {
 		
 		if(!path){
 
@@ -115,7 +137,8 @@ export default class Node<T> {
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
 						//continue inserting the original node
-						newNode.insert(method, path.slice(commonPrefix.length), payload, paramNames);
+						newNode.insert(method, 
+							path.slice(commonPrefix.length), payload, paramNames);
 					}
 				}
 				else{
@@ -140,7 +163,7 @@ export default class Node<T> {
 }
 
 function newChild<T>(
-	parentNode: Node<T>, method:string, prefix: string, 
+	parentNode: Node<T>, method: string, prefix: string, 
 	suffix: string, payload: T, paramNames: Array<string>): void {
 
 	const newNode = new Node<T>();
@@ -164,7 +187,9 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
 	return ['', ''];
 }
 
-function endOfPath<T>(method:string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
+function endOfPath<T>(
+	method: string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false{
+	
 	if(node.methodToPayload){
 		const end = node.methodToPayload[method];
 		if(end){
