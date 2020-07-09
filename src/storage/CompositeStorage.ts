@@ -6,13 +6,11 @@ import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 export default class CompositeStorage implements Storage {
 	staticStorage: Storage;
 	paramStorage: Storage;
-	storages: Array<Storage>;
 	options: RouterOptions;
 	constructor(options: RouterOptions){
 		this.options = options;
 		this.staticStorage = new StaticStorage();
 		this.paramStorage = new ParamRadixTreeStorage();
-		this.storages = [this.staticStorage, this.paramStorage];
 	}
 
 	add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
@@ -31,14 +29,8 @@ export default class CompositeStorage implements Storage {
 	}
 
 	find(method: string, path: string): Array<NextHandleFunction> | false {
-		for(const storage of this.storages){
-			const result = storage.find(method, path);
-			if(result){
-				return result;
-			}
-		}
-
-		return false;
+		return this.staticStorage.find(method, path) 
+			|| this.paramStorage.find(method, path);
 	}
 }
 

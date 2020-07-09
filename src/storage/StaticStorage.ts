@@ -22,9 +22,6 @@ export default class StaticStorage implements Storage {
 
 	find(method: string, path: string): Array<NextHandleFunction> | false{
 		const pathRoutes = this.routes[path];
-		if(pathRoutes && pathRoutes[method]){
-			return pathRoutes[method];
-		}
-		return false;
+		return (pathRoutes && pathRoutes[method]) || false;
 	}
 }
