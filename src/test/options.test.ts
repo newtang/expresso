@@ -8,7 +8,7 @@ describe('options tests', () => {
 		console.error = jest.fn();
 	});
 
-	test.each([{ strict:false }, undefined])('strict:false', async (options) => {
+	test.each([{ strict:false }/*, undefined*/])('strict:false', async (options) => {
 		const app = express();
 		const router = expresso(options);
 		const msg = 'success';
