@@ -1,8 +1,8 @@
-import { Storage } from '../interfaces';
+import { FoundRouteData, Storage } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
 
 export interface ReturnValue<T> {
-	payload: T;
+	target: T;
 	params: {[param: string]: string};
 }
 
@@ -10,7 +10,7 @@ export interface ReturnValue<T> {
  * This functions as a Radix Tree of nodes. If a node has
  * payload set, it is the end of a full, legitimate path
  *
- * Except for edges in the root node, roots do not begin with '/'
+ * Except for edges in the root node, edges do not begin with '/'
 **/	
 
 export default class ParamRadixTreeStorage implements Storage {
@@ -23,10 +23,10 @@ export default class ParamRadixTreeStorage implements Storage {
 		this.root.insert(method, path, handlers);
 	}
 
-	find(method: string, path: string): Array<NextHandleFunction> | false{
+	find(method: string, path: string): FoundRouteData | false{
 		const result = this.root.search(method, path);
 		if(result){
-			return result.payload;
+			return result;
 		}
 		return false;
 	}
@@ -194,7 +194,7 @@ function endOfPath<T>(
 		const end = node.methodToPayload[method];
 		if(end){
 			return {
-				payload: end.payload,
+				target: end.payload,
 				params: buildObject(end.paramNames as Array<string>, paramValues)
 			};
 		}

@@ -1,5 +1,5 @@
 import type { NextHandleFunction } from 'connect';
-import { Storage, RouterOptions } from '../interfaces';
+import { FoundRouteData, Storage, RouterOptions } from '../interfaces';
 import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 
@@ -28,7 +28,7 @@ export default class CompositeStorage implements Storage {
 		}
 	}
 
-	find(method: string, path: string): Array<NextHandleFunction> | false {
+	find(method: string, path: string): FoundRouteData | false {
 		return this.staticStorage.find(method, path) 
 			|| this.paramStorage.find(method, path);
 	}

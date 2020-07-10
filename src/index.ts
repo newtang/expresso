@@ -32,9 +32,9 @@ function handleRequest(routeStorage: Storage, options: RouterOptions,
 		? req.path
 		: req.path.toLowerCase();
 
-	const handlers = routeStorage.find(verb, path);
-	if(handlers){
-		executeHandlers(req, res, done, handlers); 
+	const payload = routeStorage.find(verb, path);
+	if(payload && payload.target){
+		executeHandlers(req, res, done, payload.target); 
 	}
 	else{
 		return done(new Error('404'));

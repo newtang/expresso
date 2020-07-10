@@ -1,8 +1,8 @@
-import { Storage } from '../interfaces';
+import { Storage, FoundRouteData } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
 
 interface RouteMap {
-	[key: string]: {[key: string]: Array<NextHandleFunction>};
+	[key: string]: {[key: string]: FoundRouteData};
 }
 
 export default class StaticStorage implements Storage {
@@ -17,10 +17,10 @@ export default class StaticStorage implements Storage {
 		if(!this.routes[path]){
 			this.routes[path] = {};
 		}
-		this.routes[path][method] = handlers;
+		this.routes[path][method] = { target: handlers };
 	}
 
-	find(method: string, path: string): Array<NextHandleFunction> | false{
+	find(method: string, path: string): FoundRouteData | false{
 		const pathRoutes = this.routes[path];
 		return (pathRoutes && pathRoutes[method]) || false;
 	}
