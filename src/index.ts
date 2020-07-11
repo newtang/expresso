@@ -34,6 +34,7 @@ function handleRequest(routeStorage: Storage, options: RouterOptions,
 
 	const payload = routeStorage.find(verb, path);
 	if(payload && payload.target){
+		req.params = payload.params || {};
 		executeHandlers(req, res, done, payload.target); 
 	}
 	else{

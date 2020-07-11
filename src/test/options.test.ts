@@ -8,7 +8,7 @@ describe('options tests', () => {
 		console.error = jest.fn();
 	});
 
-	test.each([{ strict:false }/*, undefined*/])('strict:false', async (options) => {
+	test.each([{ strict:false }, undefined])('strict:false', async (options) => {
 		const app = express();
 		const router = expresso(options);
 		const msg = 'success';
@@ -21,29 +21,51 @@ describe('options tests', () => {
 		//starts without trailing slash
 		router.get('/othertest/', (req: Request, res: Response) => res.send(otherMsg));
 
+		//param route without trailing slash
+		router.get('/api/:id', (req: Request, res: Response) => res.send(req.params.id));
+
+		//param route with trailing slash
+		router.get('/v2/:user/', (req: Request, res: Response) => res.send(req.params.user));
+
 		//base route
 		router.get('/', (req: Request, res: Response) => res.send(slashSuccess));
 		app.use(router);
 
-		const res = await request(app).get('/test');
+		let res = await request(app).get('/test');
 		expect(res.text).toBe(msg);
 		expect(res.status).toBe(200);
 
-		const resTrailingSlash = await request(app).get('/test/');
-		expect(resTrailingSlash.text).toBe(msg);
-		expect(resTrailingSlash.status).toBe(200);
+		res = await request(app).get('/test/');
+		expect(res.text).toBe(msg);
+		expect(res.status).toBe(200);
 
-		const otherRes = await request(app).get('/othertest');
-		expect(otherRes.text).toBe(otherMsg);
-		expect(otherRes.status).toBe(200);
+		res = await request(app).get('/othertest');
+		expect(res.text).toBe(otherMsg);
+		expect(res.status).toBe(200);
 
-		const otherResTrailingSlash = await request(app).get('/othertest/');
-		expect(otherResTrailingSlash.text).toBe(otherMsg);
-		expect(otherResTrailingSlash.status).toBe(200);
+		res = await request(app).get('/othertest/');
+		expect(res.text).toBe(otherMsg);
+		expect(res.status).toBe(200);
 
-		const slashRes = await request(app).get('/');
-		expect(slashRes.text).toBe(slashSuccess);
-		expect(slashRes.status).toBe(200);
+		res = await request(app).get('/api/yo');
+		expect(res.text).toBe('yo');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/api/yo2/');
+		expect(res.text).toBe('yo2');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/v2/someone');
+		expect(res.text).toBe('someone');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/v2/someone2/');
+		expect(res.text).toBe('someone2');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/');
+		expect(res.text).toBe(slashSuccess);
+		expect(res.status).toBe(200);
 
 	});
 
@@ -60,28 +82,48 @@ describe('options tests', () => {
 		//starts without trailing slash
 		router.get('/othertest/', (req: Request, res: Response) => res.send(otherMsg));
 
+				//param route without trailing slash
+		router.get('/api/:id', (req: Request, res: Response) => res.send(req.params.id));
+
+		//param route with trailing slash
+		router.get('/v2/:user/', (req: Request, res: Response) => res.send(req.params.user));
+
 		//base route
 		router.get('/', (req: Request, res: Response) => res.send(slashSuccess));
 
 		app.use(router);
 
-		const res = await request(app).get('/test');
+		let res = await request(app).get('/test');
 		expect(res.text).toBe(msg);
 		expect(res.status).toBe(200);
 
-		const resTrailingSlash = await request(app).get('/test/');
-		expect(resTrailingSlash.status).toBe(500);
+		res = await request(app).get('/test/');
+		expect(res.status).toBe(500);
 
-		const otherRes = await request(app).get('/othertest');
-		expect(otherRes.status).toBe(500);
+		res = await request(app).get('/othertest');
+		expect(res.status).toBe(500);
 
-		const otherResTrailingSlash = await request(app).get('/othertest/');
-		expect(otherResTrailingSlash.text).toBe(otherMsg);
-		expect(otherResTrailingSlash.status).toBe(200);
+		res = await request(app).get('/othertest/');
+		expect(res.text).toBe(otherMsg);
+		expect(res.status).toBe(200);
 
-		const slashRes = await request(app).get('/');
-		expect(slashRes.text).toBe(slashSuccess);
-		expect(slashRes.status).toBe(200);
+		res = await request(app).get('/api/yo');
+		expect(res.text).toBe('yo');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/api/yo2/');
+		expect(res.status).toBe(500);
+
+		res = await request(app).get('/v2/someone');
+		expect(res.status).toBe(500);
+
+		res = await request(app).get('/v2/someone2/');
+		expect(res.text).toBe('someone2');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/');
+		expect(res.text).toBe(slashSuccess);
+		expect(res.status).toBe(200);
 	});
 
 	test.each([{ caseSensitive:false }, undefined])('caseSensitive:false', async (options) => {
@@ -117,6 +159,8 @@ describe('options tests', () => {
 
 		router.get('/OtHeR', (req: Request, res: Response) => res.send(msg2));
 
+		router.get('/roUTE/:paRAM', (req: Request, res: Response) => res.send(req.params.paRAM));
+
 		app.use(router);
 
 		let res = await request(app).get('/test');
@@ -129,18 +173,28 @@ describe('options tests', () => {
 		res = await request(app).get('/tEsT/');
 		expect(res.status).toBe(500);
 
-		let otherRes = await request(app).get('/OtHeR');
-		expect(otherRes.text).toBe(msg2);
-		expect(otherRes.status).toBe(200);
+		res = await request(app).get('/OtHeR');
+		expect(res.text).toBe(msg2);
+		expect(res.status).toBe(200);
 
-		otherRes = await request(app).get('/OTHER');
-		expect(otherRes.status).toBe(500);
-
-		otherRes = await request(app).get('/oThEr/');
+		res = await request(app).get('/OTHER');
 		expect(res.status).toBe(500);
 
-		otherRes = await request(app).get('/other/');
-		expect(otherRes.status).toBe(500);
+		res = await request(app).get('/oThEr/');
+		expect(res.status).toBe(500);
+
+		res = await request(app).get('/other/');
+		expect(res.status).toBe(500);
+
+		res = await request(app).get('/roUTE/oK');
+		expect(res.text).toBe('oK');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/route/oK');
+		expect(res.status).toBe(500);
+
+		res = await request(app).get('/ROUTE/oK');
+		expect(res.status).toBe(500);
 
 	});
 
