@@ -193,6 +193,44 @@ describe('param radix tree storage tests', () => {
 		expect(node.search('post', '/api/v1')).toStrictEqual(false);
 	});
 
+	test('param interruped with non-alphanumeric char', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:from-:to/word', 'jackpot1');
+		
+		expect(node.search('get', '/api/v1/25-50/word')).toStrictEqual(
+			{ target: 'jackpot1', params:{ from:'25', to: '50' } });
+		expect(node.search('get', '/api/v1/0-0/word')).toStrictEqual(
+			{ target: 'jackpot1', params:{ from:'0', to: '0' } });
+		expect(node.search('get', '/api/v1/first-last/word')).toStrictEqual(
+			{ target: 'jackpot1', params:{ from:'first', to: 'last' } });
+
+		expect(node.search('get', '/api/v1/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/25')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/25/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/25-')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/25-/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/-50/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/25-/word')).toStrictEqual(false);
+	});
+
+	test('param interruped with non-alphanumeric char #2', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:first.:MIDDLE.:last/:id/settings', 'jackpot1');
+		
+		expect(node.search('get', '/api/v1/Mary.Smith.Jones/5678/settings')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { first:'Mary', MIDDLE: 'Smith', last: 'Jones', id:'5678' } 
+		});
+		expect(node.search('get', '/api/v1/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary.')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary.Smith')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary.Smith.')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary.Smith.Jones/')).toStrictEqual(false);
+		expect(node.search('get', '/api/v1/Mary.Smith.Jones/test/')).toStrictEqual(false);
+		
+	});
+
 });
 
 function stringify(node: ParamRadixTreeStorage<string>){

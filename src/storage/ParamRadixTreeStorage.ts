@@ -2,6 +2,8 @@ import { FoundRouteData, Storage } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
 import { lowercaseStaticParts } from '../utils/stringUtils';
 
+const validParamChars = /[^A-Za-z0-9_]+/;
+
 export interface ReturnValue<T> {
 	target: T;
 	params: {[param: string]: string};
@@ -79,10 +81,10 @@ export class Node<T> {
 				currentNode = paramNode;
 
 				//prevents matching with a starting slash
-				const sliceIndex = path.indexOf('/', 1);
+				// const sliceIndex = path.indexOf('/', 1);
 
+				const sliceIndex = searchAt(path, validParamChars, 1);				
 				const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
-
 				const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
 
 				pathToCompare = newPathToCompare;
@@ -113,22 +115,19 @@ export class Node<T> {
 
 		const paramIndex = path.indexOf(':');
 		let [prefix, suffix] = splitAtIndex(path, paramIndex);
-		// let prefix = paramIndex === -1
-		// 	? path
-		// 	: path.slice(0, paramIndex);
-
-		// let suffix = paramIndex === -1
-		// 	? ''
-		// 	: path.slice(paramIndex);
 
 		if(paramIndex === 0){
 			prefix = ':';
-			const nextSlash = path.indexOf('/');
-			const paramEndIndex = nextSlash === -1
+			// const paramEnd = path.indexOf('/');
+			// The name of route parameters must be made up of “word characters” ([A-Za-z0-9_]).
+			const paramEnd = path.slice(1).search(validParamChars) + 1;
+			// console.log("paramEnd", paramEnd, path);
+			const paramEndIndex = paramEnd === 0  //(-1 + 1)
 				? path.length
-				: nextSlash;
+				: paramEnd;
 
 			paramNames.push(path.slice(1, paramEndIndex));
+			// console.log("paramNames" ,paramNames);
 			suffix = path.slice(paramEndIndex);
 		}
 
@@ -240,6 +239,13 @@ function buildObject(keys: Array<string>, values: Array<string>): {[key: string]
 		obj[keys[i]] = values[i];
 	}
 	return obj;
+}
+
+function searchAt(str: string, regex: RegExp, index: number): number{
+	const searchIndex = str.slice(index).search(regex);
+	return searchIndex === -1
+		? -1
+		: searchIndex + index;
 }
 
 function splitAtIndex(str: string, index: number): [string, string] {
