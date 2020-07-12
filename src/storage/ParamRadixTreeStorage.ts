@@ -1,10 +1,17 @@
 import { FoundRouteData, Storage } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
+import { lowercaseStaticParts } from '../utils/stringUtils';
 
 export interface ReturnValue<T> {
 	target: T;
 	params: {[param: string]: string};
 }
+
+interface ParamStorageOptions {
+	caseSensitive: boolean;
+}
+
+const DEFAULT_OPTIONS: ParamStorageOptions = { caseSensitive: false };
 
 /**
  * This functions as a Radix Tree of nodes. If a node has
@@ -15,22 +22,31 @@ export interface ReturnValue<T> {
 
 export default class ParamRadixTreeStorage implements Storage {
 	root: Node<Array<NextHandleFunction>>;
-	constructor() {
+	options: ParamStorageOptions;
+	constructor(options: ParamStorageOptions = DEFAULT_OPTIONS) {
 		this.root = new Node<Array<NextHandleFunction>>();
+		this.options = options;
 	}
 
 	add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
+		path = modifyPath(path, this.options);
 		this.root.insert(method, path, handlers);
 	}
 
 	find(method: string, path: string): FoundRouteData | false{
-		const result = this.root.search(method, path);
+		const result = this.root.search(method, path, this.options.caseSensitive);
 		if(result){
 			return result;
 		}
 		return false;
 	}
 
+}
+
+function modifyPath(path: string, options: ParamStorageOptions): string{
+	return options.caseSensitive
+		? path
+		: lowercaseStaticParts(path);
 }
 
 export class Node<T> {
@@ -40,14 +56,20 @@ export class Node<T> {
 		this.edges = new Map();
 	}
 
-	search(method: string, path: string): ReturnValue<T> | false {
+	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
 		let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
 		const paramValues = [];
+
+		let pathToCompare = caseSensitive
+			? path
+			: path.toLowerCase();
+
 		walk:
-		while(path){
+		while(pathToCompare){
 			for(const [key, node] of currentNode.edges){
-				if(key !== ':' && path.startsWith(key)){
+				if(key !== ':' && pathToCompare.startsWith(key)){
 					currentNode = node;
+					pathToCompare = pathToCompare.slice(key.length);
 					path = path.slice(key.length);
 					continue walk;
 				}
@@ -60,7 +82,12 @@ export class Node<T> {
 				const sliceIndex = path.indexOf('/', 1);
 
 				const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
+
+				const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
+
+				pathToCompare = newPathToCompare;
 				path = newPath;
+
 				paramValues.push(paramValue);
 			}
 			else{

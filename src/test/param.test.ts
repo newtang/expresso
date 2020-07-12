@@ -1,9 +1,7 @@
-import request, { SuperTest, Test } from 'supertest';
+import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
-import type { Request, Response, NextFunction } from 'express';
-
-import { METHODS } from 'http';
+import type { Request, Response } from 'express';
 
 describe('param tests', () => {
 
@@ -118,7 +116,7 @@ describe('param tests', () => {
 			res.send(req.params.id));
 
 		router.get('/v1/admin/', (req: Request, res: Response) => 
-			res.send("jackpot"));
+			res.send('jackpot'));
 
 		app.use(router);
 
@@ -147,7 +145,7 @@ describe('param tests', () => {
 		const router = expresso();
 
 		router.get('/v1/admin/', (req: Request, res: Response) => 
-			res.send("jackpot"));
+			res.send('jackpot'));
 
 		router.get('/v1/:id/', (req: Request, res: Response) => 
 			res.send(req.params.id));
@@ -174,20 +172,22 @@ describe('param tests', () => {
 		expect(resWithError.status).toBe(500);
 	});
 
-	// test('case sensitive param name', async () => {
-	// 	const app = express();
-	// 	const router = expresso();
+	test('case sensitive param name', async () => {
+		const app = express();
+		const router = expresso();
 
-	// 	router.get('/api/:userId', (req: Request, res: Response) => 
-	// 		res.send(req.params.userId));
+		router.get('/api/:userId', (req: Request, res: Response) => 
+			res.send(req.params.userId));
 
-	// 	app.use(router);
+		app.use(router);
 
-	// 	let res = await request(app).get('/api/jon');
-	// 	expect(res.text).toBe('jon');
-	// 	expect(res.status).toBe(200);
-	// });
+		let res = await request(app).get('/api/jon');
+		expect(res.text).toBe('jon');
+		expect(res.status).toBe(200);
 
-
+		res = await request(app).get('/api/camelCaseValue');
+		expect(res.text).toBe('camelCaseValue');
+		expect(res.status).toBe(200);
+	});
 
 });

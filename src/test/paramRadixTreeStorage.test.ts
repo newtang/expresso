@@ -1,9 +1,6 @@
 import { Node as ParamRadixTreeStorage } from '../storage/ParamRadixTreeStorage';
 
 describe('param radix tree storage tests', () => {
-	beforeAll(() => {
-		
-	});
 
 	test('1 param in middle', () => {
 		const node = new ParamRadixTreeStorage<string>();
@@ -137,8 +134,6 @@ describe('param radix tree storage tests', () => {
 		node.insert('get', '/v1/:id', 'jackpot1');
 		node.insert('get', '/v2/:id', 'jackpot2');
 		
-		// console.log(JSON.stringify(stringify(node), null, 2));
-
 		expect(node.search('get', '/v1/hi')).toStrictEqual({ target: 'jackpot1', params:{ id:'hi' } });
 		expect(node.search('get', '/v2/hello')).toStrictEqual({ target: 'jackpot2', params:{ id:'hello' } });
 		
@@ -149,7 +144,7 @@ describe('param radix tree storage tests', () => {
 		expect(node.search('get', '/v2/')).toStrictEqual(false);
 	});
 
-	test('short, different roots', () => {
+	test('long, different roots', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('get', '/api/v1/food/desserts/cookies/:id', 'jackpot1');
 		node.insert('get', '/api/v1/food/dinners/pasta/:id', 'jackpot2');

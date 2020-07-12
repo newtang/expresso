@@ -28,11 +28,7 @@ function handleRequest(routeStorage: Storage, options: RouterOptions,
 	req: Request, res: Response, done: NextFunction): void {
 
 	const verb = req.method;
-	const path = options.caseSensitive
-		? req.path
-		: req.path.toLowerCase();
-
-	const payload = routeStorage.find(verb, path);
+	const payload = routeStorage.find(verb, req.path);
 	if(payload && payload.target){
 		req.params = payload.params || {};
 		executeHandlers(req, res, done, payload.target); 

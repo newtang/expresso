@@ -9,8 +9,8 @@ export default class CompositeStorage implements Storage {
 	options: RouterOptions;
 	constructor(options: RouterOptions){
 		this.options = options;
-		this.staticStorage = new StaticStorage();
-		this.paramStorage = new ParamRadixTreeStorage();
+		this.staticStorage = new StaticStorage(this.options);
+		this.paramStorage = new ParamRadixTreeStorage(this.options);
 	}
 
 	add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
@@ -28,7 +28,7 @@ export default class CompositeStorage implements Storage {
 		}
 	}
 
-	find(method: string, path: string): FoundRouteData | false {
+	find(method: string, path: string): FoundRouteData | false {	
 		return this.staticStorage.find(method, path) 
 			|| this.paramStorage.find(method, path);
 	}
@@ -68,9 +68,6 @@ function getValidPaths(userPath: string, options: RouterOptions): Array<string>{
 		? [userPath]
 		: getNonStrictPaths(userPath);
 
-	if(!options.caseSensitive){
-		return validPaths.map(p => p.toLowerCase());
-	}
 	return validPaths;
 }
 

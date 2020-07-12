@@ -6,7 +6,7 @@ export interface Storage {
 }
 
 export interface FoundRouteData {
-	target: Array<NextHandleFunction>,
+	target: Array<NextHandleFunction>;
 	params?: {[param: string]: string};
 }
 

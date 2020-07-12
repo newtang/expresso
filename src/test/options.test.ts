@@ -82,7 +82,7 @@ describe('options tests', () => {
 		//starts without trailing slash
 		router.get('/othertest/', (req: Request, res: Response) => res.send(otherMsg));
 
-				//param route without trailing slash
+		//param route without trailing slash
 		router.get('/api/:id', (req: Request, res: Response) => res.send(req.params.id));
 
 		//param route with trailing slash
@@ -132,6 +132,7 @@ describe('options tests', () => {
 		const msg = 'success!';
 		
 		router.get('/test', (req: Request, res: Response) => res.send(msg));
+		router.get('/route/:paRAM', (req: Request, res: Response) => res.send(req.params.paRAM));
 
 		app.use(router);
 
@@ -145,6 +146,18 @@ describe('options tests', () => {
 
 		res = await request(app).get('/tEsT/');
 		expect(res.text).toBe(msg);
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/route/test');
+		expect(res.text).toBe('test');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/ROUTE/TEST');
+		expect(res.text).toBe('TEST');
+		expect(res.status).toBe(200);
+
+		res = await request(app).get('/rOUte/tEsT');
+		expect(res.text).toBe('tEsT');
 		expect(res.status).toBe(200);
 
 	});
