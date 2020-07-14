@@ -213,7 +213,7 @@ describe('param radix tree storage tests', () => {
 		expect(node.search('get', '/api/v1/25-/word')).toStrictEqual(false);
 	});
 
-	test('param interruped with non-alphanumeric char #2', () => {
+	test('param interrupted with non-alphanumeric char #2', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('get', '/api/v1/:first.:MIDDLE.:last/:id/settings', 'jackpot1');
 		
@@ -228,6 +228,26 @@ describe('param radix tree storage tests', () => {
 		expect(node.search('get', '/api/v1/Mary.Smith.')).toStrictEqual(false);
 		expect(node.search('get', '/api/v1/Mary.Smith.Jones/')).toStrictEqual(false);
 		expect(node.search('get', '/api/v1/Mary.Smith.Jones/test/')).toStrictEqual(false);
+		
+	});
+
+	test('bad param', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		
+		expect(() => {
+			node.insert('get', '/api/v1/:-badparam', 'jackpot1');
+		})
+		.toThrowError("Invalid param name ...:-badparam");
+
+		expect(() => {
+			node.insert('get', '/:#badparam', 'jackpot1');
+		})
+		.toThrowError("Invalid param name ...:#badparam");
+
+		expect(() => {
+			node.insert('get', '/api/v1/:-badparam/settings', 'jackpot1');
+		})
+		.toThrowError("Invalid param name ...:-badparam/settings");
 		
 	});
 

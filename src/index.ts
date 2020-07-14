@@ -5,11 +5,13 @@ import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 
 interface RouterUserOptions {
+	allowDuplicateParams?: boolean;
 	strict?: boolean;
 	caseSensitive?: boolean;
 }
 
 const defaultOptions: RouterOptions = {
+	allowDuplicateParams: false,
 	strict: false,
 	caseSensitive: false,
 };

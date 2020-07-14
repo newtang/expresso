@@ -10,10 +10,14 @@ export interface ReturnValue<T> {
 }
 
 interface ParamStorageOptions {
+	allowDuplicateParams: boolean;
 	caseSensitive: boolean;
 }
 
-const DEFAULT_OPTIONS: ParamStorageOptions = { caseSensitive: false };
+const DEFAULT_OPTIONS: ParamStorageOptions = { 
+	allowDuplicateParams: false,
+	caseSensitive: false 
+};
 
 /**
  * This functions as a Radix Tree of nodes. If a node has
@@ -32,7 +36,7 @@ export default class ParamRadixTreeStorage implements Storage {
 
 	add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
 		path = modifyPath(path, this.options);
-		this.root.insert(method, path, handlers);
+		this.root.insert(method, path, handlers, this.options);
 	}
 
 	find(method: string, path: string): FoundRouteData | false{
@@ -99,8 +103,8 @@ export class Node<T> {
 
 		return endOfPath<T>(method, currentNode, paramValues);
 	}
-	insert(method: string, path: string, payload: T, paramNames: Array<string> = []): void {
-		
+	insert(method: string, path: string, payload: T, options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
+		 
 		if(!path){
 
 			if(!this.methodToPayload){
@@ -126,8 +130,17 @@ export class Node<T> {
 				? path.length
 				: paramEnd;
 
-			paramNames.push(path.slice(1, paramEndIndex));
-			// console.log("paramNames" ,paramNames);
+			const paramName = path.slice(1, paramEndIndex);
+
+			if(!paramName){
+				throw new Error(`Invalid param name ...${path}`);
+			}
+
+			if(!options.allowDuplicateParams && paramNames.includes(paramName)){
+				throw new Error(`Duplicate param name discovered: ${paramName}. Consider renaming or enabling 'allowDuplicateParams'.`);
+			}
+
+			paramNames.push(paramName);
 			suffix = path.slice(paramEndIndex);
 		}
 
@@ -139,7 +152,7 @@ export class Node<T> {
 
 		if(this.edges.size){
 			if(this.edges.has(prefix)){
-				(this.edges.get(prefix) as Node<T>).insert(method, suffix, payload, paramNames);
+				(this.edges.get(prefix) as Node<T>).insert(method, suffix, payload, options, paramNames);
 			}
 			else{
 				const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
@@ -148,7 +161,7 @@ export class Node<T> {
 
 					if(this.edges.has(commonPrefix)){
 						(this.edges.get(commonPrefix) as Node<T>)
-							.insert(method, path.slice(commonPrefix.length), payload, paramNames);
+							.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
 					}
 					else{
 						//remove edge this node to old node
@@ -164,17 +177,17 @@ export class Node<T> {
 						
 						//continue inserting the original node
 						newNode.insert(method, 
-							path.slice(commonPrefix.length), payload, paramNames);
+							path.slice(commonPrefix.length), payload, options, paramNames);
 					}
 				}
 				else{
-					newChild<T>(this, method, prefix, suffix, payload, paramNames);
+					newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
 				}
 			}
 		}
 		else{
 			//if no edges, create one up to param
-			newChild<T>(this, method, prefix, suffix, payload, paramNames);
+			newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
 		}
 		/*
 			/v1/api/users/:userId
@@ -190,10 +203,10 @@ export class Node<T> {
 
 function newChild<T>(
 	parentNode: Node<T>, method: string, prefix: string, 
-	suffix: string, payload: T, paramNames: Array<string>): void {
+	suffix: string, payload: T, options:ParamStorageOptions, paramNames: Array<string>): void {
 
 	const newNode = new Node<T>();
-	newNode.insert(method, suffix, payload, paramNames);
+	newNode.insert(method, suffix, payload, options, paramNames);
 	parentNode.edges.set(prefix, newNode);
 }
 

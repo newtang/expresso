@@ -11,6 +11,7 @@ export interface FoundRouteData {
 }
 
 export interface RouterOptions {
+	allowDuplicateParams: boolean;
 	strict: boolean;
 	caseSensitive: boolean;
 }
