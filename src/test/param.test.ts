@@ -202,4 +202,17 @@ describe('param tests', () => {
 		expect(res.status).toBe(200);
 	});
 
+	test('value with dash', async () => {
+		const app = express();
+		const router = expresso();
+
+		router.get('/v1/:value', (req: Request, res: Response) => res.send(req.params.value));
+		app.use(router);
+
+		const res = await request(app).get('/v1/test-dash');
+		expect(res.text).toBe('test-dash');
+		expect(res.status).toBe(200);
+
+	});
+
 });

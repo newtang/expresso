@@ -251,6 +251,33 @@ describe('param radix tree storage tests', () => {
 		
 	});
 
+	test('param value with dash', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:value', 'jackpot1');
+
+		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test-dash' } 
+		});
+	});
+
+	test('param value with dash and param part with a dash', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:value', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to', 'jackpot2');
+		
+		
+		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { from:'test', to: 'dash' } 
+		});
+
+		expect(node.search('get', '/api/v1/test')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test'} 
+		});
+	});
+
 });
 
 function stringify(node: ParamRadixTreeStorage<string>){

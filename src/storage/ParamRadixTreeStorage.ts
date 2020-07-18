@@ -55,23 +55,46 @@ function modifyPath(path: string, options: ParamStorageOptions): string{
 		: lowercaseStaticParts(path);
 }
 
+interface Fallback {
+	path:string,
+	pathToCompare: string
+	currentNode: any
+	sliceIndex: number,
+	paramValues: Array<string>
+}
+
+
 export class Node<T> {
 	edges: Map<string, Node<T>>;
 	methodToPayload?: {[method: string]: {payload: T; paramNames: Array<string>} };
+
 	constructor() {
 		this.edges = new Map();
+		
+		
 	}
+
+
+
+
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
 		let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
-		const paramValues = [];
+		let paramValues:Array<string> = [];
 
 		let pathToCompare = caseSensitive
 			? path
 			: path.toLowerCase();
 
+
+		const fallbacks = [];
+		let currentFallback = null;
+
 		walk:
 		while(pathToCompare){
+
+			// console.log("pathToCompare", pathToCompare);
+
 			for(const [key, node] of currentNode.edges){
 				if(key !== ':' && pathToCompare.startsWith(key)){
 					currentNode = node;
@@ -82,13 +105,30 @@ export class Node<T> {
 			}
 			const paramNode = currentNode.edges.get(':');
 			if(paramNode){
+				let prevNode = currentNode;
 				currentNode = paramNode;
 
 				//prevents matching with a starting slash
 				// const sliceIndex = path.indexOf('/', 1);
 
-				const sliceIndex = searchAt(path, validParamChars, 1);				
+				const searchIndex = (currentFallback && currentFallback.sliceIndex) || 1
+				const sliceIndex = searchAt(path, validParamChars, searchIndex);				
 				const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
+				// console.log("char at slice:", path.charAt(sliceIndex), "paramValue", paramValue, "newPath", newPath)
+
+
+				const sliceChar = path.charAt(sliceIndex);
+				if(sliceChar !== '/' && sliceChar !== ''){
+					// console.log("ADD FALLBACK");
+					fallbacks.push({
+						path,
+						pathToCompare,
+						currentNode: prevNode,
+						sliceIndex: sliceIndex + 1,
+						paramValues: paramValues.concat()
+					});
+				}
+
 				const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
 
 				pathToCompare = newPathToCompare;
@@ -97,7 +137,18 @@ export class Node<T> {
 				paramValues.push(paramValue);
 			}
 			else{
-				return false;
+				if(fallbacks.length){
+					currentFallback = fallbacks.pop();
+					pathToCompare = (currentFallback as Fallback).pathToCompare;
+					path = (currentFallback as Fallback).path;
+					currentNode = (currentFallback as Fallback).currentNode;
+					paramValues = (currentFallback as Fallback).paramValues;
+				}
+				else{
+					return false;
+				}
+
+				
 			}
 		}
 
