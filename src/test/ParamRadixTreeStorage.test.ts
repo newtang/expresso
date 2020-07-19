@@ -278,6 +278,24 @@ describe('param radix tree storage tests', () => {
 		});
 	});
 
+	test('param value with dash and param part with a dash #2', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:value', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to/settings/admin/', 'jackpot2');
+		
+		console.log(JSON.stringify(stringify(node), null, 2));
+		
+		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test-dash' } 
+		});
+
+		expect(node.search('get', '/api/v1/test')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test'} 
+		});
+	});
+
 });
 
 function stringify(node: ParamRadixTreeStorage<string>){

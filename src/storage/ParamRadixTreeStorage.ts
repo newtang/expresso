@@ -59,7 +59,7 @@ interface Fallback {
 	path:string,
 	pathToCompare: string
 	currentNode: any
-	sliceIndex: number,
+	searchIndex: number,
 	paramValues: Array<string>
 }
 
@@ -79,80 +79,95 @@ export class Node<T> {
 
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
-		let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
-		let paramValues:Array<string> = [];
-
-		let pathToCompare = caseSensitive
-			? path
-			: path.toLowerCase();
+		// let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
+		// let paramValues:Array<string> = [];
 
 
-		const fallbacks = [];
-		let currentFallback = null;
 
-		walk:
-		while(pathToCompare){
 
-			// console.log("pathToCompare", pathToCompare);
-
-			for(const [key, node] of currentNode.edges){
-				if(key !== ':' && pathToCompare.startsWith(key)){
-					currentNode = node;
-					pathToCompare = pathToCompare.slice(key.length);
-					path = path.slice(key.length);
-					continue walk;
-				}
+		const fallbackStack: Array<Fallback> = [
+			{
+				pathToCompare: caseSensitive
+					? path
+					: path.toLowerCase(),
+				path,
+				searchIndex: 1,
+				currentNode: this, 
+				paramValues: []
 			}
-			const paramNode = currentNode.edges.get(':');
-			if(paramNode){
-				let prevNode = currentNode;
-				currentNode = paramNode;
+		];
 
-				//prevents matching with a starting slash
-				// const sliceIndex = path.indexOf('/', 1);
-
-				const searchIndex = (currentFallback && currentFallback.sliceIndex) || 1
-				const sliceIndex = searchAt(path, validParamChars, searchIndex);				
-				const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
-				// console.log("char at slice:", path.charAt(sliceIndex), "paramValue", paramValue, "newPath", newPath)
+		/**
+	     * If a character in a param can also be a character in a path, ie the dash in
+	     * /:from-:to we need a way to retrace our steps.
+		 **/
 
 
-				const sliceChar = path.charAt(sliceIndex);
-				if(sliceChar !== '/' && sliceChar !== ''){
-					// console.log("ADD FALLBACK");
-					fallbacks.push({
-						path,
-						pathToCompare,
-						currentNode: prevNode,
-						sliceIndex: sliceIndex + 1,
-						paramValues: paramValues.concat()
-					});
+		do{
+
+
+			let {pathToCompare, path, searchIndex, currentNode, paramValues} = fallbackStack.pop() as Fallback;
+
+			walk:
+			while(pathToCompare){
+
+	
+
+				for(const [key, node] of currentNode.edges){
+					if(key !== ':' && pathToCompare.startsWith(key)){
+						currentNode = node;
+						pathToCompare = pathToCompare.slice(key.length);
+						path = path.slice(key.length);
+						continue walk;
+					}
 				}
+				const paramNode = currentNode.edges.get(':');
+				if(paramNode){
+					let prevNode = currentNode;
+					currentNode = paramNode;
 
-				const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
 
-				pathToCompare = newPathToCompare;
-				path = newPath;
+					//prevents matching with a starting slash
+					// const sliceIndex = path.indexOf('/', 1);
+					// const searchIndex = (currentFallback && currentFallback.sliceIndex) || 1
+					const sliceIndex = searchAt(path, validParamChars, searchIndex);				
+					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
+		
+					const sliceChar = path.charAt(sliceIndex);
 
-				paramValues.push(paramValue);
-			}
-			else{
-				if(fallbacks.length){
-					currentFallback = fallbacks.pop();
-					pathToCompare = (currentFallback as Fallback).pathToCompare;
-					path = (currentFallback as Fallback).path;
-					currentNode = (currentFallback as Fallback).currentNode;
-					paramValues = (currentFallback as Fallback).paramValues;
+					if(sliceChar !== '/' && sliceChar !== ''){
+						fallbackStack.push({
+							path,
+							pathToCompare,
+							currentNode: prevNode,
+							searchIndex: sliceIndex + 1,
+							paramValues: paramValues.concat()
+						});
+					}
+
+					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
+
+					pathToCompare = newPathToCompare;
+					path = newPath;
+
+					paramValues.push(paramValue);
 				}
 				else{
-					return false;
+					break walk;
 				}
 
-				
 			}
+			if(!pathToCompare){
+				const endValue = endOfPath<T>(method, currentNode, paramValues);
+				if(endValue){				
+					return endValue;
+				}
+			}
+			
 		}
+		while(fallbackStack.length);
 
-		return endOfPath<T>(method, currentNode, paramValues);
+		return false;
 	}
 	insert(method: string, path: string, payload: T, options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
 		 
