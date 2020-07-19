@@ -89,19 +89,19 @@ describe('param tests', () => {
 
 	test('2 params, same param names', async () => {
 		const app = express();
-		const router = expresso({allowDuplicateParams: false});
+		const router = expresso({ allowDuplicateParams: false });
 
-		expect(() =>{
+		expect(() => {
 			router.get('/static/:value/:value', (req: Request, res: Response) => 
 				res.send(req.params.value));
 		})
-		.toThrowError("Duplicate param name discovered: value. Consider renaming or enabling 'allowDuplicateParams'.");
+			.toThrowError('Duplicate param name discovered: value. Consider renaming or enabling \'allowDuplicateParams\'.');
 		
 	});
 
 	test('2 params, same param names', async () => {
 		const app = express();
-		const router = expresso({allowDuplicateParams: true});
+		const router = expresso({ allowDuplicateParams: true });
 
 		router.get('/static/:value/:value', (req: Request, res: Response) => 
 			res.send(req.params.value));

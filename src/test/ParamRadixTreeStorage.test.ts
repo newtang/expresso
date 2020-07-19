@@ -237,17 +237,17 @@ describe('param radix tree storage tests', () => {
 		expect(() => {
 			node.insert('get', '/api/v1/:-badparam', 'jackpot1');
 		})
-		.toThrowError("Invalid param name ...:-badparam");
+			.toThrowError('Invalid param name ...:-badparam');
 
 		expect(() => {
 			node.insert('get', '/:#badparam', 'jackpot1');
 		})
-		.toThrowError("Invalid param name ...:#badparam");
+			.toThrowError('Invalid param name ...:#badparam');
 
 		expect(() => {
 			node.insert('get', '/api/v1/:-badparam/settings', 'jackpot1');
 		})
-		.toThrowError("Invalid param name ...:-badparam/settings");
+			.toThrowError('Invalid param name ...:-badparam/settings');
 		
 	});
 
@@ -266,7 +266,6 @@ describe('param radix tree storage tests', () => {
 		node.insert('get', '/api/v1/:value', 'jackpot1');
 		node.insert('get', '/api/v1/:from-:to', 'jackpot2');
 		
-		
 		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
 			target: 'jackpot2', 
 			params: { from:'test', to: 'dash' } 
@@ -274,7 +273,7 @@ describe('param radix tree storage tests', () => {
 
 		expect(node.search('get', '/api/v1/test')).toStrictEqual({ 
 			target: 'jackpot1', 
-			params: { value:'test'} 
+			params: { value:'test' } 
 		});
 	});
 
@@ -283,7 +282,7 @@ describe('param radix tree storage tests', () => {
 		node.insert('get', '/api/v1/:value', 'jackpot1');
 		node.insert('get', '/api/v1/:from-:to/settings/admin/', 'jackpot2');
 		
-		console.log(JSON.stringify(stringify(node), null, 2));
+		// console.log(JSON.stringify(stringify(node), null, 2));
 		
 		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
 			target: 'jackpot1', 
@@ -292,7 +291,51 @@ describe('param radix tree storage tests', () => {
 
 		expect(node.search('get', '/api/v1/test')).toStrictEqual({ 
 			target: 'jackpot1', 
-			params: { value:'test'} 
+			params: { value:'test' } 
+		});
+	});
+
+	test('param value with dash and param part with a dash #3', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:value/settings/mystery', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to/settings/admin/', 'jackpot2');
+		
+		// console.log(JSON.stringify(stringify(node), null, 2));
+		
+		expect(node.search('get', '/api/v1/test-dash/settings/mystery')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test-dash' } 
+		});
+
+		expect(node.search('get', '/api/v1/user_id_/settings/mystery')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'user_id_' } 
+		});
+	});
+
+	test('param value with dash and param part with a dash #4', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:value/settings/:param/user', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to/settings/admin/', 'jackpot2');
+		
+		// console.log(JSON.stringify(stringify(node), null, 2));
+		
+		expect(node.search('get', '/api/v1/test-dash/settings/abc/user')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { value:'test-dash', param: 'abc' } 
+		});
+	});
+
+	test('guid 1', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:guid/settings', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to/settings/admin/', 'jackpot2');
+		
+		console.log(JSON.stringify(stringify(node), null, 2));
+		
+		expect(node.search('get', '/api/v1/456b9c19-07f0-4a4a-8b1e-a27547ffe019/settings')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { guid:'456b9c19-07f0-4a4a-8b1e-a27547ffe019' } 
 		});
 	});
 

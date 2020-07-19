@@ -56,13 +56,12 @@ function modifyPath(path: string, options: ParamStorageOptions): string{
 }
 
 interface Fallback {
-	path:string,
-	pathToCompare: string
-	currentNode: any
-	searchIndex: number,
-	paramValues: Array<string>
+	path: string;
+	pathToCompare: string;
+	currentNode: any;
+	searchIndex: number;
+	paramValues: Array<string>;
 }
-
 
 export class Node<T> {
 	edges: Map<string, Node<T>>;
@@ -71,19 +70,11 @@ export class Node<T> {
 	constructor() {
 		this.edges = new Map();
 		
-		
 	}
-
-
-
-
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
 		// let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
 		// let paramValues:Array<string> = [];
-
-
-
 
 		const fallbackStack: Array<Fallback> = [
 			{
@@ -102,16 +93,13 @@ export class Node<T> {
 	     * /:from-:to we need a way to retrace our steps.
 		 **/
 
-
 		do{
-
-
-			let {pathToCompare, path, searchIndex, currentNode, paramValues} = fallbackStack.pop() as Fallback;
+			let { pathToCompare, path, searchIndex, currentNode, paramValues } = fallbackStack.pop() as Fallback;
 
 			walk:
 			while(pathToCompare){
 
-	
+				console.log('pathToCompare', pathToCompare);
 
 				for(const [key, node] of currentNode.edges){
 					if(key !== ':' && pathToCompare.startsWith(key)){
@@ -123,18 +111,21 @@ export class Node<T> {
 				}
 				const paramNode = currentNode.edges.get(':');
 				if(paramNode){
-					let prevNode = currentNode;
+					const prevNode = currentNode;
 					currentNode = paramNode;
 
-
 					//prevents matching with a starting slash
-					// const sliceIndex = path.indexOf('/', 1);
-					// const searchIndex = (currentFallback && currentFallback.sliceIndex) || 1
-					const sliceIndex = searchAt(path, validParamChars, searchIndex);				
+					const sliceIndex = searchAt(path, validParamChars, searchIndex);	
+
+					//reset searchIndex
+					searchIndex = 1;
+
 					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
 		
 					const sliceChar = path.charAt(sliceIndex);
 
+					// console.log("searchIndex", searchIndex, "paramValue", paramValue, "newPath", newPath)
+					
 					if(sliceChar !== '/' && sliceChar !== ''){
 						fallbackStack.push({
 							path,
@@ -269,7 +260,7 @@ export class Node<T> {
 
 function newChild<T>(
 	parentNode: Node<T>, method: string, prefix: string, 
-	suffix: string, payload: T, options:ParamStorageOptions, paramNames: Array<string>): void {
+	suffix: string, payload: T, options: ParamStorageOptions, paramNames: Array<string>): void {
 
 	const newNode = new Node<T>();
 	newNode.insert(method, suffix, payload, options, paramNames);
