@@ -337,6 +337,24 @@ describe('param radix tree storage tests', () => {
 			target: 'jackpot1', 
 			params: { guid:'456b9c19-07f0-4a4a-8b1e-a27547ffe019' } 
 		});
+
+		expect(node.search('get', '/api/v1/456b9c19-07f0/settings/admin/')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { from:'456b9c19', to: '07f0' } 
+		});
+	});
+
+	test('guid 2', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:guid/settings', 'jackpot1');
+		node.insert('get', '/api/v1/:from-:to/settings', 'jackpot2');
+		
+		console.log(JSON.stringify(stringify(node), null, 2));
+		
+		expect(node.search('get', '/api/v1/456b9c19-07f0-4a4a-8b1e-a27547ffe019/settings')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { from:'456b9c19', to: '07f0-4a4a-8b1e-a27547ffe019' } 
+		});
 	});
 
 });
