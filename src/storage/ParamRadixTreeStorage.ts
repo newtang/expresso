@@ -69,13 +69,9 @@ export class Node<T> {
 
 	constructor() {
 		this.edges = new Map();
-		
 	}
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
-		// let currentNode: Node<T> = this; //eslint-disable-line @typescript-eslint/no-this-alias
-		// let paramValues:Array<string> = [];
-
 		const fallbackStack: Array<Fallback> = [
 			{
 				pathToCompare: caseSensitive
@@ -91,6 +87,8 @@ export class Node<T> {
 		/**
 	     * If a character in a param can also be a character in a path, ie the dash in
 	     * /:from-:to we need a way to retrace our steps.
+
+	     * This basically functions as breadth-first search if necessary.
 		 **/
 
 		do{
@@ -99,7 +97,7 @@ export class Node<T> {
 			walk:
 			while(pathToCompare){
 
-				console.log('pathToCompare', pathToCompare);
+				// console.log('pathToCompare', pathToCompare);
 
 				for(const [key, node] of currentNode.edges){
 					if(key !== ':' && pathToCompare.startsWith(key)){
@@ -123,9 +121,7 @@ export class Node<T> {
 					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
 		
 					const sliceChar = path.charAt(sliceIndex);
-
-					// console.log("searchIndex", searchIndex, "paramValue", paramValue, "newPath", newPath)
-					
+		
 					if(sliceChar !== '/' && sliceChar !== ''){
 						fallbackStack.push({
 							path,
