@@ -347,6 +347,11 @@ describe('param radix tree storage tests', () => {
 			target: 'jackpot2', 
 			params: { from:'456b9c19', to: '07f0' } 
 		});
+
+		expect(node.search('get', '/api/v1/456b9c19-07f0-4a4a-8b1e-a27547ffe019/settings/admin/')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { from:'456b9c19', to: '07f0-4a4a-8b1e-a27547ffe019' } 
+		});
 	});
 
 	test('guid 2', () => {

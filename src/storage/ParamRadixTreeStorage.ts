@@ -122,6 +122,8 @@ export class Node<T> {
 		
 					const sliceChar = path.charAt(sliceIndex);
 		
+
+
 					if(sliceChar !== '/' && sliceChar !== ''){
 						fallbackStack.push({
 							path,
@@ -130,6 +132,8 @@ export class Node<T> {
 							searchIndex: sliceIndex + 1,
 							paramValues: paramValues.concat()
 						});
+
+						// console.log("fallbackStack", fallbackStack)
 					}
 
 					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
