@@ -61,14 +61,16 @@ interface Fallback {
 	currentNode: any;
 	searchIndex: number;
 	paramValues: Array<string>;
+	terminiValues?: Array<string>
 }
 
 export class Node<T> {
 	edges: Map<string, Node<T>>;
 	methodToPayload?: {[method: string]: {payload: T; paramNames: Array<string>} };
-
+	termini: Set<string>
 	constructor() {
 		this.edges = new Map();
+		this.termini = new Set();
 	}
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
@@ -80,12 +82,12 @@ export class Node<T> {
 				path,
 				searchIndex: 1,
 				currentNode: this, 
-				paramValues: []
+				paramValues: [],
 			}
 		];
 
 		/**
-	     * If a character in a param can also be a character in a path, ie the dash in
+	     * If a character in a param value can also be a character in a path, ie the dash in
 	     * /:from-:to we need a way to retrace our steps.
 
 	     * This basically functions as breadth-first search if necessary.
@@ -112,25 +114,33 @@ export class Node<T> {
 					const prevNode = currentNode;
 					currentNode = paramNode;
 
+					// console.log(currentNode.termini);
+					const terminiValues = Array.from(currentNode.termini.values());
+					const terminus = terminiValues.pop() as string;
+					const sliceIndex = path.indexOf(terminus);
+
 					//prevents matching with a starting slash
-					const sliceIndex = searchAt(path, validParamChars, searchIndex);	
+					// const sliceIndex = searchAt(path, validParamChars, searchIndex);	
 
 					//reset searchIndex
-					searchIndex = 1;
+					// searchIndex = 1;
 
 					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
+					// console.log("paramValue", paramValue);
+					// console.log("newPath", newPath);
 		
-					const sliceChar = path.charAt(sliceIndex);
+					// const sliceChar = path.charAt(sliceIndex);
 		
+					// console.log("sliceChar", sliceChar);
 
-
-					if(sliceChar !== '/' && sliceChar !== ''){
+					if(terminiValues.length){
 						fallbackStack.push({
 							path,
 							pathToCompare,
 							currentNode: prevNode,
 							searchIndex: sliceIndex + 1,
-							paramValues: paramValues.concat()
+							paramValues: paramValues.concat(),
+							terminiValues: terminiValues as any as string[]
 						});
 
 						// console.log("fallbackStack", fallbackStack)
@@ -176,6 +186,7 @@ export class Node<T> {
 
 		const paramIndex = path.indexOf(':');
 		let [prefix, suffix] = splitAtIndex(path, paramIndex);
+		let terminus;
 
 		if(paramIndex === 0){
 			prefix = ':';
@@ -188,6 +199,8 @@ export class Node<T> {
 				: paramEnd;
 
 			const paramName = path.slice(1, paramEndIndex);
+			terminus = path.charAt(paramEndIndex);
+			// console.log("setting terminus var?", terminus)
 
 			if(!paramName){
 				throw new Error(`Invalid param name ...${path}`);
@@ -229,6 +242,10 @@ export class Node<T> {
 						//set up old node
 						
 						const newNode = new Node<T>();
+						// console.log("terminus", terminus)
+						if(typeof terminus === "string"){
+							newNode.termini.add(terminus);
+						}
 						this.edges.set(commonPrefix, newNode);
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
@@ -238,13 +255,13 @@ export class Node<T> {
 					}
 				}
 				else{
-					newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
+					newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
 				}
 			}
 		}
 		else{
 			//if no edges, create one up to param
-			newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
+			newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
 		}
 		/*
 			/v1/api/users/:userId
@@ -260,10 +277,14 @@ export class Node<T> {
 
 function newChild<T>(
 	parentNode: Node<T>, method: string, prefix: string, 
-	suffix: string, payload: T, options: ParamStorageOptions, paramNames: Array<string>): void {
+	suffix: string, payload: T, options: ParamStorageOptions, paramNames: Array<string>, terminus?: string): void {
 
 	const newNode = new Node<T>();
 	newNode.insert(method, suffix, payload, options, paramNames);
+	if(typeof terminus === 'string'){
+		newNode.termini.add(terminus);
+	}
+	
 	parentNode.edges.set(prefix, newNode);
 }
 

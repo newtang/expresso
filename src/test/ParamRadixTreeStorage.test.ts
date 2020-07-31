@@ -380,6 +380,25 @@ describe('param radix tree storage tests', () => {
 		});
 	});
 
+	test('experiment', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:guid/a', 'jackpot1');
+		node.insert('get', '/api/v1/:guid/b', 'jackpot2');
+		
+		console.log(JSON.stringify(stringify(node), null, 2));
+
+		expect(node.search('get', '/api/v1/abcd/a')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { guid:'abcd' } 
+		});
+
+
+		expect(node.search('get', '/api/v1/asdfasdfasdfasdf/b')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { guid:'asdfasdfasdfasdf' } 
+		});
+	});
+
 });
 
 function stringify(node: ParamRadixTreeStorage<string>){
