@@ -67,10 +67,12 @@ interface Fallback {
 export class Node<T> {
 	edges: Map<string, Node<T>>;
 	methodToPayload?: {[method: string]: {payload: T; paramNames: Array<string>} };
-	termini: Set<string>
+
+	// for param nodes that are terminated by a character that isn't '/' or ''.
+	nonStandardTermini: Set<string>;
 	constructor() {
 		this.edges = new Map();
-		this.termini = new Set();
+		this.nonStandardTermini = new Set();
 	}
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
@@ -114,10 +116,38 @@ export class Node<T> {
 					const prevNode = currentNode;
 					currentNode = paramNode;
 
-					// console.log(currentNode.termini);
-					const terminiValues = Array.from(currentNode.termini.values());
-					const terminus = terminiValues.pop() as string;
-					const sliceIndex = path.indexOf(terminus);
+					let sliceIndex;
+					let nonStandardTerminusFound = false;
+					if(currentNode.nonStandardTermini.size){
+						const terminiValues = Array.from(currentNode.nonStandardTermini.values());
+						
+						while(terminiValues.length){
+							const terminus = terminiValues.pop() as string;
+							sliceIndex = path.indexOf(terminus, 1);
+							if(sliceIndex !== -1){
+								nonStandardTerminusFound = true;
+							}
+						}
+
+						if(terminiValues.length){
+							fallbackStack.push({
+								path,
+								pathToCompare,
+								currentNode: prevNode,
+								searchIndex: (sliceIndex as number) + 1,
+								paramValues: paramValues.concat(),
+								terminiValues: terminiValues as any as string[]
+							});
+						}
+					}
+					
+					if(!nonStandardTerminusFound){
+						//prevents matching with a starting slash
+						sliceIndex = path.indexOf('/', 1);
+					}
+
+
+					
 
 					//prevents matching with a starting slash
 					// const sliceIndex = searchAt(path, validParamChars, searchIndex);	
@@ -125,28 +155,8 @@ export class Node<T> {
 					//reset searchIndex
 					// searchIndex = 1;
 
-					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
-					// console.log("paramValue", paramValue);
-					// console.log("newPath", newPath);
-		
-					// const sliceChar = path.charAt(sliceIndex);
-		
-					// console.log("sliceChar", sliceChar);
-
-					if(terminiValues.length){
-						fallbackStack.push({
-							path,
-							pathToCompare,
-							currentNode: prevNode,
-							searchIndex: sliceIndex + 1,
-							paramValues: paramValues.concat(),
-							terminiValues: terminiValues as any as string[]
-						});
-
-						// console.log("fallbackStack", fallbackStack)
-					}
-
-					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
+					const [paramValue, newPath] = splitAtIndex(path, sliceIndex as number);
+					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex as number);
 
 					pathToCompare = newPathToCompare;
 					path = newPath;
@@ -242,10 +252,7 @@ export class Node<T> {
 						//set up old node
 						
 						const newNode = new Node<T>();
-						// console.log("terminus", terminus)
-						if(typeof terminus === "string"){
-							newNode.termini.add(terminus);
-						}
+						addTerminus<T>(terminus, newNode);
 						this.edges.set(commonPrefix, newNode);
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
@@ -281,11 +288,14 @@ function newChild<T>(
 
 	const newNode = new Node<T>();
 	newNode.insert(method, suffix, payload, options, paramNames);
-	if(typeof terminus === 'string'){
-		newNode.termini.add(terminus);
-	}
-	
+	addTerminus<T>(terminus, newNode);
 	parentNode.edges.set(prefix, newNode);
+}
+
+function addTerminus<T>(terminus:string | undefined, node: Node<T>): void{
+	if(typeof terminus === 'string' && terminus !== '/' && terminus !== ''){
+		node.nonStandardTermini.add(terminus);
+	}
 }
 
 function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [string, string]{
