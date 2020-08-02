@@ -70,9 +70,11 @@ export class Node<T> {
 
 	// for param nodes that are terminated by a character that isn't '/' or ''.
 	nonStandardTermini: Set<string>;
+	hasStandardTerminus: boolean;
 	constructor() {
 		this.edges = new Map();
 		this.nonStandardTermini = new Set();
+		this.hasStandardTerminus = false;
 	}
 
 	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
@@ -96,12 +98,12 @@ export class Node<T> {
 		 **/
 
 		do{
-			let { pathToCompare, path, searchIndex, currentNode, paramValues } = fallbackStack.pop() as Fallback;
+			let { pathToCompare, path, searchIndex, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback;
 
 			walk:
 			while(pathToCompare){
 
-				// console.log('pathToCompare', pathToCompare);
+				console.log('pathToCompare', pathToCompare);
 
 				for(const [key, node] of currentNode.edges){
 					if(key !== ':' && pathToCompare.startsWith(key)){
@@ -118,9 +120,21 @@ export class Node<T> {
 
 					let sliceIndex;
 					let nonStandardTerminusFound = false;
-					if(currentNode.nonStandardTermini.size){
-						const terminiValues = Array.from(currentNode.nonStandardTermini.values());
-						
+
+					// console.log("nonStandardTermini",currentNode.nonStandardTermini);
+
+					terminiValues = terminiValues || 
+						(currentNode.nonStandardTermini.size 
+							? Array.from(currentNode.nonStandardTermini.values()) 
+							: []
+						);
+
+					console.log("terminiValues", terminiValues);
+					console.log("currentNode.nonStandardTermini", currentNode.nonStandardTermini);
+
+
+					if(terminiValues && terminiValues.length){
+												
 						while(terminiValues.length){
 							const terminus = terminiValues.pop() as string;
 							sliceIndex = path.indexOf(terminus, 1);
@@ -129,7 +143,7 @@ export class Node<T> {
 							}
 						}
 
-						if(terminiValues.length){
+						if(terminiValues.length || currentNode.hasStandardTerminus){
 							fallbackStack.push({
 								path,
 								pathToCompare,
@@ -232,7 +246,9 @@ export class Node<T> {
 
 		if(this.edges.size){
 			if(this.edges.has(prefix)){
-				(this.edges.get(prefix) as Node<T>).insert(method, suffix, payload, options, paramNames);
+				const existingNode = this.edges.get(prefix) as Node<T>;
+				existingNode.insert(method, suffix, payload, options, paramNames);
+				addTerminus<T>(terminus, existingNode);
 			}
 			else{
 				const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
@@ -240,8 +256,10 @@ export class Node<T> {
 				if(commonPrefix){
 
 					if(this.edges.has(commonPrefix)){
-						(this.edges.get(commonPrefix) as Node<T>)
-							.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+						const existingNode = this.edges.get(commonPrefix) as Node<T>;
+						existingNode.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+
+						addTerminus<T>(terminus, existingNode);
 					}
 					else{
 						//remove edge this node to old node
@@ -293,8 +311,13 @@ function newChild<T>(
 }
 
 function addTerminus<T>(terminus:string | undefined, node: Node<T>): void{
-	if(typeof terminus === 'string' && terminus !== '/' && terminus !== ''){
-		node.nonStandardTermini.add(terminus);
+	if(typeof terminus === 'string'){
+		if(terminus !== '/' && terminus !== ''){
+			node.nonStandardTermini.add(terminus);
+		}
+		else{
+			node.hasStandardTerminus = true;
+		}
 	}
 }
 
