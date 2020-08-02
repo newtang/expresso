@@ -97,13 +97,17 @@ export class Node<T> {
 	     * This basically functions as breadth-first search if necessary.
 		 **/
 
+		 let sanity = 2;
+
 		do{
+
 			let { pathToCompare, path, searchIndex, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback;
+			// console.log("popping the stack. Termini values", terminiValues);
 
 			walk:
 			while(pathToCompare){
 
-				console.log('pathToCompare', pathToCompare);
+				// console.log('pathToCompare', pathToCompare);
 
 				for(const [key, node] of currentNode.edges){
 					if(key !== ':' && pathToCompare.startsWith(key)){
@@ -121,17 +125,22 @@ export class Node<T> {
 					let sliceIndex;
 					let nonStandardTerminusFound = false;
 
-					// console.log("nonStandardTermini",currentNode.nonStandardTermini);
+					/**
+						The first time we visit each node, terminiValues is undefined, so we fetch
+						them from currentNode.nonStandardTermini if available
 
-					terminiValues = terminiValues || 
-						(currentNode.nonStandardTermini.size 
+						If it's the second time we're visiting a node (via fallback functionality), then 
+						terminiValues would be an array.
+					*/
+
+					if(Array.isArray(terminiValues)){
+						// we've been on this node before
+					}
+					else{
+						terminiValues = currentNode.nonStandardTermini.size 
 							? Array.from(currentNode.nonStandardTermini.values()) 
-							: []
-						);
-
-					console.log("terminiValues", terminiValues);
-					console.log("currentNode.nonStandardTermini", currentNode.nonStandardTermini);
-
+							: undefined;
+					}
 
 					if(terminiValues && terminiValues.length){
 												
@@ -140,6 +149,7 @@ export class Node<T> {
 							sliceIndex = path.indexOf(terminus, 1);
 							if(sliceIndex !== -1){
 								nonStandardTerminusFound = true;
+								break;
 							}
 						}
 
@@ -160,14 +170,8 @@ export class Node<T> {
 						sliceIndex = path.indexOf('/', 1);
 					}
 
-
+					terminiValues = undefined;
 					
-
-					//prevents matching with a starting slash
-					// const sliceIndex = searchAt(path, validParamChars, searchIndex);	
-
-					//reset searchIndex
-					// searchIndex = 1;
 
 					const [paramValue, newPath] = splitAtIndex(path, sliceIndex as number);
 					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex as number);
@@ -190,7 +194,7 @@ export class Node<T> {
 			}
 			
 		}
-		while(fallbackStack.length);
+		while(fallbackStack.length && sanity--);
 
 		return false;
 	}
