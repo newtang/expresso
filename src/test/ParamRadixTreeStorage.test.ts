@@ -263,6 +263,18 @@ describe('param radix tree storage tests', () => {
 		});
 	});
 
+	test('param part with a dash', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:from-:to', 'jackpot1');
+		
+		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { from:'test', to: 'dash' } 
+		});
+
+		expect(node.search('get', '/api/v1/testing')).toStrictEqual(false);
+	});
+
 	test('param value with dash and param part with a dash #1', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('get', '/api/v1/:value', 'jackpot1');
@@ -394,7 +406,6 @@ describe('param radix tree storage tests', () => {
 			params: { guid:'abcd' } 
 		});
 
-
 		expect(node.search('get', '/api/v1/asdfasdfasdfasdf/b')).toStrictEqual({ 
 			target: 'jackpot2', 
 			params: { guid:'asdfasdfasdfasdf' } 
@@ -433,11 +444,11 @@ describe('param radix tree storage tests', () => {
 			target: 'jackpot3', 
 			params: { value: 'foobar' } 
 		});
-	})
+	});
 
 });
 
-function stringify(node: ParamRadixTreeStorage<string>){
+function stringify(node: ParamRadixTreeStorage<string>): {[key: string]: any}{
 	const obj: {[key: string]: any} = {};
 	for(const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)){
 		obj[k] = stringify(v); 

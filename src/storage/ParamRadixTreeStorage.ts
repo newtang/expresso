@@ -55,13 +55,12 @@ function modifyPath(path: string, options: ParamStorageOptions): string{
 		: lowercaseStaticParts(path);
 }
 
-interface Fallback {
+interface Fallback<T> {
 	path: string;
 	pathToCompare: string;
-	currentNode: any;
-	searchIndex: number;
+	currentNode: Node<T>;
 	paramValues: Array<string>;
-	terminiValues?: Array<string>
+	terminiValues?: Array<string>;
 }
 
 export class Node<T> {
@@ -70,6 +69,8 @@ export class Node<T> {
 
 	// for param nodes that are terminated by a character that isn't '/' or ''.
 	nonStandardTermini: Set<string>;
+
+	// for param nodes that are terminated by either '/' or ''.
 	hasStandardTerminus: boolean;
 	constructor() {
 		this.edges = new Map();
@@ -77,14 +78,13 @@ export class Node<T> {
 		this.hasStandardTerminus = false;
 	}
 
-	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
-		const fallbackStack: Array<Fallback> = [
+	search(method: string, searchPath: string, caseSensitive=false): ReturnValue<T> | false {
+		const fallbackStack: Array<Fallback<T>> = [
 			{
 				pathToCompare: caseSensitive
-					? path
-					: path.toLowerCase(),
-				path,
-				searchIndex: 1,
+					? searchPath
+					: searchPath.toLowerCase(),
+				path: searchPath,
 				currentNode: this, 
 				paramValues: [],
 			}
@@ -92,16 +92,14 @@ export class Node<T> {
 
 		/**
 	     * If a character in a param value can also be a character in a path, ie the dash in
-	     * /:from-:to we need a way to retrace our steps.
+	     * /:from-:to we need a way to retrace our steps if there is also a standard /:param
 
 	     * This basically functions as breadth-first search if necessary.
 		 **/
 
-		 let sanity = 2;
-
 		do{
 
-			let { pathToCompare, path, searchIndex, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback;
+			let { pathToCompare, path, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback<T>;
 			// console.log("popping the stack. Termini values", terminiValues);
 
 			walk:
@@ -133,10 +131,8 @@ export class Node<T> {
 						terminiValues would be an array.
 					*/
 
-					if(Array.isArray(terminiValues)){
-						// we've been on this node before
-					}
-					else{
+					if(!Array.isArray(terminiValues)){
+						// we haven't been on this node before
 						terminiValues = currentNode.nonStandardTermini.size 
 							? Array.from(currentNode.nonStandardTermini.values()) 
 							: undefined;
@@ -158,9 +154,8 @@ export class Node<T> {
 								path,
 								pathToCompare,
 								currentNode: prevNode,
-								searchIndex: (sliceIndex as number) + 1,
 								paramValues: paramValues.concat(),
-								terminiValues: terminiValues as any as string[]
+								terminiValues: terminiValues as string[]
 							});
 						}
 					}
@@ -171,7 +166,6 @@ export class Node<T> {
 					}
 
 					terminiValues = undefined;
-					
 
 					const [paramValue, newPath] = splitAtIndex(path, sliceIndex as number);
 					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex as number);
@@ -194,14 +188,14 @@ export class Node<T> {
 			}
 			
 		}
-		while(fallbackStack.length && sanity--);
+		while(fallbackStack.length);
 
 		return false;
 	}
-	insert(method: string, path: string, payload: T, options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
-		 
+	insert(method: string, path: string, payload: T, 
+		options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
+		
 		if(!path){
-
 			if(!this.methodToPayload){
 				this.methodToPayload = {};
 			}
@@ -314,7 +308,7 @@ function newChild<T>(
 	parentNode.edges.set(prefix, newNode);
 }
 
-function addTerminus<T>(terminus:string | undefined, node: Node<T>): void{
+function addTerminus<T>(terminus: string | undefined, node: Node<T>): void{
 	if(typeof terminus === 'string'){
 		if(terminus !== '/' && terminus !== ''){
 			node.nonStandardTermini.add(terminus);
@@ -337,7 +331,6 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
 	}
 
 	//I think we never get here. At some point `str` is "" which is valid
-
 	return ['', ''];
 }
 
@@ -367,13 +360,6 @@ function buildObject(keys: Array<string>, values: Array<string>): {[key: string]
 		obj[keys[i]] = values[i];
 	}
 	return obj;
-}
-
-function searchAt(str: string, regex: RegExp, index: number): number{
-	const searchIndex = str.slice(index).search(regex);
-	return searchIndex === -1
-		? -1
-		: searchIndex + index;
 }
 
 function splitAtIndex(str: string, index: number): [string, string] {
