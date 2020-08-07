@@ -4,6 +4,7 @@
     },
     "extends": [
         "eslint:recommended",
+        "prettier",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended"
     ],
@@ -13,7 +14,8 @@
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "prettier"
     ],
     "rules": {
         "array-callback-return": ["error"],
@@ -22,7 +24,6 @@
         "func-call-spacing": "off", //handled by ts rule
         "indent": "off", //handled by ts rule
         "linebreak-style": ["error", "unix"],
-        "max-len": ["error", {"code": 125}],
         "no-extra-parens": "off", //handled by ts rule
         "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 1}],
         "no-return-await": "error",
@@ -34,6 +35,7 @@
         "prefer-const": ["error", {
             "destructuring": "all"
         }],
+        "prettier/prettier": "error",
         "quotes": "off", //handled by ts rule.
         "require-atomic-updates": ["error"],
         "semi": "off", //handled by ts rule
@@ -42,19 +44,9 @@
         "@typescript-eslint/comma-spacing": ["error", { "before": false, "after": true }],
         "@typescript-eslint/explicit-function-return-type": ["error"],
         "@typescript-eslint/explicit-module-boundary-types": ["error"],
-        "@typescript-eslint/indent": ["error", "tab"],
         "@typescript-eslint/member-delimiter-style": ["error"],
         "@typescript-eslint/no-explicit-any": ["error"],
-        "@typescript-eslint/no-extra-parens": ["error"],
         "@typescript-eslint/no-unused-vars": ["error"],
-        "@typescript-eslint/no-unused-expressions": ["error"],
-        "@typescript-eslint/quotes": ["error","single"],
-        "@typescript-eslint/type-annotation-spacing": ["error", {"before": false, "after": true}],
-        "@typescript-eslint/semi": ["error"],
-        "@typescript-eslint/space-before-function-paren": ["error",  {
-            "anonymous": "never",
-            "named": "never",
-            "asyncArrow": "always"
-        }]
+        "@typescript-eslint/no-unused-expressions": ["error"]
     }
 }
