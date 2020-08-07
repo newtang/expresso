@@ -217,6 +217,8 @@ describe('param radix tree storage tests', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('get', '/api/v1/:first.:MIDDLE.:last/:id/settings', 'jackpot1');
 		
+		console.log(JSON.stringify(stringify(node), null, 2));
+
 		expect(node.search('get', '/api/v1/Mary.Smith.Jones/5678/settings')).toStrictEqual({ 
 			target: 'jackpot1', 
 			params: { first:'Mary', MIDDLE: 'Smith', last: 'Jones', id:'5678' } 
@@ -261,7 +263,19 @@ describe('param radix tree storage tests', () => {
 		});
 	});
 
-	test('param value with dash and param part with a dash', () => {
+	test('param part with a dash', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:from-:to', 'jackpot1');
+		
+		expect(node.search('get', '/api/v1/test-dash')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { from:'test', to: 'dash' } 
+		});
+
+		expect(node.search('get', '/api/v1/testing')).toStrictEqual(false);
+	});
+
+	test('param value with dash and param part with a dash #1', () => {
 		const node = new ParamRadixTreeStorage<string>();
 		node.insert('get', '/api/v1/:value', 'jackpot1');
 		node.insert('get', '/api/v1/:from-:to', 'jackpot2');
@@ -380,9 +394,61 @@ describe('param radix tree storage tests', () => {
 		});
 	});
 
+	test('experiment', () => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:guid/a', 'jackpot1');
+		node.insert('get', '/api/v1/:guid/b', 'jackpot2');
+		
+		console.log(JSON.stringify(stringify(node), null, 2));
+
+		expect(node.search('get', '/api/v1/abcd/a')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { guid:'abcd' } 
+		});
+
+		expect(node.search('get', '/api/v1/asdfasdfasdfasdf/b')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { guid:'asdfasdfasdfasdf' } 
+		});
+	});
+
+	test('multiple alternative termini', ()  => {
+		const node = new ParamRadixTreeStorage<string>();
+		node.insert('get', '/api/v1/:from-:to/a', 'jackpot1');
+		node.insert('get', '/api/v1/:start.:end/a', 'jackpot2');
+		node.insert('get', '/api/v1/:value/a', 'jackpot3');
+		
+		// console.log(JSON.stringify(stringify(node), null, 2));
+
+		expect(node.search('get', '/api/v1/5-6/a')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { from:'5', to: '6' } 
+		});
+
+		expect(node.search('get', '/api/v1/start-finish/a')).toStrictEqual({ 
+			target: 'jackpot1', 
+			params: { from:'start', to: 'finish' } 
+		});
+
+		expect(node.search('get', '/api/v1/456b9c19-07f0-4a4a-8b1e-a27547ffe019/a')).toStrictEqual({
+			target: 'jackpot1', 
+			params: { from:'456b9c19', to: '07f0-4a4a-8b1e-a27547ffe019' } 
+		});
+
+		expect(node.search('get', '/api/v1/8.9/a')).toStrictEqual({ 
+			target: 'jackpot2', 
+			params: { start: '8', end: '9' } 
+		});
+
+		expect(node.search('get', '/api/v1/foobar/a')).toStrictEqual({ 
+			target: 'jackpot3', 
+			params: { value: 'foobar' } 
+		});
+	});
+
 });
 
-function stringify(node: ParamRadixTreeStorage<string>){
+function stringify(node: ParamRadixTreeStorage<string>): {[key: string]: any}{
 	const obj: {[key: string]: any} = {};
 	for(const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)){
 		obj[k] = stringify(v); 

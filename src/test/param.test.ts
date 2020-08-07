@@ -87,8 +87,7 @@ describe('param tests', () => {
 		expect(resWithError.status).toBe(500);
 	});
 
-	test('2 params, same param names', async () => {
-		const app = express();
+	test('2 params, same param names - prohibited', async () => {
 		const router = expresso({ allowDuplicateParams: false });
 
 		expect(() => {
@@ -99,7 +98,7 @@ describe('param tests', () => {
 		
 	});
 
-	test('2 params, same param names', async () => {
+	test('2 params, same param names - permitted', async () => {
 		const app = express();
 		const router = expresso({ allowDuplicateParams: true });
 

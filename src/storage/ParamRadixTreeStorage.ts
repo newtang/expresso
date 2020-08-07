@@ -55,44 +55,52 @@ function modifyPath(path: string, options: ParamStorageOptions): string{
 		: lowercaseStaticParts(path);
 }
 
-interface Fallback {
+interface Fallback<T> {
 	path: string;
 	pathToCompare: string;
-	currentNode: any;
-	searchIndex: number;
+	currentNode: Node<T>;
 	paramValues: Array<string>;
+	terminiValues?: Array<string>;
 }
 
 export class Node<T> {
 	edges: Map<string, Node<T>>;
 	methodToPayload?: {[method: string]: {payload: T; paramNames: Array<string>} };
 
+	// for param nodes that are terminated by a character that isn't '/' or ''.
+	nonStandardTermini: Set<string>;
+
+	// for param nodes that are terminated by either '/' or ''.
+	hasStandardTerminus: boolean;
 	constructor() {
 		this.edges = new Map();
+		this.nonStandardTermini = new Set();
+		this.hasStandardTerminus = false;
 	}
 
-	search(method: string, path: string, caseSensitive=false): ReturnValue<T> | false {
-		const fallbackStack: Array<Fallback> = [
+	search(method: string, searchPath: string, caseSensitive=false): ReturnValue<T> | false {
+		const fallbackStack: Array<Fallback<T>> = [
 			{
 				pathToCompare: caseSensitive
-					? path
-					: path.toLowerCase(),
-				path,
-				searchIndex: 1,
+					? searchPath
+					: searchPath.toLowerCase(),
+				path: searchPath,
 				currentNode: this, 
-				paramValues: []
+				paramValues: [],
 			}
 		];
 
 		/**
-	     * If a character in a param can also be a character in a path, ie the dash in
-	     * /:from-:to we need a way to retrace our steps.
+	     * If a character in a param value can also be a character in a path, ie the dash in
+	     * /:from-:to we need a way to retrace our steps if there is also a standard /:param
 
 	     * This basically functions as breadth-first search if necessary.
 		 **/
 
 		do{
-			let { pathToCompare, path, searchIndex, currentNode, paramValues } = fallbackStack.pop() as Fallback;
+
+			let { pathToCompare, path, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback<T>;
+			// console.log("popping the stack. Termini values", terminiValues);
 
 			walk:
 			while(pathToCompare){
@@ -112,31 +120,55 @@ export class Node<T> {
 					const prevNode = currentNode;
 					currentNode = paramNode;
 
-					//prevents matching with a starting slash
-					const sliceIndex = searchAt(path, validParamChars, searchIndex);	
+					let sliceIndex;
+					let nonStandardTerminusFound = false;
 
-					//reset searchIndex
-					searchIndex = 1;
+					/**
+						The first time we visit each node, terminiValues is undefined, so we fetch
+						them from currentNode.nonStandardTermini if available
 
-					const [paramValue, newPath] = splitAtIndex(path, sliceIndex);
-		
-					const sliceChar = path.charAt(sliceIndex);
-		
+						If it's the second time we're visiting a node (via fallback functionality), then 
+						terminiValues would be an array.
+					*/
 
-
-					if(sliceChar !== '/' && sliceChar !== ''){
-						fallbackStack.push({
-							path,
-							pathToCompare,
-							currentNode: prevNode,
-							searchIndex: sliceIndex + 1,
-							paramValues: paramValues.concat()
-						});
-
-						// console.log("fallbackStack", fallbackStack)
+					if(!Array.isArray(terminiValues)){
+						// we haven't been on this node before
+						terminiValues = currentNode.nonStandardTermini.size 
+							? Array.from(currentNode.nonStandardTermini.values()) 
+							: undefined;
 					}
 
-					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex);
+					if(terminiValues && terminiValues.length){
+												
+						while(terminiValues.length){
+							const terminus = terminiValues.pop() as string;
+							sliceIndex = path.indexOf(terminus, 1);
+							if(sliceIndex !== -1){
+								nonStandardTerminusFound = true;
+								break;
+							}
+						}
+
+						if(terminiValues.length || currentNode.hasStandardTerminus){
+							fallbackStack.push({
+								path,
+								pathToCompare,
+								currentNode: prevNode,
+								paramValues: paramValues.concat(),
+								terminiValues: terminiValues as string[]
+							});
+						}
+					}
+					
+					if(!nonStandardTerminusFound){
+						//prevents matching with a starting slash
+						sliceIndex = path.indexOf('/', 1);
+					}
+
+					terminiValues = undefined;
+
+					const [paramValue, newPath] = splitAtIndex(path, sliceIndex as number);
+					const [, newPathToCompare] = splitAtIndex(pathToCompare, sliceIndex as number);
 
 					pathToCompare = newPathToCompare;
 					path = newPath;
@@ -160,10 +192,10 @@ export class Node<T> {
 
 		return false;
 	}
-	insert(method: string, path: string, payload: T, options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
-		 
+	insert(method: string, path: string, payload: T, 
+		options: ParamStorageOptions = DEFAULT_OPTIONS, paramNames: Array<string> = []): void {
+		
 		if(!path){
-
 			if(!this.methodToPayload){
 				this.methodToPayload = {};
 			}
@@ -176,6 +208,7 @@ export class Node<T> {
 
 		const paramIndex = path.indexOf(':');
 		let [prefix, suffix] = splitAtIndex(path, paramIndex);
+		let terminus;
 
 		if(paramIndex === 0){
 			prefix = ':';
@@ -188,6 +221,8 @@ export class Node<T> {
 				: paramEnd;
 
 			const paramName = path.slice(1, paramEndIndex);
+			terminus = path.charAt(paramEndIndex);
+			// console.log("setting terminus var?", terminus)
 
 			if(!paramName){
 				throw new Error(`Invalid param name ...${path}`);
@@ -209,7 +244,9 @@ export class Node<T> {
 
 		if(this.edges.size){
 			if(this.edges.has(prefix)){
-				(this.edges.get(prefix) as Node<T>).insert(method, suffix, payload, options, paramNames);
+				const existingNode = this.edges.get(prefix) as Node<T>;
+				existingNode.insert(method, suffix, payload, options, paramNames);
+				addTerminus<T>(terminus, existingNode);
 			}
 			else{
 				const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
@@ -217,8 +254,10 @@ export class Node<T> {
 				if(commonPrefix){
 
 					if(this.edges.has(commonPrefix)){
-						(this.edges.get(commonPrefix) as Node<T>)
-							.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+						const existingNode = this.edges.get(commonPrefix) as Node<T>;
+						existingNode.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+
+						addTerminus<T>(terminus, existingNode);
 					}
 					else{
 						//remove edge this node to old node
@@ -229,6 +268,7 @@ export class Node<T> {
 						//set up old node
 						
 						const newNode = new Node<T>();
+						addTerminus<T>(terminus, newNode);
 						this.edges.set(commonPrefix, newNode);
 						newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 						
@@ -238,13 +278,13 @@ export class Node<T> {
 					}
 				}
 				else{
-					newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
+					newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
 				}
 			}
 		}
 		else{
 			//if no edges, create one up to param
-			newChild<T>(this, method, prefix, suffix, payload, options, paramNames);
+			newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
 		}
 		/*
 			/v1/api/users/:userId
@@ -260,11 +300,23 @@ export class Node<T> {
 
 function newChild<T>(
 	parentNode: Node<T>, method: string, prefix: string, 
-	suffix: string, payload: T, options: ParamStorageOptions, paramNames: Array<string>): void {
+	suffix: string, payload: T, options: ParamStorageOptions, paramNames: Array<string>, terminus?: string): void {
 
 	const newNode = new Node<T>();
 	newNode.insert(method, suffix, payload, options, paramNames);
+	addTerminus<T>(terminus, newNode);
 	parentNode.edges.set(prefix, newNode);
+}
+
+function addTerminus<T>(terminus: string | undefined, node: Node<T>): void{
+	if(typeof terminus === 'string'){
+		if(terminus !== '/' && terminus !== ''){
+			node.nonStandardTermini.add(terminus);
+		}
+		else{
+			node.hasStandardTerminus = true;
+		}
+	}
 }
 
 function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [string, string]{
@@ -279,7 +331,6 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
 	}
 
 	//I think we never get here. At some point `str` is "" which is valid
-
 	return ['', ''];
 }
 
@@ -309,13 +360,6 @@ function buildObject(keys: Array<string>, values: Array<string>): {[key: string]
 		obj[keys[i]] = values[i];
 	}
 	return obj;
-}
-
-function searchAt(str: string, regex: RegExp, index: number): number{
-	const searchIndex = str.slice(index).search(regex);
-	return searchIndex === -1
-		? -1
-		: searchIndex + index;
 }
 
 function splitAtIndex(str: string, index: number): [string, string] {

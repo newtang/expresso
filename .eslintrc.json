@@ -22,7 +22,7 @@
         "func-call-spacing": "off", //handled by ts rule
         "indent": "off", //handled by ts rule
         "linebreak-style": ["error", "unix"],
-        "max-len": ["error", {"code": 100}],
+        "max-len": ["error", {"code": 125}],
         "no-extra-parens": "off", //handled by ts rule
         "no-multiple-empty-lines": ["error", {"max": 1, "maxEOF": 1}],
         "no-return-await": "error",
@@ -31,6 +31,9 @@
         "no-unused-vars": "off", //handled by ts rule
         "no-unused-expressions": "off", //handled by ts rule
         "object-curly-spacing": ["error", "always"],
+        "prefer-const": ["error", {
+            "destructuring": "all"
+        }],
         "quotes": "off", //handled by ts rule.
         "require-atomic-updates": ["error"],
         "semi": "off", //handled by ts rule
