@@ -285,7 +285,7 @@ describe('param radix tree storage tests', () => {
     const node = new ParamRadixTreeStorage<string>();
     node.insert('get', '/api/v1/:first.:MIDDLE.:last/:id/settings', 'jackpot1');
 
-    console.log(JSON.stringify(stringify(node), null, 2));
+    // console.log(JSON.stringify(stringify(node), null, 2));
 
     expect(node.search('get', '/api/v1/Mary.Smith.Jones/5678/settings')).toStrictEqual({
       target: 'jackpot1',
@@ -462,7 +462,7 @@ describe('param radix tree storage tests', () => {
     node.insert('get', '/api/v1/:guid/a', 'jackpot1');
     node.insert('get', '/api/v1/:guid/b', 'jackpot2');
 
-    console.log(JSON.stringify(stringify(node), null, 2));
+    // console.log(JSON.stringify(stringify(node), null, 2));
 
     expect(node.search('get', '/api/v1/abcd/a')).toStrictEqual({
       target: 'jackpot1',

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 describe('options tests', () => {
   beforeAll(() => {
@@ -207,4 +207,38 @@ describe('options tests', () => {
     res = await request(app).get('/ROUTE/oK');
     expect(res.status).toBe(500);
   });
+
+  test.each(['/', '/test', '/abc/123/'])('allowDuplicatePaths: false', async (path) => {
+    const app = express();
+    const router = expresso({ allowDuplicatePaths: false });
+
+    router.get(path, (req: Request, res: Response) => res.send({}));
+    expect(() => {
+        router.get(path, (req: Request, res: Response) => res.send({}));
+    })
+    .toThrowError(`Duplicate path prohibited with allowDuplicatePaths=false. GET: ${path}`)
+  });
+
+  test('allowDuplicatePaths:true', async () => {
+    const app = express();
+    const router = expresso({ allowDuplicatePaths: true });
+    const msg = 'success!';
+    let firstCalled = false;
+
+
+    router.get('/test', (req: Request, res: Response, next:NextFunction) => {
+        firstCalled = true;
+        next();
+    });
+
+    router.get('/test', (req: Request, res: Response) => res.send(msg));
+
+    app.use(router);
+
+    const res = await request(app).get('/test');
+    expect(res.status).toBe(200);
+    expect(res.text).toBe(msg);
+
+  });
+
 });

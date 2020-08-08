@@ -6,12 +6,14 @@ import CompositeStorage from './storage/CompositeStorage';
 
 interface RouterUserOptions {
   allowDuplicateParams?: boolean;
+  allowDuplicatePaths?: boolean,
   strict?: boolean;
   caseSensitive?: boolean;
 }
 
 const defaultOptions: RouterOptions = {
   allowDuplicateParams: false,
+  allowDuplicatePaths: false,
   strict: false,
   caseSensitive: false,
 };
