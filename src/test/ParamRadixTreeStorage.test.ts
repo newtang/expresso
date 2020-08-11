@@ -511,10 +511,10 @@ describe('param radix tree storage tests', () => {
 });
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-function stringify(node: ParamRadixTreeStorage<string>): { [key: string]: any } {
-  const obj: { [key: string]: any } = {}; //eslint-disable-line @typescript-eslint/no-explicit-any
-  for (const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)) {
-    obj[k] = stringify(v);
-  }
-  return obj;
-}
+// function stringify(node: ParamRadixTreeStorage<string>): { [key: string]: any } {
+//   const obj: { [key: string]: any } = {}; //eslint-disable-line @typescript-eslint/no-explicit-any
+//   for (const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)) {
+//     obj[k] = stringify(v);
+//   }
+//   return obj;
+// }

@@ -220,7 +220,16 @@ describe('options tests', () => {
     }
   );
 
-  test('allowDuplicatePaths:true static', async () => {
+  test('allowDuplicatePaths: false - param', async () => {
+    const router = expresso({ allowDuplicatePaths: false });
+
+    router.get('/v1/api/:id', (req: Request, res: Response) => res.send({}));
+    expect(() => {
+      router.get('/v1/api/:otherparam', (req: Request, res: Response) => res.send({}));
+    }).toThrowError(`Duplicate path prohibited with allowDuplicatePaths=false. GET: /v1/api/:otherparam`);
+  });
+
+  test('allowDuplicatePaths:true - static', async () => {
     const app = express();
     const router = expresso({ allowDuplicatePaths: true });
     const msg = 'success!';
@@ -236,6 +245,27 @@ describe('options tests', () => {
     app.use(router);
 
     const res = await request(app).get('/test');
+    expect(firstCalled).toBe(true);
+    expect(res.status).toBe(200);
+    expect(res.text).toBe(msg);
+  });
+
+  test('allowDuplicatePaths:true - param', async () => {
+    const app = express();
+    const router = expresso({ allowDuplicatePaths: true });
+    const msg = 'success!';
+    let firstCalled = false;
+
+    router.get('/v1/:param/settings/:id', (req: Request, res: Response, next: NextFunction) => {
+      firstCalled = true;
+      next();
+    });
+
+    router.get('/v1/:param/settings/:id', (req: Request, res: Response) => res.send(msg));
+
+    app.use(router);
+
+    const res = await request(app).get('/v1/value1/settings/abc-123');
     expect(firstCalled).toBe(true);
     expect(res.status).toBe(200);
     expect(res.text).toBe(msg);
