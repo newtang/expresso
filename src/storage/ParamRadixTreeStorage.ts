@@ -11,11 +11,13 @@ export interface ReturnValue<T> {
 
 interface ParamStorageOptions {
   allowDuplicateParams: boolean;
+  allowDuplicatePaths: boolean;
   caseSensitive: boolean;
 }
 
 const DEFAULT_OPTIONS: ParamStorageOptions = {
   allowDuplicateParams: false,
+  allowDuplicatePaths: false,
   caseSensitive: false,
 };
 
@@ -186,17 +188,38 @@ export class Node<T> {
     path: string,
     payload: T,
     options: ParamStorageOptions = DEFAULT_OPTIONS,
-    paramNames: Array<string> = []
+    paramNames: Array<string> = [],
+    originalPath?: string
   ): void {
+    originalPath = originalPath || path;
     if (!path) {
       if (!this.methodToPayload) {
         this.methodToPayload = {};
       }
 
-      this.methodToPayload[method] = {
-        payload,
-        paramNames,
-      };
+      if (this.methodToPayload[method]) {
+        if (options.allowDuplicatePaths) {
+          if (Array.isArray(payload)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((this.methodToPayload[method].payload as any) as Array<unknown>).push(...payload);
+          } else {
+            /**
+             * Node<T> probably shouldn't be so generic so we don't get into weird states like this.
+             **/
+
+            throw new Error(`Unable to collapse duplicates. ${originalPath}`);
+          }
+        } else {
+          throw new Error(
+            `Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${originalPath}`
+          );
+        }
+      } else {
+        this.methodToPayload[method] = {
+          payload,
+          paramNames,
+        };
+      }
       return;
     }
 
@@ -206,26 +229,20 @@ export class Node<T> {
 
     if (paramIndex === 0) {
       prefix = ':';
-      // const paramEnd = path.indexOf('/');
       // The name of route parameters must be made up of “word characters” ([A-Za-z0-9_]).
       const paramEnd = path.slice(1).search(validParamChars) + 1;
-      // console.log("paramEnd", paramEnd, path);
-      const paramEndIndex =
-        paramEnd === 0 //(-1 + 1)
-          ? path.length
-          : paramEnd;
+      const paramEndIndex = paramEnd === 0 ? path.length : paramEnd;
 
       const paramName = path.slice(1, paramEndIndex);
       terminus = path.charAt(paramEndIndex);
-      // console.log("setting terminus var?", terminus)
 
       if (!paramName) {
-        throw new Error(`Invalid param name ...${path}`);
+        throw new Error(`Invalid param name found at ...${path} in ${originalPath}`);
       }
 
       if (!options.allowDuplicateParams && paramNames.includes(paramName)) {
         throw new Error(
-          `Duplicate param name discovered: ${paramName}. Consider renaming or enabling 'allowDuplicateParams'.`
+          `In path ${originalPath}, duplicate param name discovered: ${paramName}. Consider renaming or enabling 'allowDuplicateParams'.`
         );
       }
 
@@ -242,7 +259,7 @@ export class Node<T> {
     if (this.edges.size) {
       if (this.edges.has(prefix)) {
         const existingNode = this.edges.get(prefix) as Node<T>;
-        existingNode.insert(method, suffix, payload, options, paramNames);
+        existingNode.insert(method, suffix, payload, options, paramNames, originalPath);
         addTerminus<T>(terminus, existingNode);
       } else {
         const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
@@ -250,7 +267,14 @@ export class Node<T> {
         if (commonPrefix) {
           if (this.edges.has(commonPrefix)) {
             const existingNode = this.edges.get(commonPrefix) as Node<T>;
-            existingNode.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+            existingNode.insert(
+              method,
+              path.slice(commonPrefix.length),
+              payload,
+              options,
+              paramNames,
+              originalPath
+            );
 
             addTerminus<T>(terminus, existingNode);
           } else {
@@ -267,15 +291,22 @@ export class Node<T> {
             newNode.edges.set(similarEdge.slice(commonPrefix.length), oldNode);
 
             //continue inserting the original node
-            newNode.insert(method, path.slice(commonPrefix.length), payload, options, paramNames);
+            newNode.insert(
+              method,
+              path.slice(commonPrefix.length),
+              payload,
+              options,
+              paramNames,
+              originalPath
+            );
           }
         } else {
-          newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
+          newChild<T>(this, method, prefix, suffix, payload, options, paramNames, originalPath, terminus);
         }
       }
     } else {
       //if no edges, create one up to param
-      newChild<T>(this, method, prefix, suffix, payload, options, paramNames, terminus);
+      newChild<T>(this, method, prefix, suffix, payload, options, paramNames, originalPath, terminus);
     }
     /*
 			/v1/api/users/:userId
@@ -296,10 +327,11 @@ function newChild<T>(
   payload: T,
   options: ParamStorageOptions,
   paramNames: Array<string>,
+  originalPath: string,
   terminus?: string
 ): void {
   const newNode = new Node<T>();
-  newNode.insert(method, suffix, payload, options, paramNames);
+  newNode.insert(method, suffix, payload, options, paramNames, originalPath);
   addTerminus<T>(terminus, newNode);
   parentNode.edges.set(prefix, newNode);
 }

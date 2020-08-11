@@ -6,7 +6,7 @@ import CompositeStorage from './storage/CompositeStorage';
 
 interface RouterUserOptions {
   allowDuplicateParams?: boolean;
-  allowDuplicatePaths?: boolean,
+  allowDuplicatePaths?: boolean;
   strict?: boolean;
   caseSensitive?: boolean;
 }

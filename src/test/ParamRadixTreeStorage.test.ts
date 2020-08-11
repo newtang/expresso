@@ -305,15 +305,15 @@ describe('param radix tree storage tests', () => {
 
     expect(() => {
       node.insert('get', '/api/v1/:-badparam', 'jackpot1');
-    }).toThrowError('Invalid param name ...:-badparam');
+    }).toThrowError('Invalid param name found at ...:-badparam in /api/v1/:-badparam');
 
     expect(() => {
       node.insert('get', '/:#badparam', 'jackpot1');
-    }).toThrowError('Invalid param name ...:#badparam');
+    }).toThrowError('Invalid param name found at ...:#badparam in /:#badparam');
 
     expect(() => {
       node.insert('get', '/api/v1/:-badparam/settings', 'jackpot1');
-    }).toThrowError('Invalid param name ...:-badparam/settings');
+    }).toThrowError('Invalid param name found at ...:-badparam/settings in /api/v1/:-badparam/settings');
   });
 
   test('param value with dash', () => {

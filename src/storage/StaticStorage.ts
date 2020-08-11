@@ -26,18 +26,15 @@ export default class StaticStorage implements Storage {
       this.routes[path] = {};
     }
 
-    if(this.routes[path][method]){
-      if(this.options.allowDuplicatePaths){
+    if (this.routes[path][method]) {
+      if (this.options.allowDuplicatePaths) {
         this.routes[path][method].target.push(...handlers);
+      } else {
+        throw new Error(`Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${path}`);
       }
-      else{
-        throw new Error(`Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${path}`)
-      }
-    }
-    else{
+    } else {
       this.routes[path][method] = { target: handlers };
     }
-    
   }
 
   find(method: string, path: string): FoundRouteData | false {

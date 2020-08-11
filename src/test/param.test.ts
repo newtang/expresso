@@ -88,12 +88,12 @@ describe('param tests', () => {
   });
 
   test('2 params, same param names - prohibited', async () => {
-    const router = expresso({ allowDuplicateParams: false });
+    const router = expresso({ strict: true, allowDuplicateParams: false });
 
     expect(() => {
       router.get('/static/:value/:value', (req: Request, res: Response) => res.send(req.params.value));
     }).toThrowError(
-      "Duplicate param name discovered: value. Consider renaming or enabling 'allowDuplicateParams'."
+      "In path /static/:value/:value, duplicate param name discovered: value. Consider renaming or enabling 'allowDuplicateParams'."
     );
   });
 
