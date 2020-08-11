@@ -207,7 +207,7 @@ export class Node<T> {
              * Node<T> probably shouldn't be so generic so we don't get into weird states like this.
              **/
 
-            throw new Error(`Unable to collapse duplicates. ${originalPath}`);
+            throw new Error(`Unable to combine duplicates. ${originalPath}`);
           }
         } else {
           throw new Error(

@@ -508,6 +508,16 @@ describe('param radix tree storage tests', () => {
       params: { value: 'foobar' },
     });
   });
+
+  test('duplicate routes with non array jackpots', () => {
+    const node = new ParamRadixTreeStorage<string>();
+    const options = { allowDuplicatePaths: true, allowDuplicateParams: true, caseSensitive: false };
+    node.insert('get', '/api/v1/:param/a', 'jackpot1', options);
+
+    expect(() => {
+      node.insert('get', '/api/v1/:value/a', 'jackpot2', options);
+    }).toThrowError(`Unable to combine duplicates. /api/v1/:value/a`);
+  });
 });
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
