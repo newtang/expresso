@@ -6,10 +6,11 @@ interface RouteMap {
 }
 
 interface StaticStorageOptions {
+  allowDuplicatePaths: boolean;
   caseSensitive: boolean;
 }
 
-const DEFAULT_OPTIONS: StaticStorageOptions = { caseSensitive: false };
+const DEFAULT_OPTIONS: StaticStorageOptions = { allowDuplicatePaths: false, caseSensitive: false };
 
 export default class StaticStorage implements Storage {
   routes: RouteMap;
@@ -24,7 +25,16 @@ export default class StaticStorage implements Storage {
     if (!this.routes[path]) {
       this.routes[path] = {};
     }
-    this.routes[path][method] = { target: handlers };
+
+    if (this.routes[path][method]) {
+      if (this.options.allowDuplicatePaths) {
+        this.routes[path][method].target.push(...handlers);
+      } else {
+        throw new Error(`Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${path}`);
+      }
+    } else {
+      this.routes[path][method] = { target: handlers };
+    }
   }
 
   find(method: string, path: string): FoundRouteData | false {

@@ -285,7 +285,7 @@ describe('param radix tree storage tests', () => {
     const node = new ParamRadixTreeStorage<string>();
     node.insert('get', '/api/v1/:first.:MIDDLE.:last/:id/settings', 'jackpot1');
 
-    console.log(JSON.stringify(stringify(node), null, 2));
+    // console.log(JSON.stringify(stringify(node), null, 2));
 
     expect(node.search('get', '/api/v1/Mary.Smith.Jones/5678/settings')).toStrictEqual({
       target: 'jackpot1',
@@ -305,15 +305,15 @@ describe('param radix tree storage tests', () => {
 
     expect(() => {
       node.insert('get', '/api/v1/:-badparam', 'jackpot1');
-    }).toThrowError('Invalid param name ...:-badparam');
+    }).toThrowError('Invalid param name found at ...:-badparam in /api/v1/:-badparam');
 
     expect(() => {
       node.insert('get', '/:#badparam', 'jackpot1');
-    }).toThrowError('Invalid param name ...:#badparam');
+    }).toThrowError('Invalid param name found at ...:#badparam in /:#badparam');
 
     expect(() => {
       node.insert('get', '/api/v1/:-badparam/settings', 'jackpot1');
-    }).toThrowError('Invalid param name ...:-badparam/settings');
+    }).toThrowError('Invalid param name found at ...:-badparam/settings in /api/v1/:-badparam/settings');
   });
 
   test('param value with dash', () => {
@@ -462,7 +462,7 @@ describe('param radix tree storage tests', () => {
     node.insert('get', '/api/v1/:guid/a', 'jackpot1');
     node.insert('get', '/api/v1/:guid/b', 'jackpot2');
 
-    console.log(JSON.stringify(stringify(node), null, 2));
+    // console.log(JSON.stringify(stringify(node), null, 2));
 
     expect(node.search('get', '/api/v1/abcd/a')).toStrictEqual({
       target: 'jackpot1',
@@ -508,13 +508,23 @@ describe('param radix tree storage tests', () => {
       params: { value: 'foobar' },
     });
   });
+
+  test('duplicate routes with non array jackpots', () => {
+    const node = new ParamRadixTreeStorage<string>();
+    const options = { allowDuplicatePaths: true, allowDuplicateParams: true, caseSensitive: false };
+    node.insert('get', '/api/v1/:param/a', 'jackpot1', options);
+
+    expect(() => {
+      node.insert('get', '/api/v1/:value/a', 'jackpot2', options);
+    }).toThrowError(`Unable to combine duplicates. /api/v1/:value/a`);
+  });
 });
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-function stringify(node: ParamRadixTreeStorage<string>): { [key: string]: any } {
-  const obj: { [key: string]: any } = {}; //eslint-disable-line @typescript-eslint/no-explicit-any
-  for (const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)) {
-    obj[k] = stringify(v);
-  }
-  return obj;
-}
+// function stringify(node: ParamRadixTreeStorage<string>): { [key: string]: any } {
+//   const obj: { [key: string]: any } = {}; //eslint-disable-line @typescript-eslint/no-explicit-any
+//   for (const [k, v] of Array.from(node.edges as Map<string, ParamRadixTreeStorage<string>>)) {
+//     obj[k] = stringify(v);
+//   }
+//   return obj;
+// }
