@@ -7,11 +7,28 @@ export default class CompositeStorage implements Storage {
   readonly staticStorage: Storage;
   readonly paramStorage: Storage;
   readonly options: RouterOptions;
+  readonly useHandlers: Array<{pathStart: string, handlers: Array<NextHandleFunction>}>;
 
   constructor(options: RouterOptions) {
     this.options = options;
     this.staticStorage = new StaticStorage(this.options);
     this.paramStorage = new ParamRadixTreeStorage(this.options);
+    this.useHandlers = [];
+  }
+
+
+  use(handler: NextHandleFunction,  ...handlers: Array<NextHandleFunction>): void;
+  use(handler: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>): void{
+
+    let pathStart = '/';
+    if(typeof handler === 'string'){
+      pathStart = handler;
+    }
+    else{
+      handlers.unshift(handler);
+    }
+
+    this.useHandlers.push({pathStart, handlers});
   }
 
   add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
