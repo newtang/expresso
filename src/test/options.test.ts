@@ -97,10 +97,10 @@ describe('options tests', () => {
     expect(res.status).toBe(200);
 
     res = await request(app).get('/test/');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/othertest');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/othertest/');
     expect(res.text).toBe(otherMsg);
@@ -111,10 +111,10 @@ describe('options tests', () => {
     expect(res.status).toBe(200);
 
     res = await request(app).get('/api/yo2/');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/v2/someone');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/v2/someone2/');
     expect(res.text).toBe('someone2');
@@ -179,33 +179,33 @@ describe('options tests', () => {
     expect(res.status).toBe(200);
 
     res = await request(app).get('/TEST');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/tEsT/');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/OtHeR');
     expect(res.text).toBe(msg2);
     expect(res.status).toBe(200);
 
     res = await request(app).get('/OTHER');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/oThEr/');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/other/');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/roUTE/oK');
     expect(res.text).toBe('oK');
     expect(res.status).toBe(200);
 
     res = await request(app).get('/route/oK');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
 
     res = await request(app).get('/ROUTE/oK');
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(404);
   });
 
   test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id'])(

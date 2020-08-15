@@ -41,7 +41,7 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
-    return done(new Error('404'));
+    return done();
   }
 }
 

@@ -23,7 +23,7 @@ describe('basic tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/error');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('basic route', async () => {
@@ -39,7 +39,7 @@ describe('basic tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/error');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('same routes, different verb', async () => {

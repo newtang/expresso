@@ -24,7 +24,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('param then static', async () => {
@@ -43,7 +43,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/test/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('static then param', async () => {
@@ -62,7 +62,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/static/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('2 params, different param names', async () => {
@@ -84,7 +84,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/static/hey/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('2 params, same param names - prohibited', async () => {
@@ -114,7 +114,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/static/hey/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('param shadowed by static', async () => {
@@ -144,7 +144,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/v1/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('param shadowed by static #2', async () => {
@@ -174,7 +174,7 @@ describe('param tests', () => {
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/v1/');
-    expect(resWithError.status).toBe(500);
+    expect(resWithError.status).toBe(404);
   });
 
   test('case sensitive param name', async () => {
