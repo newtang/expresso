@@ -29,8 +29,8 @@ const DEFAULT_OPTIONS: ParamStorageOptions = {
  **/
 
 export default class ParamRadixTreeStorage implements Storage {
-  root: Node<Array<NextHandleFunction>>;
-  options: ParamStorageOptions;
+  readonly root: Node<Array<NextHandleFunction>>;
+  readonly options: ParamStorageOptions;
   constructor(options: ParamStorageOptions = DEFAULT_OPTIONS) {
     this.root = new Node<Array<NextHandleFunction>>();
     this.options = options;
@@ -63,11 +63,11 @@ interface Fallback<T> {
 }
 
 export class Node<T> {
-  edges: Map<string, Node<T>>;
+  readonly edges: Map<string, Node<T>>;
   methodToPayload?: { [method: string]: { payload: T; paramNames: Array<string> } };
 
   // for param nodes that are terminated by a character that isn't '/' or ''.
-  nonStandardTermini: Set<string>;
+  readonly nonStandardTermini: Set<string>;
 
   // for param nodes that are terminated by either '/' or ''.
   hasStandardTerminus: boolean;

@@ -4,9 +4,10 @@ import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 
 export default class CompositeStorage implements Storage {
-  staticStorage: Storage;
-  paramStorage: Storage;
-  options: RouterOptions;
+  readonly staticStorage: Storage;
+  readonly paramStorage: Storage;
+  readonly options: RouterOptions;
+
   constructor(options: RouterOptions) {
     this.options = options;
     this.staticStorage = new StaticStorage(this.options);
