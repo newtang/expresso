@@ -4,6 +4,11 @@ import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 
+type UseHandler = {
+  pathStart: string;
+  handlers: Array<NextHandleFunction>;
+};
+
 interface RouterUserOptions {
   allowDuplicateParams?: boolean;
   allowDuplicatePaths?: boolean;
@@ -22,11 +27,35 @@ const defaultOptions: RouterOptions = {
 function buildRouter(userOptions?: RouterUserOptions): any {
   const options = Object.assign({}, defaultOptions, userOptions);
   const routeStorage = new CompositeStorage(options);
-  const routerObj = buildRouterMethods(routeStorage);
-  return Object.assign(handleRequest.bind(null, routeStorage, options), routerObj);
+
+  const useHandlers: Array<UseHandler> = [];
+  const use = buildUse.bind(null, useHandlers);
+  const routerObj = buildRouterMethods(routeStorage, useHandlers);
+
+  return Object.assign(handleRequest.bind(null, routeStorage, options), { use }, routerObj);
 }
 
 export = buildRouter;
+
+function buildUse(
+  useHandlers: Array<UseHandler>,
+  handler: NextHandleFunction,
+  ...handlers: Array<NextHandleFunction>
+): void;
+function buildUse(
+  useHandlers: Array<UseHandler>,
+  handler: string | NextHandleFunction,
+  ...handlers: Array<NextHandleFunction>
+): void {
+  let pathStart = '/';
+  if (typeof handler === 'string') {
+    pathStart = handler;
+  } else {
+    handlers.unshift(handler);
+  }
+
+  useHandlers.push({ pathStart, handlers });
+}
 
 function handleRequest(
   routeStorage: Storage,
@@ -71,7 +100,8 @@ function executeHandlers(
 }
 
 function buildRouterMethods(
-  routeStorage: Storage
+  routeStorage: Storage,
+  useHandlers: Array<UseHandler>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
   for (const capsMethod of METHODS) {
@@ -81,7 +111,7 @@ function buildRouterMethods(
      * Using the capitalized method (as opposed to lowercasing it on every request)
      * is actually a relatively significant optimization
      **/
-    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage);
+    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers);
   }
   return routerObj;
 }
@@ -89,8 +119,19 @@ function buildRouterMethods(
 function addRoute(
   method: string,
   routeStorage: Storage,
+  useHandlers: Array<UseHandler>,
   path: string,
   ...handlers: Array<NextHandleFunction>
 ): void {
-  routeStorage.add(method, path, handlers);
+  routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers), ...handlers]);
+}
+
+function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): Array<NextHandleFunction> {
+  const arr = [];
+  for (const useHandler of useHandlers) {
+    if (path.startsWith(useHandler.pathStart)) {
+      arr.push(...useHandler.handlers);
+    }
+  }
+  return arr;
 }
