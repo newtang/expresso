@@ -3,10 +3,16 @@ import type { Request, Response, NextFunction } from 'express';
 import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
+import pathToRegexp = require('path-to-regexp');
 
 type UseHandler = {
   pathStart: string;
+  regexp: RegExp;
   handlers: Array<NextHandleFunction>;
+};
+
+type Router = {
+  use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
 };
 
 interface RouterUserOptions {
@@ -28,33 +34,35 @@ function buildRouter(userOptions?: RouterUserOptions): any {
   const options = Object.assign({}, defaultOptions, userOptions);
   const routeStorage = new CompositeStorage(options);
 
+  const handler = handleRequest.bind(null, routeStorage, options);
   const useHandlers: Array<UseHandler> = [];
-  const use = buildUse.bind(null, useHandlers);
+  const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
 
-  return Object.assign(handleRequest.bind(null, routeStorage, options), { use }, routerObj);
+  return Object.assign(handler, { use }, routerObj);
 }
 
 export = buildRouter;
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handler: NextHandleFunction,
+  handlerOrPathStart: string | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
-): void;
-function buildUse(
-  useHandlers: Array<UseHandler>,
-  handler: string | NextHandleFunction,
-  ...handlers: Array<NextHandleFunction>
-): void {
+): Router {
   let pathStart = '/';
-  if (typeof handler === 'string') {
-    pathStart = handler;
+  if (typeof handlerOrPathStart === 'string') {
+    pathStart = handlerOrPathStart;
   } else {
-    handlers.unshift(handler);
+    handlers.unshift(handlerOrPathStart);
   }
 
-  useHandlers.push({ pathStart, handlers });
+  useHandlers.push({
+    pathStart,
+    handlers,
+    regexp: pathToRegexp(pathStart, [], { strict: false, end: false }),
+  });
+
+  return this;
 }
 
 function handleRequest(
@@ -127,9 +135,9 @@ function addRoute(
 }
 
 function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): Array<NextHandleFunction> {
-  const arr = [];
+  const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
-    if (path.startsWith(useHandler.pathStart)) {
+    if (useHandler.regexp.test(path)) {
       arr.push(...useHandler.handlers);
     }
   }
