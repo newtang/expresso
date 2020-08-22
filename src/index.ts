@@ -6,7 +6,6 @@ import CompositeStorage from './storage/CompositeStorage';
 import pathToRegexp = require('path-to-regexp');
 
 type UseHandler = {
-  pathStart: string;
   regexp: RegExp;
   handlers: Array<NextHandleFunction>;
 };
@@ -46,20 +45,22 @@ export = buildRouter;
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | NextHandleFunction,
+  handlerOrPathStart: string | RegExp | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
 ): Router {
-  let pathStart = '/';
-  if (typeof handlerOrPathStart === 'string') {
-    pathStart = handlerOrPathStart;
-  } else {
+  let pathStart: string | RegExp = '/';
+
+  if (typeof handlerOrPathStart === 'function') {
     handlers.unshift(handlerOrPathStart);
+  } else {
+    pathStart = handlerOrPathStart;
   }
 
+  const regexp = pathToRegexp(pathStart, [], { strict: false, end: false });
+
   useHandlers.push({
-    pathStart,
+    regexp,
     handlers,
-    regexp: pathToRegexp(pathStart, [], { strict: false, end: false }),
   });
 
   return this;

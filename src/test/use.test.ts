@@ -33,7 +33,7 @@ describe('router.use', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('use - all paths', async () => {
+  test('all paths', async () => {
     const app = express();
     const router = expresso();
 
@@ -57,7 +57,7 @@ describe('router.use', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('use - all paths - multiple functions', async () => {
+  test('all paths - multiple functions', async () => {
     const app = express();
     const router = expresso();
 
@@ -89,7 +89,7 @@ describe('router.use', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('use - specified path', async () => {
+  test('specified path', async () => {
     const app = express();
     const router = expresso();
 
@@ -123,7 +123,7 @@ describe('router.use', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('use - param path', async () => {
+  test('param path', async () => {
     const app = express();
     const router = expresso();
 
@@ -154,15 +154,45 @@ describe('router.use', () => {
     expect(res.status).toBe(200);
     expect(useCalled).toBe(true);
 
-
-    useCalled = false;
+    useCalled = false; //eslint-disable-line require-atomic-updates
     res = await request(app).get('/v1/paramValue/id/settings');
     expect(res.text).toBe('success3');
     expect(res.status).toBe(200);
     expect(useCalled).toBe(true);
 
-
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
+  });
+
+  test('regex', async () => {
+    const app = express();
+    const router = expresso();
+
+    let useCalled = false;
+    router.use(/\/api/, function (req: Request, res: Response, next: NextFunction) {
+      useCalled = true;
+      next();
+    });
+
+    router.get('/', (req: Request, res: Response) => res.send('success'));
+    router.get('/api', (req: Request, res: Response) => res.send('success2'));
+    router.get('/api/v2/id', (req: Request, res: Response) => res.send('success3'));
+    app.use(router);
+
+    let res = await request(app).get('/');
+    expect(res.text).toBe('success');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(false);
+
+    res = await request(app).get('/api/');
+    expect(res.text).toBe('success2');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
+
+    useCalled = false; //eslint-disable-line require-atomic-updates
+    res = await request(app).get('/api/v2/id');
+    expect(res.text).toBe('success3');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
   });
 });
