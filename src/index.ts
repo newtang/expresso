@@ -3,10 +3,10 @@ import type { Request, Response, NextFunction } from 'express';
 import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
-import pathToRegexp = require('path-to-regexp');
+import { validatePath } from './utils/stringUtils';
 
 type UseHandler = {
-  regexp: RegExp;
+  pathStart: string;
   handlers: Array<NextHandleFunction>;
 };
 
@@ -45,10 +45,10 @@ export = buildRouter;
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | RegExp | NextHandleFunction,
+  handlerOrPathStart: string | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
 ): Router {
-  let pathStart: string | RegExp = '/';
+  let pathStart = '/';
 
   if (typeof handlerOrPathStart === 'function') {
     handlers.unshift(handlerOrPathStart);
@@ -56,10 +56,14 @@ function buildUse(
     pathStart = handlerOrPathStart;
   }
 
-  const regexp = pathToRegexp(pathStart, [], { strict: false, end: false });
+  validatePath(pathStart, { allowColon: false });
+
+  if (pathStart.charAt(pathStart.length - 1) === '/') {
+    pathStart = pathStart.slice(0, pathStart.length - 1);
+  }
 
   useHandlers.push({
-    regexp,
+    pathStart,
     handlers,
   });
 
@@ -138,7 +142,25 @@ function addRoute(
 function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): Array<NextHandleFunction> {
   const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
-    if (useHandler.regexp.test(path)) {
+    /*
+      use(/v1/api)
+         - must start with this
+         - cannot start with /v1/apiabc
+
+         - remove ending slash from pathStart
+           - path must start with pathStart and with pathStart with an ending slash
+             /v1/api/ * works
+             /v1/api/abc
+             OR
+           - path must equal pathStart.
+             /v1/api
+
+    */
+
+    if (
+      path === useHandler.pathStart ||
+      (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
+    ) {
       arr.push(...useHandler.handlers);
     }
   }

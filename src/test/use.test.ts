@@ -10,6 +10,25 @@ describe('router.use', () => {
     expect(router).toBe(router.use(jest.fn()));
   });
 
+  test.each(['', [], '/:param', '/api/#hash'])('invalid use paths', (path) => {
+    const router = expresso();
+    expect(() => {
+      router.use(path, jest.fn());
+    }).toThrowError(`Invalid path: ${path}`);
+  });
+
+  test('invalid use paths, special error', () => {
+    const router = expresso();
+
+    expect(() => {
+      router.use('abc', jest.fn());
+    }).toThrowError(`First character in path, must be a slash. abc`);
+
+    expect(() => {
+      router.use('/v1//api', jest.fn());
+    }).toThrowError(`Invalid path. Contains consecutive '//', /v1//api`);
+  });
+
   test('use added after route', async () => {
     const app = express();
     const router = expresso();
@@ -121,78 +140,5 @@ describe('router.use', () => {
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
-  });
-
-  test('param path', async () => {
-    const app = express();
-    const router = expresso();
-
-    let useCalled = false;
-    router.use('/v1/:param/id', function (req: Request, res: Response, next: NextFunction) {
-      useCalled = true;
-      next();
-    });
-
-    router.get('/', (req: Request, res: Response) => res.send('success'));
-    router.get('/v2/api', (req: Request, res: Response) => res.send('success2'));
-    router.get('/v1/abc/id', (req: Request, res: Response) => res.send('success3'));
-    router.get('/v1/:param/id/settings', (req: Request, res: Response) => res.send('success3'));
-    app.use(router);
-
-    let res = await request(app).get('/');
-    expect(res.text).toBe('success');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(false);
-
-    res = await request(app).get('/v2/api');
-    expect(res.text).toBe('success2');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(false);
-
-    res = await request(app).get('/v1/abc/id');
-    expect(res.text).toBe('success3');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(true);
-
-    useCalled = false; //eslint-disable-line require-atomic-updates
-    res = await request(app).get('/v1/paramValue/id/settings');
-    expect(res.text).toBe('success3');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(true);
-
-    const resWithError = await request(app).get('/error');
-    expect(resWithError.status).toBe(404);
-  });
-
-  test('regex', async () => {
-    const app = express();
-    const router = expresso();
-
-    let useCalled = false;
-    router.use(/\/api/, function (req: Request, res: Response, next: NextFunction) {
-      useCalled = true;
-      next();
-    });
-
-    router.get('/', (req: Request, res: Response) => res.send('success'));
-    router.get('/api', (req: Request, res: Response) => res.send('success2'));
-    router.get('/api/v2/id', (req: Request, res: Response) => res.send('success3'));
-    app.use(router);
-
-    let res = await request(app).get('/');
-    expect(res.text).toBe('success');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(false);
-
-    res = await request(app).get('/api/');
-    expect(res.text).toBe('success2');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(true);
-
-    useCalled = false; //eslint-disable-line require-atomic-updates
-    res = await request(app).get('/api/v2/id');
-    expect(res.text).toBe('success3');
-    expect(res.status).toBe(200);
-    expect(useCalled).toBe(true);
   });
 });
