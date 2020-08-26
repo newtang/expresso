@@ -33,8 +33,9 @@ function buildRouter(userOptions?: RouterUserOptions): any {
   const options = Object.assign({}, defaultOptions, userOptions);
   const routeStorage = new CompositeStorage(options);
 
-  const handler = handleRequest.bind(null, routeStorage, options);
   const useHandlers: Array<UseHandler> = [];
+  const handler = handleRequest.bind(null, routeStorage, useHandlers, options);
+
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
 
@@ -72,6 +73,7 @@ function buildUse(
 
 function handleRequest(
   routeStorage: Storage,
+  useHandlers: Array<UseHandler>,
   options: RouterOptions,
   req: Request,
   res: Response,
@@ -83,6 +85,9 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
+    const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers);
+    executeHandlers(req, res, done, useHandlerFunctions);
+
     return done();
   }
 }
@@ -161,8 +166,21 @@ function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): A
       path === useHandler.pathStart ||
       (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
     ) {
-      arr.push(...useHandler.handlers);
+      arr.push(
+        (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
+        ...useHandler.handlers
+      );
     }
   }
+
+  //reset properties before verb handlers.
+  arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
   return arr;
+}
+
+function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
+  console.log('BEFORE\t', prefix, req.path, req.originalUrl, req.url, req.baseUrl);
+  req.url = req.originalUrl.slice(prefix.length);
+  console.log('AFTER\t', prefix, req.path, req.originalUrl, req.url, req.baseUrl);
+  next();
 }
