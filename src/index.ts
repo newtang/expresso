@@ -87,8 +87,6 @@ function handleRequest(
   } else {
     const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers);
     executeHandlers(req, res, done, useHandlerFunctions);
-
-    return done();
   }
 }
 
@@ -174,13 +172,20 @@ function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): A
   }
 
   //reset properties before verb handlers.
-  arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
+
+  /**
+   * Do we keep this commented out?
+  **/
+
+  // arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
   return arr;
 }
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
   console.log('BEFORE\t', prefix, req.path, req.originalUrl, req.url, req.baseUrl);
   req.url = req.originalUrl.slice(prefix.length);
+  req.baseUrl = prefix;
+
   console.log('AFTER\t', prefix, req.path, req.originalUrl, req.url, req.baseUrl);
   next();
 }

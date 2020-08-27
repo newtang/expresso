@@ -6,7 +6,6 @@ import type { Request, Response, NextFunction } from 'express';
 describe('router.use', () => {
   test('chainable', async () => {
     const router = expresso();
-
     expect(router).toBe(router.use(jest.fn()));
   });
 
@@ -80,29 +79,54 @@ describe('router.use', () => {
     const app = express();
     const router = expresso();
 
-    let useCalled1 = false;
-    let useCalled2 = false;
+
+    let useUrlProps1;
+    let useUrlProps2;
     router.use(
       function (req: Request, res: Response, next: NextFunction) {
-        useCalled1 = true;
+        useUrlProps1 = cloneUrlProps(req);
         next();
       },
       function (req: Request, res: Response, next: NextFunction) {
-        useCalled2 = true;
+        useUrlProps2 = cloneUrlProps(req);
         next();
       }
     );
 
     const msg = 'success';
-
-    router.get('/', (req: Request, res: Response) => res.send(msg));
+    let getUrlProps;
+    router.get('/', (req: Request, res: Response) => {
+      getUrlProps = cloneUrlProps(req);
+      res.send(msg)
+    });
     app.use(router);
 
     const res = await request(app).get('/');
     expect(res.text).toBe(msg);
     expect(res.status).toBe(200);
-    expect(useCalled1).toBe(true);
-    expect(useCalled2).toBe(true);
+
+    expect(useUrlProps1).toStrictEqual({
+      originalUrl: '/',
+      url: '/',
+      baseUrl: '',
+      path: '/'
+    });
+
+    expect(useUrlProps2).toStrictEqual({
+      originalUrl: '/',
+      url: '/',
+      baseUrl: '',
+      path: '/'
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      originalUrl: '/',
+      url: '/',
+      baseUrl: '',
+      path: '/'
+    });
+
+
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
@@ -112,9 +136,9 @@ describe('router.use', () => {
     const app = express();
     const router = expresso();
 
-    let useCalled = false;
+    let useUrlProps: null | {} = null;
     router.use('/v1/', function (req: Request, res: Response, next: NextFunction) {
-      useCalled = true;
+      useUrlProps = cloneUrlProps(req);
       next();
     });
 
@@ -126,19 +150,100 @@ describe('router.use', () => {
     let res = await request(app).get('/');
     expect(res.text).toBe('success');
     expect(res.status).toBe(200);
-    expect(useCalled).toBe(false);
+    expect(useUrlProps).toBeNull();
 
     res = await request(app).get('/v2/api');
     expect(res.text).toBe('success2');
     expect(res.status).toBe(200);
-    expect(useCalled).toBe(false);
+    expect(useUrlProps).toBeNull();
 
     res = await request(app).get('/v1/api');
     expect(res.text).toBe('success3');
     expect(res.status).toBe(200);
-    expect(useCalled).toBe(true);
+
+    /***
+      * TODO Check this
+    **/
+
+    expect(useUrlProps).toStrictEqual({
+      originalUrl: '/v1/api',
+      url: '/v1/api',
+      baseUrl: '/v1/',
+      path: '/v1/api'
+    });
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
+
+  /**
+   Test
+   req.originalUrl, 
+   req.url,
+   req.baseUrl
+   req.path
+
+   errors call all the use functions
+   params in mounted routers
+
+  **/
+
+  test('mounted router', async () => {
+    const mountedRouter = expresso();
+    const baseRouter = expresso();
+    const app = express();
+
+    let mountedRouterProps;
+    mountedRouter.get("/id/:id/settings", 
+      (req, res, next) => {
+        mountedRouterProps = cloneUrlProps(req);
+        res.send('success');
+      }
+    );
+
+    let baseRouterProps;
+    baseRouter.use("/api/", (req, res, next) => {
+      baseRouterProps = cloneUrlProps(req);
+      next();
+    }, mountedRouter);
+
+    app.use(baseRouter);
+  
+
+    let res = await request(app).get('/api/id/1234/settings');
+    expect(res.text).toBe('success');
+    expect(res.status).toBe(200);
+
+    expect(baseRouterProps.path).toBe('/id/1234/settings');
+    expect(baseRouterProps.originalUrl).toBe('/api/id/1234/settings');
+    expect(baseRouterProps.url).toBe('/id/1234/settings');
+    expect(baseRouterProps.baseUrl).toBe('/api');
+    
+    expect(mountedRouterProps.path).toBe('/id/1234/settings');
+    expect(mountedRouterProps.originalUrl).toBe('/api/id/1234/settings');
+    expect(mountedRouterProps.url).toBe('/id/1234/settings');
+    expect(mountedRouterProps.baseUrl).toBe('/api');
+    
+
+  });
+
 });
+
+function cloneProps(obj, props){
+  const clone = {};
+  for(const prop of props){
+    clone[prop] = obj[prop];
+  }
+  return clone;
+}
+
+function cloneUrlProps(req:Request){
+  return cloneProps(req, ['originalUrl', 'url', 'baseUrl', 'path']);
+}
+
+
+
+
+
+
+
