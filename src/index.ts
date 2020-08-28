@@ -85,7 +85,7 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
-    const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers);
+    const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
 }
@@ -139,10 +139,14 @@ function addRoute(
   path: string,
   ...handlers: Array<NextHandleFunction>
 ): void {
-  routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers), ...handlers]);
+  routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers, true), ...handlers]);
 }
 
-function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): Array<NextHandleFunction> {
+function getRelevantUseHandlers(
+  path: string,
+  useHandlers: Array<UseHandler>,
+  reset: boolean
+): Array<NextHandleFunction> {
   const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
     /*
@@ -172,12 +176,10 @@ function getRelevantUseHandlers(path: string, useHandlers: Array<UseHandler>): A
   }
 
   //reset properties before verb handlers.
+  if (reset) {
+    arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
+  }
 
-  /**
-   * Do we keep this commented out?
-  **/
-
-  // arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
   return arr;
 }
 

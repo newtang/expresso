@@ -79,7 +79,6 @@ describe('router.use', () => {
     const app = express();
     const router = expresso();
 
-
     let useUrlProps1;
     let useUrlProps2;
     router.use(
@@ -97,7 +96,7 @@ describe('router.use', () => {
     let getUrlProps;
     router.get('/', (req: Request, res: Response) => {
       getUrlProps = cloneUrlProps(req);
-      res.send(msg)
+      res.send(msg);
     });
     app.use(router);
 
@@ -109,24 +108,22 @@ describe('router.use', () => {
       originalUrl: '/',
       url: '/',
       baseUrl: '',
-      path: '/'
+      path: '/',
     });
 
     expect(useUrlProps2).toStrictEqual({
       originalUrl: '/',
       url: '/',
       baseUrl: '',
-      path: '/'
+      path: '/',
     });
 
     expect(getUrlProps).toStrictEqual({
       originalUrl: '/',
       url: '/',
       baseUrl: '',
-      path: '/'
+      path: '/',
     });
-
-
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
@@ -136,15 +133,19 @@ describe('router.use', () => {
     const app = express();
     const router = expresso();
 
-    let useUrlProps: null | {} = null;
+    let useUrlProps: null | { [key: string]: string } = null;
     router.use('/v1/', function (req: Request, res: Response, next: NextFunction) {
       useUrlProps = cloneUrlProps(req);
       next();
     });
 
+    let getUrlProps;
     router.get('/', (req: Request, res: Response) => res.send('success'));
     router.get('/v2/api', (req: Request, res: Response) => res.send('success2'));
-    router.get('/v1/api', (req: Request, res: Response) => res.send('success3'));
+    router.get('/v1/api', (req: Request, res: Response) => {
+      getUrlProps = cloneUrlProps(req);
+      res.send('success3');
+    });
     app.use(router);
 
     let res = await request(app).get('/');
@@ -162,14 +163,25 @@ describe('router.use', () => {
     expect(res.status).toBe(200);
 
     /***
-      * TODO Check this
-    **/
+     * TODO Check this
+     **/
+
+    //"use", req.path, req.originalUrl, req.url, req.baseUrl
+    // use     /api       /v1/api           /api     /v1
+    // get     /v1/api    /v1/api         /v1/api
 
     expect(useUrlProps).toStrictEqual({
       originalUrl: '/v1/api',
+      url: '/api',
+      baseUrl: '/v1',
+      path: '/api',
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      originalUrl: '/v1/api',
       url: '/v1/api',
-      baseUrl: '/v1/',
-      path: '/v1/api'
+      baseUrl: '',
+      path: '/v1/api',
     });
 
     const resWithError = await request(app).get('/error');
@@ -194,23 +206,24 @@ describe('router.use', () => {
     const app = express();
 
     let mountedRouterProps;
-    mountedRouter.get("/id/:id/settings", 
-      (req, res, next) => {
-        mountedRouterProps = cloneUrlProps(req);
-        res.send('success');
-      }
-    );
+    mountedRouter.get('/id/:id/settings', (req, res) => {
+      mountedRouterProps = cloneUrlProps(req);
+      res.send('success');
+    });
 
     let baseRouterProps;
-    baseRouter.use("/api/", (req, res, next) => {
-      baseRouterProps = cloneUrlProps(req);
-      next();
-    }, mountedRouter);
+    baseRouter.use(
+      '/api/',
+      (req, res, next) => {
+        baseRouterProps = cloneUrlProps(req);
+        next();
+      },
+      mountedRouter
+    );
 
     app.use(baseRouter);
-  
 
-    let res = await request(app).get('/api/id/1234/settings');
+    const res = await request(app).get('/api/id/1234/settings');
     expect(res.text).toBe('success');
     expect(res.status).toBe(200);
 
@@ -218,32 +231,22 @@ describe('router.use', () => {
     expect(baseRouterProps.originalUrl).toBe('/api/id/1234/settings');
     expect(baseRouterProps.url).toBe('/id/1234/settings');
     expect(baseRouterProps.baseUrl).toBe('/api');
-    
+
     expect(mountedRouterProps.path).toBe('/id/1234/settings');
     expect(mountedRouterProps.originalUrl).toBe('/api/id/1234/settings');
     expect(mountedRouterProps.url).toBe('/id/1234/settings');
     expect(mountedRouterProps.baseUrl).toBe('/api');
-    
-
   });
-
 });
 
-function cloneProps(obj, props){
+function cloneProps(obj: { [key: string]: string }, props: Array<string>): { [key: string]: string } {
   const clone = {};
-  for(const prop of props){
+  for (const prop of props) {
     clone[prop] = obj[prop];
   }
   return clone;
 }
 
-function cloneUrlProps(req:Request){
+function cloneUrlProps(req: Request): { [key: string]: string } {
   return cloneProps(req, ['originalUrl', 'url', 'baseUrl', 'path']);
 }
-
-
-
-
-
-
-
