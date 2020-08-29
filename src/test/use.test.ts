@@ -186,19 +186,7 @@ describe('router.use', () => {
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
-  });
-
-  /**
-   Test
-   req.originalUrl, 
-   req.url,
-   req.baseUrl
-   req.path
-
-   errors call all the use functions
-   params in mounted routers
-
-  **/
+  })
 
   test('mounted router', async () => {
     const mountedRouter = expresso();
@@ -221,21 +209,42 @@ describe('router.use', () => {
       mountedRouter
     );
 
+    // let otherProps;
+    // baseRouter.get('/otherapi/test', (req, res) => {
+    //   otherProps = cloneUrlProps(req);
+    //   res.send("other success");
+    // });
+
     app.use(baseRouter);
 
-    const res = await request(app).get('/api/id/1234/settings');
+    let res = await request(app).get('/api/id/1234/settings');
     expect(res.text).toBe('success');
     expect(res.status).toBe(200);
 
-    expect(baseRouterProps.path).toBe('/id/1234/settings');
-    expect(baseRouterProps.originalUrl).toBe('/api/id/1234/settings');
-    expect(baseRouterProps.url).toBe('/id/1234/settings');
-    expect(baseRouterProps.baseUrl).toBe('/api');
+    expect(baseRouterProps).toStrictEqual({
+      path: '/id/1234/settings',
+      originalUrl: '/api/id/1234/settings',
+      url: '/id/1234/settings',
+      baseUrl: '/api'
+    })
 
-    expect(mountedRouterProps.path).toBe('/id/1234/settings');
-    expect(mountedRouterProps.originalUrl).toBe('/api/id/1234/settings');
-    expect(mountedRouterProps.url).toBe('/id/1234/settings');
-    expect(mountedRouterProps.baseUrl).toBe('/api');
+    expect(mountedRouterProps).toStrictEqual({
+      path:'/id/1234/settings',
+      originalUrl:'/api/id/1234/settings',
+      url:'/id/1234/settings',
+      baseUrl:'/api'
+    });
+
+    // res = await request(app).get('/otherapi/test');
+    // expect(res.text).toBe('other success');
+    // expect(res.status).toBe(200);
+    // expect(otherProps).toStrictEqual({
+    //   originalUrl: '/otherapi/test',
+    //   url: '/otherapi/test',
+    //   baseUrl: '',
+    //   path: '/otherapi/test',
+    // });
+
   });
 });
 
@@ -247,6 +256,6 @@ function cloneProps(obj: { [key: string]: string }, props: Array<string>): { [ke
   return clone;
 }
 
-function cloneUrlProps(req: Request): { [key: string]: string } {
+function cloneUrlProps(req): { [key: string]: string } {
   return cloneProps(req, ['originalUrl', 'url', 'baseUrl', 'path']);
 }
