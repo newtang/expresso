@@ -162,14 +162,6 @@ describe('router.use', () => {
     expect(res.text).toBe('success3');
     expect(res.status).toBe(200);
 
-    /***
-     * TODO Check this
-     **/
-
-    //"use", req.path, req.originalUrl, req.url, req.baseUrl
-    // use     /api       /v1/api           /api     /v1
-    // get     /v1/api    /v1/api         /v1/api
-
     expect(useUrlProps).toStrictEqual({
       originalUrl: '/v1/api',
       url: '/api',
@@ -209,11 +201,11 @@ describe('router.use', () => {
       mountedRouter
     );
 
-    // let otherProps;
-    // baseRouter.get('/otherapi/test', (req, res) => {
-    //   otherProps = cloneUrlProps(req);
-    //   res.send("other success");
-    // });
+    let otherProps;
+    baseRouter.get('/otherapi/test', (req, res) => {
+      otherProps = cloneUrlProps(req);
+      res.send("other success");
+    });
 
     app.use(baseRouter);
 
@@ -235,17 +227,79 @@ describe('router.use', () => {
       baseUrl:'/api'
     });
 
-    // res = await request(app).get('/otherapi/test');
-    // expect(res.text).toBe('other success');
-    // expect(res.status).toBe(200);
-    // expect(otherProps).toStrictEqual({
-    //   originalUrl: '/otherapi/test',
-    //   url: '/otherapi/test',
-    //   baseUrl: '',
-    //   path: '/otherapi/test',
-    // });
-
+    res = await request(app).get('/otherapi/test');
+    expect(res.text).toBe('other success');
+    expect(res.status).toBe(200);
+    expect(otherProps).toStrictEqual({
+      originalUrl: '/otherapi/test',
+      url: '/otherapi/test',
+      baseUrl: '',
+      path: '/otherapi/test',
+    });
   });
+
+  test('multi-level, mounted router', async () => {
+    const specificDessertRouter = expresso();
+    const specificEntreeRouter = expresso();
+    const dessertRouter = expresso();
+    const entreeRouter = expresso();
+    const baseRouter = expresso();
+    const app = express();
+
+    let currentRouteReqProps;
+
+    specificEntreeRouter.get('/', (req, res, next) => {
+      currentRouteReqProps = cloneUrlProps(req);
+      res.send('entrees');
+    });
+
+    specificEntreeRouter.get('/hamburger', (req, res, next) => {
+      currentRouteReqProps = cloneUrlProps(req);
+      res.send('hamburger');
+    });
+
+
+    specificDessertRouter.get('/cupcakes', (req, res, next) => {
+      currentRouteReqProps = cloneUrlProps(req);
+      res.send("cupcakes!");
+    });
+
+    specificDessertRouter.get('/cookies/chocolatechip', (req, res, next) => {
+      currentRouteReqProps = cloneUrlProps(req);
+      res.send("chocolate chip cookies!");
+    });
+
+
+
+    dessertRouter.use('/desserts', (req, res, next) => {
+      next();
+    }, specificDessertRouter);
+
+    entreeRouter.use('/entrees', (req, res, next) => {
+      next();
+    }, specificEntreeRouter);
+
+    baseRouter.use(
+      '/api/v1',
+      (req, res, next) => {
+        // baseRouterProps = cloneUrlProps(req);
+        next();
+      },
+      dessertRouter,
+      entreeRouter
+    );
+
+    app.use(baseRouter);
+
+
+
+    let res = await request(app).get('/api/v1/desserts/cupcakes');
+    expect(res.text).toBe('cupcakes!');
+    expect(res.status).toBe(200);
+    
+  });
+
+
 });
 
 function cloneProps(obj: { [key: string]: string }, props: Array<string>): { [key: string]: string } {
