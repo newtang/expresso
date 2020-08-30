@@ -179,10 +179,16 @@ function getRelevantUseHandlers(
 
   //reset properties before verb handlers.
   if (arr.length && reset) {
-    arr.push((trimPathPrefix.bind(null, '') as any) as NextHandleFunction);
+    arr.push(resetPathPrefix as NextHandleFunction);
   }
 
   return arr;
+}
+
+function resetPathPrefix(req:Request, res:Response, next:NextFunction): void{
+  req.url = req.originalUrl;
+  req.baseUrl = '';
+  next();
 }
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {

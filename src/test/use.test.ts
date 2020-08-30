@@ -163,17 +163,18 @@ describe('router.use', () => {
     expect(res.status).toBe(200);
 
     expect(useUrlProps).toStrictEqual({
+      path: '/api',
       originalUrl: '/v1/api',
       url: '/api',
       baseUrl: '/v1',
-      path: '/api',
+      
     });
 
     expect(getUrlProps).toStrictEqual({
+      path: '/v1/api',
       originalUrl: '/v1/api',
       url: '/v1/api',
       baseUrl: '',
-      path: '/v1/api',
     });
 
     const resWithError = await request(app).get('/error');
