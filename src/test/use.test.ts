@@ -271,18 +271,24 @@ describe('router.use', () => {
 
 
 
+    let dessertRouterProps;
     dessertRouter.use('/desserts', (req, res, next) => {
+      dessertRouterProps = cloneUrlProps(req);
       next();
     }, specificDessertRouter);
 
+    let entreeRouterProps;
     entreeRouter.use('/entrees', (req, res, next) => {
+      entreeRouterProps = cloneUrlProps(req);
       next();
     }, specificEntreeRouter);
 
+
+    let baseRouterProps;
     baseRouter.use(
       '/api/v1',
       (req, res, next) => {
-        // baseRouterProps = cloneUrlProps(req);
+        baseRouterProps = cloneUrlProps(req);
         next();
       },
       dessertRouter,
@@ -296,7 +302,132 @@ describe('router.use', () => {
     let res = await request(app).get('/api/v1/desserts/cupcakes');
     expect(res.text).toBe('cupcakes!');
     expect(res.status).toBe(200);
-    
+    expect(baseRouterProps).toStrictEqual({
+      path: '/desserts/cupcakes',
+      originalUrl: '/api/v1/desserts/cupcakes',
+      url: '/desserts/cupcakes',
+      baseUrl: '/api/v1'
+    });
+
+    expect(dessertRouterProps).toStrictEqual({
+      path: '/cupcakes',
+      originalUrl: '/api/v1/desserts/cupcakes',
+      url: '/cupcakes',
+      baseUrl: '/api/v1/desserts'
+    });
+
+    expect(entreeRouterProps).toBeUndefined();
+
+    expect(currentRouteReqProps).toStrictEqual({
+      path: '/cupcakes',
+      originalUrl: '/api/v1/desserts/cupcakes',
+      url: '/cupcakes',
+      baseUrl: '/api/v1/desserts'
+    });
+
+
+    res = await request(app).get('/api/v1/entrees/hamburger');
+    expect(res.text).toBe('hamburger');
+    expect(res.status).toBe(200);
+    expect(baseRouterProps).toStrictEqual({
+      path: '/entrees/hamburger',
+      originalUrl: '/api/v1/entrees/hamburger',
+      url: '/entrees/hamburger',
+      baseUrl: '/api/v1'
+    });
+
+    expect(dessertRouterProps).toStrictEqual({
+      path: '/cupcakes',
+      originalUrl: '/api/v1/desserts/cupcakes',
+      url: '/cupcakes',
+      baseUrl: '/api/v1/desserts'
+    });
+
+    expect(entreeRouterProps).toStrictEqual({
+      path: '/hamburger',
+      originalUrl: '/api/v1/entrees/hamburger',
+      url: '/hamburger',
+      baseUrl: '/api/v1/entrees'
+    });
+
+    expect(currentRouteReqProps).toStrictEqual({
+      path: '/hamburger',
+      originalUrl: '/api/v1/entrees/hamburger',
+      url: '/hamburger',
+      baseUrl: '/api/v1/entrees'
+    });
+
+
+
+
+
+
+    res = await request(app).get('/api/v1/desserts/cookies/chocolatechip');
+    expect(res.text).toBe("chocolate chip cookies!");
+    expect(res.status).toBe(200);
+    expect(baseRouterProps).toStrictEqual({
+      path: '/desserts/cookies/chocolatechip',
+      originalUrl: '/api/v1/desserts/cookies/chocolatechip',
+      url: '/desserts/cookies/chocolatechip',
+      baseUrl: '/api/v1'
+    });
+
+    expect(dessertRouterProps).toStrictEqual({
+      path: '/cookies/chocolatechip',
+      originalUrl: '/api/v1/desserts/cookies/chocolatechip',
+      url: '/cookies/chocolatechip',
+      baseUrl: '/api/v1/desserts'
+    });
+
+    expect(entreeRouterProps).toStrictEqual({
+      path: '/hamburger',
+      originalUrl: '/api/v1/entrees/hamburger',
+      url: '/hamburger',
+      baseUrl: '/api/v1/entrees'
+    });
+
+    expect(currentRouteReqProps).toStrictEqual({
+      path: '/cookies/chocolatechip',
+      originalUrl: '/api/v1/desserts/cookies/chocolatechip',
+      url: '/cookies/chocolatechip',
+      baseUrl: '/api/v1/desserts'
+    });
+
+
+
+
+
+    res = await request(app).get('/api/v1/entrees');
+    expect(res.text).toBe('entrees');
+    expect(res.status).toBe(200);
+    expect(baseRouterProps).toStrictEqual({
+      path: '/entrees',
+      originalUrl: '/api/v1/entrees',
+      url: '/entrees',
+      baseUrl: '/api/v1'
+    });
+
+    expect(dessertRouterProps).toStrictEqual({
+      path: '/cookies/chocolatechip',
+      originalUrl: '/api/v1/desserts/cookies/chocolatechip',
+      url: '/cookies/chocolatechip',
+      baseUrl: '/api/v1/desserts'
+    });
+
+    expect(entreeRouterProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/api/v1/entrees',
+      url: '/',
+      baseUrl: '/api/v1/entrees'
+    });
+
+    expect(currentRouteReqProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/api/v1/entrees',
+      url: '/',
+      baseUrl: '/api/v1/entrees'
+    });
+
   });
 
 

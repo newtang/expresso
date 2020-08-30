@@ -187,8 +187,8 @@ function getRelevantUseHandlers(
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
   console.log('BEFORE\t', `prefix:${prefix}`, req.path, req.originalUrl, req.url, req.baseUrl);
-  req.url = req.originalUrl.slice(prefix.length);
-  req.baseUrl = prefix;
+  req.url = req.url.slice(prefix.length) || '/';
+  req.baseUrl = `${req.baseUrl}${prefix}`;
 
   console.log('AFTER\t', `prefix:${prefix}`, req.path, req.originalUrl, req.url, req.baseUrl);
   next();
