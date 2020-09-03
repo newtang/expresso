@@ -179,6 +179,64 @@ describe('router.use', () => {
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
+  });
+
+  test('specified path - non strict', async () => {
+    const app = express();
+    const router = expresso();
+
+    let useUrlProps: null | { [key: string]: string } = null;
+    let useCalled = false;
+    router.use('/api/', function (req: Request, res: Response, next: NextFunction) {
+      useCalled = true;
+      useUrlProps = cloneUrlProps(req);
+      next();
+    });
+
+    let getUrlProps;
+    router.get('/api', (req: Request, res: Response) => {
+      getUrlProps = cloneUrlProps(req);
+      res.send('success')
+    });
+    app.use(router);
+
+    let res = await request(app).get('/api');
+    expect(res.text).toBe('success');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
+    expect(useUrlProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/api',
+      url: '/',
+      baseUrl: '/api',
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      path: '/api',
+      originalUrl: '/api',
+      url: '/api',
+      baseUrl: ''
+    });
+
+    useCalled = false;
+
+    res = await request(app).get('/api/');
+    expect(res.text).toBe('success');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
+    expect(useUrlProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/api/',
+      url: '/',
+      baseUrl: '/api',
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      path: '/api/',
+      originalUrl: '/api/',
+      url: '/api/',
+      baseUrl: ''
+    });
   })
 
   test('mounted router', async () => {

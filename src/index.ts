@@ -85,7 +85,6 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
-    console.log("else in handleRequest");
     const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
@@ -140,7 +139,6 @@ function addRoute(
   path: string,
   ...handlers: Array<NextHandleFunction>
 ): void {
-  console.log('addRoute useHandlers.length', useHandlers.length);
   routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers, true), ...handlers]);
 }
 
@@ -192,10 +190,7 @@ function resetPathPrefix(req:Request, res:Response, next:NextFunction): void{
 }
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
-  console.log('BEFORE\t', `prefix:${prefix}`, req.path, req.originalUrl, req.url, req.baseUrl);
   req.url = req.url.slice(prefix.length) || '/';
   req.baseUrl = `${req.baseUrl}${prefix}`;
-
-  console.log('AFTER\t', `prefix:${prefix}`, req.path, req.originalUrl, req.url, req.baseUrl);
   next();
 }
