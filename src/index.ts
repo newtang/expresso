@@ -169,6 +169,7 @@ function getRelevantUseHandlers(
       (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
     ) {
       arr.push(
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
         ...useHandler.handlers
       );
@@ -183,7 +184,7 @@ function getRelevantUseHandlers(
   return arr;
 }
 
-function resetPathPrefix(req:Request, res:Response, next:NextFunction): void{
+function resetPathPrefix(req: Request, res: Response, next: NextFunction): void {
   req.url = req.originalUrl;
   req.baseUrl = '';
   next();

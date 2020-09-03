@@ -167,7 +167,6 @@ describe('router.use', () => {
       originalUrl: '/v1/api',
       url: '/api',
       baseUrl: '/v1',
-      
     });
 
     expect(getUrlProps).toStrictEqual({
@@ -196,7 +195,7 @@ describe('router.use', () => {
     let getUrlProps;
     router.get('/api', (req: Request, res: Response) => {
       getUrlProps = cloneUrlProps(req);
-      res.send('success')
+      res.send('success');
     });
     app.use(router);
 
@@ -215,7 +214,7 @@ describe('router.use', () => {
       path: '/api',
       originalUrl: '/api',
       url: '/api',
-      baseUrl: ''
+      baseUrl: '',
     });
 
     useCalled = false;
@@ -235,9 +234,9 @@ describe('router.use', () => {
       path: '/api/',
       originalUrl: '/api/',
       url: '/api/',
-      baseUrl: ''
+      baseUrl: '',
     });
-  })
+  });
 
   test('mounted router', async () => {
     const mountedRouter = expresso();
@@ -263,7 +262,7 @@ describe('router.use', () => {
     let otherProps;
     baseRouter.get('/otherapi/test', (req, res) => {
       otherProps = cloneUrlProps(req);
-      res.send("other success");
+      res.send('other success');
     });
 
     app.use(baseRouter);
@@ -276,14 +275,14 @@ describe('router.use', () => {
       path: '/id/1234/settings',
       originalUrl: '/api/id/1234/settings',
       url: '/id/1234/settings',
-      baseUrl: '/api'
-    })
+      baseUrl: '/api',
+    });
 
     expect(mountedRouterProps).toStrictEqual({
-      path:'/id/1234/settings',
-      originalUrl:'/api/id/1234/settings',
-      url:'/id/1234/settings',
-      baseUrl:'/api'
+      path: '/id/1234/settings',
+      originalUrl: '/api/id/1234/settings',
+      url: '/id/1234/settings',
+      baseUrl: '/api',
     });
 
     res = await request(app).get('/otherapi/test');
@@ -307,41 +306,45 @@ describe('router.use', () => {
 
     let currentRouteReqProps;
 
-    specificEntreeRouter.get('/', (req, res, next) => {
+    specificEntreeRouter.get('/', (req, res) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('entrees');
     });
 
-    specificEntreeRouter.get('/hamburger', (req, res, next) => {
+    specificEntreeRouter.get('/hamburger', (req, res) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('hamburger');
     });
 
-
-    specificDessertRouter.get('/cupcakes', (req, res, next) => {
+    specificDessertRouter.get('/cupcakes', (req, res) => {
       currentRouteReqProps = cloneUrlProps(req);
-      res.send("cupcakes!");
+      res.send('cupcakes!');
     });
 
-    specificDessertRouter.get('/cookies/chocolatechip', (req, res, next) => {
+    specificDessertRouter.get('/cookies/chocolatechip', (req, res) => {
       currentRouteReqProps = cloneUrlProps(req);
-      res.send("chocolate chip cookies!");
+      res.send('chocolate chip cookies!');
     });
-
-
 
     let dessertRouterProps;
-    dessertRouter.use('/desserts', (req, res, next) => {
-      dessertRouterProps = cloneUrlProps(req);
-      next();
-    }, specificDessertRouter);
+    dessertRouter.use(
+      '/desserts',
+      (req, res, next) => {
+        dessertRouterProps = cloneUrlProps(req);
+        next();
+      },
+      specificDessertRouter
+    );
 
     let entreeRouterProps;
-    entreeRouter.use('/entrees', (req, res, next) => {
-      entreeRouterProps = cloneUrlProps(req);
-      next();
-    }, specificEntreeRouter);
-
+    entreeRouter.use(
+      '/entrees',
+      (req, res, next) => {
+        entreeRouterProps = cloneUrlProps(req);
+        next();
+      },
+      specificEntreeRouter
+    );
 
     let baseRouterProps;
     baseRouter.use(
@@ -356,8 +359,6 @@ describe('router.use', () => {
 
     app.use(baseRouter);
 
-
-
     let res = await request(app).get('/api/v1/desserts/cupcakes');
     expect(res.text).toBe('cupcakes!');
     expect(res.status).toBe(200);
@@ -365,14 +366,14 @@ describe('router.use', () => {
       path: '/desserts/cupcakes',
       originalUrl: '/api/v1/desserts/cupcakes',
       url: '/desserts/cupcakes',
-      baseUrl: '/api/v1'
+      baseUrl: '/api/v1',
     });
 
     expect(dessertRouterProps).toStrictEqual({
       path: '/cupcakes',
       originalUrl: '/api/v1/desserts/cupcakes',
       url: '/cupcakes',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
 
     expect(entreeRouterProps).toBeUndefined();
@@ -381,9 +382,8 @@ describe('router.use', () => {
       path: '/cupcakes',
       originalUrl: '/api/v1/desserts/cupcakes',
       url: '/cupcakes',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
-
 
     res = await request(app).get('/api/v1/entrees/hamburger');
     expect(res.text).toBe('hamburger');
@@ -392,69 +392,60 @@ describe('router.use', () => {
       path: '/entrees/hamburger',
       originalUrl: '/api/v1/entrees/hamburger',
       url: '/entrees/hamburger',
-      baseUrl: '/api/v1'
+      baseUrl: '/api/v1',
     });
 
     expect(dessertRouterProps).toStrictEqual({
       path: '/cupcakes',
       originalUrl: '/api/v1/desserts/cupcakes',
       url: '/cupcakes',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
 
     expect(entreeRouterProps).toStrictEqual({
       path: '/hamburger',
       originalUrl: '/api/v1/entrees/hamburger',
       url: '/hamburger',
-      baseUrl: '/api/v1/entrees'
+      baseUrl: '/api/v1/entrees',
     });
 
     expect(currentRouteReqProps).toStrictEqual({
       path: '/hamburger',
       originalUrl: '/api/v1/entrees/hamburger',
       url: '/hamburger',
-      baseUrl: '/api/v1/entrees'
+      baseUrl: '/api/v1/entrees',
     });
 
-
-
-
-
-
     res = await request(app).get('/api/v1/desserts/cookies/chocolatechip');
-    expect(res.text).toBe("chocolate chip cookies!");
+    expect(res.text).toBe('chocolate chip cookies!');
     expect(res.status).toBe(200);
     expect(baseRouterProps).toStrictEqual({
       path: '/desserts/cookies/chocolatechip',
       originalUrl: '/api/v1/desserts/cookies/chocolatechip',
       url: '/desserts/cookies/chocolatechip',
-      baseUrl: '/api/v1'
+      baseUrl: '/api/v1',
     });
 
     expect(dessertRouterProps).toStrictEqual({
       path: '/cookies/chocolatechip',
       originalUrl: '/api/v1/desserts/cookies/chocolatechip',
       url: '/cookies/chocolatechip',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
 
     expect(entreeRouterProps).toStrictEqual({
       path: '/hamburger',
       originalUrl: '/api/v1/entrees/hamburger',
       url: '/hamburger',
-      baseUrl: '/api/v1/entrees'
+      baseUrl: '/api/v1/entrees',
     });
 
     expect(currentRouteReqProps).toStrictEqual({
       path: '/cookies/chocolatechip',
       originalUrl: '/api/v1/desserts/cookies/chocolatechip',
       url: '/cookies/chocolatechip',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
-
-
-
-
 
     res = await request(app).get('/api/v1/entrees');
     expect(res.text).toBe('entrees');
@@ -463,33 +454,30 @@ describe('router.use', () => {
       path: '/entrees',
       originalUrl: '/api/v1/entrees',
       url: '/entrees',
-      baseUrl: '/api/v1'
+      baseUrl: '/api/v1',
     });
 
     expect(dessertRouterProps).toStrictEqual({
       path: '/cookies/chocolatechip',
       originalUrl: '/api/v1/desserts/cookies/chocolatechip',
       url: '/cookies/chocolatechip',
-      baseUrl: '/api/v1/desserts'
+      baseUrl: '/api/v1/desserts',
     });
 
     expect(entreeRouterProps).toStrictEqual({
       path: '/',
       originalUrl: '/api/v1/entrees',
       url: '/',
-      baseUrl: '/api/v1/entrees'
+      baseUrl: '/api/v1/entrees',
     });
 
     expect(currentRouteReqProps).toStrictEqual({
       path: '/',
       originalUrl: '/api/v1/entrees',
       url: '/',
-      baseUrl: '/api/v1/entrees'
+      baseUrl: '/api/v1/entrees',
     });
-
   });
-
-
 });
 
 function cloneProps(obj: { [key: string]: string }, props: Array<string>): { [key: string]: string } {
