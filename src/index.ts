@@ -36,10 +36,11 @@ function buildRouter(userOptions?: RouterUserOptions): any {
   const useHandlers: Array<UseHandler> = [];
   const handler = handleRequest.bind(null, routeStorage, useHandlers, options);
 
+  const param = routeStorage.param.bind(routeStorage);
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
 
-  return Object.assign(handler, { use }, routerObj);
+  return Object.assign(handler, { use, param }, routerObj);
 }
 
 export = buildRouter;

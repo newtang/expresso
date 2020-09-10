@@ -5,6 +5,10 @@ export interface Storage {
   find(method: string, path: string): FoundRouteData | false;
 }
 
+export interface ParamStorage extends Storage {
+  param(name: string, callback: NextHandleFunction): void;
+}
+
 export interface FoundRouteData {
   target: Array<NextHandleFunction>;
   params?: { [param: string]: string };

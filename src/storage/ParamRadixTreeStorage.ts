@@ -1,4 +1,4 @@
-import { FoundRouteData, Storage } from '../interfaces';
+import { FoundRouteData, ParamStorage } from '../interfaces';
 import type { Request, Response, NextFunction } from 'express';
 import type { NextHandleFunction } from 'connect';
 import type { RequestParamHandler } from 'express';
@@ -23,7 +23,7 @@ const DEFAULT_OPTIONS: ParamStorageOptions = {
   caseSensitive: false,
 };
 
-type ParamHash = {[param:string]: RequestParamHandler};
+type ParamHash = { [param: string]: RequestParamHandler };
 
 /**
  * This functions as a Radix Tree of nodes. If a node has
@@ -32,7 +32,7 @@ type ParamHash = {[param:string]: RequestParamHandler};
  * Except for edges in the root node, edges do not begin with '/'
  **/
 
-export default class ParamRadixTreeStorage implements Storage {
+export default class ParamRadixTreeStorage implements ParamStorage {
   readonly root: Node<Array<NextHandleFunction>>;
   readonly options: ParamStorageOptions;
   readonly paramHash: ParamHash;
@@ -51,7 +51,7 @@ export default class ParamRadixTreeStorage implements Storage {
     const result = this.root.search(method, path, this.options.caseSensitive);
     if (result) {
       const paramHandlers = getParamHandlers(result.params, this.paramHash);
-      if(paramHandlers && paramHandlers.length){
+      if (paramHandlers && paramHandlers.length) {
         result.target = [...paramHandlers, ...result.target];
       }
       return result;
@@ -60,29 +60,31 @@ export default class ParamRadixTreeStorage implements Storage {
   }
 
   param(name: string, callback: NextHandleFunction): void {
-    if(this.paramHash[name]){
-      throw new Error(`Parameter ${name} already has a callback`)
+    if (this.paramHash[name]) {
+      throw new Error(`Parameter ${name} already has a callback`);
     }
     this.paramHash[name] = callback;
   }
 }
 
-function bindRight(handler: RequestParamHandler, paramValue: string, paramName:string): NextHandleFunction{
-  return function(req:Request, res: Response, next:NextFunction): void {
+function bindRight(handler: RequestParamHandler, paramValue: string, paramName: string): NextHandleFunction {
+  return function (req: Request, res: Response, next: NextFunction): void {
     handler(req, res, next, paramValue, paramName);
   } as NextHandleFunction;
 }
 
-function getParamHandlers(foundParams: { [param: string]: string }, paramHash: ParamHash): Array<NextHandleFunction>{
+function getParamHandlers(
+  foundParams: { [param: string]: string },
+  paramHash: ParamHash
+): Array<NextHandleFunction> {
   const handlers: Array<NextHandleFunction> = [];
-  for(const paramName in foundParams){
-    if(paramHash[paramName]){
+  for (const paramName in foundParams) {
+    if (paramHash[paramName]) {
       handlers.push(bindRight(paramHash[paramName], foundParams[paramName], paramName));
     }
   }
   return handlers;
 }
-
 
 function modifyPath(path: string, options: ParamStorageOptions): string {
   return options.caseSensitive ? path : lowercaseStaticParts(path);
