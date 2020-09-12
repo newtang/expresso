@@ -1,12 +1,12 @@
 import type { NextHandleFunction } from 'connect';
-import { FoundRouteData, Storage, RouterOptions } from '../interfaces';
+import { FoundRouteData, Storage, ParamStorage, RouterOptions } from '../interfaces';
 import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 import { validatePath } from '../utils/stringUtils';
 
-export default class CompositeStorage implements Storage {
+export default class CompositeStorage implements ParamStorage {
   readonly staticStorage: Storage;
-  readonly paramStorage: Storage;
+  readonly paramStorage: ParamRadixTreeStorage;
   readonly options: RouterOptions;
   readonly useHandlers: Array<{ pathStart: string; handlers: Array<NextHandleFunction> }>;
 
@@ -32,6 +32,10 @@ export default class CompositeStorage implements Storage {
 
   find(method: string, path: string): FoundRouteData | false {
     return this.staticStorage.find(method, path) || this.paramStorage.find(method, path);
+  }
+
+  param(name: string, callback: NextHandleFunction): void {
+    return this.paramStorage.param(name, callback);
   }
 }
 

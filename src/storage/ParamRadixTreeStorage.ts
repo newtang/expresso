@@ -1,8 +1,11 @@
-import { FoundRouteData, Storage } from '../interfaces';
+import { FoundRouteData, ParamStorage } from '../interfaces';
+import type { Request, Response, NextFunction } from 'express';
 import type { NextHandleFunction } from 'connect';
+import type { RequestParamHandler } from 'express';
 import { lowercaseStaticParts } from '../utils/stringUtils';
 
 const validParamChars = /[^A-Za-z0-9_]+/;
+const validParamName = /^[A-Za-z0-9_]+$/;
 
 export interface ReturnValue<T> {
   target: T;
@@ -21,6 +24,8 @@ const DEFAULT_OPTIONS: ParamStorageOptions = {
   caseSensitive: false,
 };
 
+type ParamHash = { [param: string]: RequestParamHandler };
+
 /**
  * This functions as a Radix Tree of nodes. If a node has
  * payload set, it is the end of a full, legitimate path
@@ -28,12 +33,14 @@ const DEFAULT_OPTIONS: ParamStorageOptions = {
  * Except for edges in the root node, edges do not begin with '/'
  **/
 
-export default class ParamRadixTreeStorage implements Storage {
+export default class ParamRadixTreeStorage implements ParamStorage {
   readonly root: Node<Array<NextHandleFunction>>;
   readonly options: ParamStorageOptions;
+  readonly paramHash: ParamHash;
   constructor(options: ParamStorageOptions = DEFAULT_OPTIONS) {
     this.root = new Node<Array<NextHandleFunction>>();
     this.options = options;
+    this.paramHash = {};
   }
 
   add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
@@ -44,10 +51,54 @@ export default class ParamRadixTreeStorage implements Storage {
   find(method: string, path: string): FoundRouteData | false {
     const result = this.root.search(method, path, this.options.caseSensitive);
     if (result) {
+      const paramHandlers = getParamHandlers(result.params, this.paramHash);
+      if (paramHandlers && paramHandlers.length) {
+        result.target = [...paramHandlers, ...result.target];
+      }
       return result;
     }
     return false;
   }
+
+  param(originalName: string, callback: NextHandleFunction): void {
+    if (!originalName || typeof originalName !== 'string') {
+      throw new Error(`Expected name to be a string`);
+    }
+
+    if (!callback || typeof callback !== 'function') {
+      throw new Error(`Expected callback to be a function`);
+    }
+
+    const name = originalName.charAt(0) === ':' ? originalName.slice(1) : originalName;
+
+    if (!validParamName.test(name)) {
+      throw new Error(`Invalid parameter name: ${originalName}`);
+    }
+
+    if (this.paramHash[name]) {
+      throw new Error(`Parameter ${name} already has a callback`);
+    }
+    this.paramHash[name] = callback;
+  }
+}
+
+function bindRight(handler: RequestParamHandler, paramValue: string, paramName: string): NextHandleFunction {
+  return function (req: Request, res: Response, next: NextFunction): void {
+    handler(req, res, next, paramValue, paramName);
+  } as NextHandleFunction;
+}
+
+function getParamHandlers(
+  foundParams: { [param: string]: string },
+  paramHash: ParamHash
+): Array<NextHandleFunction> {
+  const handlers: Array<NextHandleFunction> = [];
+  for (const paramName in foundParams) {
+    if (paramHash[paramName]) {
+      handlers.push(bindRight(paramHash[paramName], foundParams[paramName], paramName));
+    }
+  }
+  return handlers;
 }
 
 function modifyPath(path: string, options: ParamStorageOptions): string {
