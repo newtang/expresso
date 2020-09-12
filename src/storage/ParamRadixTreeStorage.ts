@@ -5,6 +5,7 @@ import type { RequestParamHandler } from 'express';
 import { lowercaseStaticParts } from '../utils/stringUtils';
 
 const validParamChars = /[^A-Za-z0-9_]+/;
+const validParamName = /^[A-Za-z0-9_]+$/;
 
 export interface ReturnValue<T> {
   target: T;
@@ -59,7 +60,21 @@ export default class ParamRadixTreeStorage implements ParamStorage {
     return false;
   }
 
-  param(name: string, callback: NextHandleFunction): void {
+  param(originalName: string, callback: NextHandleFunction): void {
+    if (!originalName || typeof originalName !== 'string') {
+      throw new Error(`Expected name to be a string`);
+    }
+
+    if (!callback || typeof callback !== 'function') {
+      throw new Error(`Expected callback to be a function`);
+    }
+
+    const name = originalName.charAt(0) === ':' ? originalName.slice(1) : originalName;
+
+    if (!validParamName.test(name)) {
+      throw new Error(`Invalid parameter name: ${originalName}`);
+    }
+
     if (this.paramHash[name]) {
       throw new Error(`Parameter ${name} already has a callback`);
     }
