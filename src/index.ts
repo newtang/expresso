@@ -39,9 +39,9 @@ function buildRouter(userOptions?: RouterUserOptions): any {
   const param = routeStorage.param.bind(routeStorage);
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
+  const route = routeFxn.bind(null, routerObj);
 
-
-  return Object.assign(handler, { use, param }, routerObj);
+  return Object.assign(handler, { use, param, route }, routerObj);
 }
 
 export = buildRouter;
@@ -51,7 +51,7 @@ function routeFxn(routerObj, path:string){
   for(const method in routerObj){
     routerObjBindClone[method] = routerObj[method].bind(null, path);
   }
-
+  return routerObjBindClone;
 }
 
 function buildUse(
