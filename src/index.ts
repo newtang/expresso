@@ -39,11 +39,28 @@ function buildRouter(userOptions?: RouterUserOptions): any {
   const param = routeStorage.param.bind(routeStorage);
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
+  const route = routeFxn.bind(null, routerObj);
 
-  return Object.assign(handler, { use, param }, routerObj);
+  return Object.assign(handler, { use, param, route }, routerObj);
 }
 
 export = buildRouter;
+
+function routeFxn(
+  routerObj,
+  path: string
+): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+  const routerObjBindClone = {};
+  for (const method in routerObj) {
+    routerObjBindClone[method] = function (
+      ...handlers: Array<NextHandleFunction>
+    ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+      routerObj[method](path, ...handlers);
+      return routerObjBindClone;
+    };
+  }
+  return routerObjBindClone;
+}
 
 function buildUse(
   useHandlers: Array<UseHandler>,
@@ -128,7 +145,7 @@ function buildRouterMethods(
      * Using the capitalized method (as opposed to lowercasing it on every request)
      * is actually a relatively significant optimization
      **/
-    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers);
+    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers, routerObj);
   }
   return routerObj;
 }
@@ -137,10 +154,12 @@ function addRoute(
   method: string,
   routeStorage: Storage,
   useHandlers: Array<UseHandler>,
+  routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
   path: string,
   ...handlers: Array<NextHandleFunction>
-): void {
+): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers, true), ...handlers]);
+  return routerObj;
 }
 
 function getRelevantUseHandlers(

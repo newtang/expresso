@@ -205,4 +205,38 @@ describe('param tests', () => {
     expect(res.text).toBe('test-dash');
     expect(res.status).toBe(200);
   });
+
+  test('.route param basic', async () => {
+    const app = express();
+    const router = expresso();
+
+    router
+      .route('/api/:id')
+      .get((req: Request, res: Response) => {
+        res.send(`get success ${req.params.id}`);
+      })
+      .post((req: Request, res: Response) => {
+        res.send(`post success ${req.params.id}`);
+      })
+      .patch((req: Request, res: Response) => {
+        res.send(`patch success ${req.params.id}`);
+      });
+
+    app.use(router);
+
+    let res = await request(app).get('/api/cool');
+    expect(res.text).toBe('get success cool');
+    expect(res.status).toBe(200);
+
+    res = await request(app).post('/api/1234');
+    expect(res.text).toBe('post success 1234');
+    expect(res.status).toBe(200);
+
+    res = await request(app).patch('/api/foobar');
+    expect(res.text).toBe('patch success foobar');
+    expect(res.status).toBe(200);
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
 });
