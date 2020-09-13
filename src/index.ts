@@ -46,9 +46,12 @@ function buildRouter(userOptions?: RouterUserOptions): any {
 
 export = buildRouter;
 
-function routeFxn(routerObj, path:string){
+function routeFxn(
+  routerObj,
+  path: string
+): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObjBindClone = {};
-  for(const method in routerObj){
+  for (const method in routerObj) {
     routerObjBindClone[method] = routerObj[method].bind(null, path);
   }
   return routerObjBindClone;
