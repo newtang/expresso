@@ -52,7 +52,12 @@ function routeFxn(
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
-    routerObjBindClone[method] = routerObj[method].bind(null, path);
+    routerObjBindClone[method] = function (
+      ...handlers: Array<NextHandleFunction>
+    ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+      routerObj[method](path, ...handlers);
+      return routerObjBindClone;
+    };
   }
   return routerObjBindClone;
 }

@@ -132,9 +132,17 @@ describe('basic tests', () => {
     const app = express();
     const router = expresso();
 
-    router.route('/api')
-      .get((req: Request, res: Response) => {res.send('get success')})
-      .post((req: Request, res: Response) => {res.send('post success')});
+    router
+      .route('/api')
+      .get((req: Request, res: Response) => {
+        res.send('get success');
+      })
+      .post((req: Request, res: Response) => {
+        res.send('post success');
+      })
+      .patch((req: Request, res: Response) => {
+        res.send('patch success');
+      });
 
     app.use(router);
 
@@ -142,9 +150,13 @@ describe('basic tests', () => {
     expect(res.text).toBe('get success');
     expect(res.status).toBe(200);
 
-      // res = await request(app).post('/api');
-      // expect(res.text).toBe('post success');
-      // expect(res.status).toBe(200);
+    res = await request(app).post('/api');
+    expect(res.text).toBe('post success');
+    expect(res.status).toBe(200);
+
+    res = await request(app).patch('/api');
+    expect(res.text).toBe('patch success');
+    expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
