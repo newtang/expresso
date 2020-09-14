@@ -155,10 +155,19 @@ function addRoute(
   routeStorage: Storage,
   useHandlers: Array<UseHandler>,
   routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string,
+  path: string | Array<string>,
   ...handlers: Array<NextHandleFunction>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
-  routeStorage.add(method, path, [...getRelevantUseHandlers(path, useHandlers, true), ...handlers]);
+  const paths = Array.isArray(path) ? path : [path];
+
+  if(!paths || !paths.length){
+    throw new Error(`Invalid path: ${path}`);
+  }
+
+  for (const p of paths) {
+    routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...handlers]);
+  }
+
   return routerObj;
 }
 
