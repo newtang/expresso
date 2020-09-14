@@ -27,6 +27,14 @@ describe('basic tests', () => {
     expect(() => {
       expresso().get(path, jest.fn());
     }).toThrow(`Invalid path: ${path}`);
+
+    expect(() => {
+      expresso().get([path], jest.fn());
+    }).toThrow(`Invalid path: ${path}`);
+
+    expect(() => {
+      expresso().route(path).get(jest.fn());
+    }).toThrow(`Invalid path: ${path}`);
   });
 
   test.each(['hey', 'v1/api/'])('no starting slash %s', (path) => {
