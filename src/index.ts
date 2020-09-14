@@ -160,7 +160,7 @@ function addRoute(
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const paths = Array.isArray(path) ? path : [path];
 
-  if(!paths || !paths.length){
+  if (!paths || !paths.length) {
     throw new Error(`Invalid path: ${path}`);
   }
 
