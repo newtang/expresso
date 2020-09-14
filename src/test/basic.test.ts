@@ -161,4 +161,58 @@ describe('basic tests', () => {
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
+
+  test('path array', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    router.get(['/', '/api', '/api/:id'], (req: Request, res: Response) => res.send(msg));
+    app.use(router);
+
+    for (const path of ['/', '/api', '/api/foo']) {
+      const res = await request(app).get(path);
+      expect(res.text).toBe(msg);
+      expect(res.status).toBe(200);
+    }
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
+
+  test('path array in .route', async () => {
+    const app = express();
+    const router = expresso();
+
+    router
+      .route(['/', '/api', '/api/:id'])
+      .get((req: Request, res: Response) => {
+        res.send('get success');
+      })
+      .post((req: Request, res: Response) => {
+        res.send('post success');
+      })
+      .patch((req: Request, res: Response) => {
+        res.send('patch success');
+      });
+
+    app.use(router);
+
+    for (const path of ['/', '/api', '/api/foo']) {
+      let res = await request(app).get(path);
+      expect(res.text).toBe('get success');
+      expect(res.status).toBe(200);
+
+      res = await request(app).post(path);
+      expect(res.text).toBe('post success');
+      expect(res.status).toBe(200);
+
+      res = await request(app).patch(path);
+      expect(res.text).toBe('patch success');
+      expect(res.status).toBe(200);
+    }
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
 });
