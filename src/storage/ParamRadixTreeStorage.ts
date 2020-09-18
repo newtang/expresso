@@ -414,7 +414,7 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
 
 function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false {
   if (node.methodToPayload) {
-    const end = node.methodToPayload[method];
+    const end = node.methodToPayload[method] || node.methodToPayload[method === 'HEAD' ? 'GET' : ''];
     if (end) {
       return {
         target: end.payload,
