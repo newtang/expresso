@@ -19,6 +19,7 @@ interface RouterUserOptions {
   allowDuplicatePaths?: boolean;
   strict?: boolean;
   caseSensitive?: boolean;
+  on405?: NextHandleFunction;
 }
 
 const defaultOptions: RouterOptions = {
@@ -99,9 +100,14 @@ function handleRequest(
 ): void {
   const verb = req.method;
   const payload = routeStorage.find(verb, req.path);
-  if (payload && payload.target) {
-    req.params = payload.params || {};
-    executeHandlers(req, res, done, payload.target);
+  if (payload){
+    if(payload === 405){
+
+    }
+    else if(payload.target) {
+      req.params = payload.params || {};
+      executeHandlers(req, res, done, payload.target);
+    }
   } else {
     const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
     executeHandlers(req, res, done, useHandlerFunctions);

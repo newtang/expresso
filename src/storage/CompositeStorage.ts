@@ -30,7 +30,7 @@ export default class CompositeStorage implements ParamStorage {
     }
   }
 
-  find(method: string, path: string): FoundRouteData | false {
+  find(method: string, path: string): FoundRouteData | 405 | false {
     return this.staticStorage.find(method, path) || this.paramStorage.find(method, path);
   }
 
