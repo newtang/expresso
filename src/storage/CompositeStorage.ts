@@ -31,7 +31,14 @@ export default class CompositeStorage implements ParamStorage {
   }
 
   find(method: string, path: string): FoundRouteData | 405 | false {
-    return this.staticStorage.find(method, path) || this.paramStorage.find(method, path);
+    // return this.staticStorage.find(method, path) || this.paramStorage.find(method, path);
+    const result = this.staticStorage.find(method, path);
+    if(result && result !== 405){
+      return result;
+    }
+
+    return this.paramStorage.find(method, path) || result;
+
   }
 
   param(name: string, callback: NextHandleFunction): void {

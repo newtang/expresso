@@ -102,7 +102,9 @@ function handleRequest(
   const payload = routeStorage.find(verb, req.path);
   if (payload){
     if(payload === 405){
-
+      if(options.on405){
+        
+      }
     }
     else if(payload.target) {
       req.params = payload.params || {};

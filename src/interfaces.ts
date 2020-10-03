@@ -19,4 +19,5 @@ export interface RouterOptions {
   allowDuplicatePaths: boolean;
   strict: boolean;
   caseSensitive: boolean;
+  on405?: NextHandleFunction;
 }
