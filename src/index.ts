@@ -103,7 +103,8 @@ function handleRequest(
   if (payload){
     if(payload === 405){
       if(options.on405){
-        
+        const useHandlerFunctions = [...getRelevantUseHandlers(req.path, useHandlers, false), options.on405];
+        executeHandlers(req, res, done, useHandlerFunctions);
       }
     }
     else if(payload.target) {

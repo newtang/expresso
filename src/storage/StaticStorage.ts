@@ -37,12 +37,16 @@ export default class StaticStorage implements Storage {
     }
   }
 
-  find(method: string, path: string): FoundRouteData | false {
+  find(method: string, path: string): FoundRouteData | 405 | false {
     path = this.options.caseSensitive ? path : path.toLowerCase();
 
     const pathRoutes = this.routes[path];
-    // return (pathRoutes && pathRoutes[method]) || false;
-    return (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
+    
+    if(pathRoutes){
+      return (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : '']) || 405;
+    }
+    return false;
+    // return (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
   }
 }
 

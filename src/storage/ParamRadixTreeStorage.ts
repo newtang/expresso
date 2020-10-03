@@ -48,7 +48,7 @@ export default class ParamRadixTreeStorage implements ParamStorage {
     this.root.insert(method, path, handlers, this.options);
   }
 
-  find(method: string, path: string): FoundRouteData | false {
+  find(method: string, path: string): FoundRouteData | 405 | false {
     const result = this.root.search(method, path, this.options.caseSensitive);
     if (result) {
       const paramHandlers = getParamHandlers(result.params, this.paramHash);
@@ -128,7 +128,7 @@ export class Node<T> {
     this.hasStandardTerminus = false;
   }
 
-  search(method: string, searchPath: string, caseSensitive = false): ReturnValue<T> | false {
+  search(method: string, searchPath: string, caseSensitive = false): ReturnValue<T> | 405 | false {
     const fallbackStack: Array<Fallback<T>> = [
       {
         pathToCompare: caseSensitive ? searchPath : searchPath.toLowerCase(),
@@ -412,7 +412,7 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
   return ['', ''];
 }
 
-function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false {
+function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | 405 | false {
   if (node.methodToPayload) {
     const end = node.methodToPayload[method] || node.methodToPayload[method === 'HEAD' ? 'GET' : ''];
     if (end) {
@@ -421,7 +421,7 @@ function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>)
         params: buildObject(end.paramNames as Array<string>, paramValues),
       };
     } else {
-      return false;
+      return 405;
     }
   } else {
     return false;
