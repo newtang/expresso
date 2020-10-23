@@ -9,11 +9,11 @@ export function buildOptionsHandler(methods:Array<string>): NextHandleFunction {
 
     const sortedMethods = Array.from(methodSet).sort().join(', ');
 
-    return (req:Request, res:Response) => {
+    return ((req:Request, res:Response) => {
       res.setHeader('Allow', sortedMethods);
       res.setHeader('Content-Length', Buffer.byteLength(sortedMethods));
       res.setHeader('Content-Type', 'text/plain');
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.end(sortedMethods);
-    } as NextHandleFunction;
+      res.send(sortedMethods);
+    }) as unknown as NextHandleFunction;
 }
