@@ -43,15 +43,15 @@ export default class StaticStorage implements Storage {
 
     const pathRoutes = this.routes[path];
     // return (pathRoutes && pathRoutes[method]) || false;
-    const result = (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
-    if(result){
+    const result =
+      (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
+    if (result) {
       return result;
-    }
-    else{
-      if(method === 'OPTIONS'){
+    } else {
+      if (method === 'OPTIONS') {
         const handlers = [buildOptionsHandler(Object.keys(pathRoutes))];
         this.add('OPTIONS', path, handlers);
-        return {target: handlers};
+        return { target: handlers };
       }
 
       return false;
