@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { NextHandleFunction } from 'connect';
 import type { RequestParamHandler } from 'express';
 import { lowercaseStaticParts } from '../utils/stringUtils';
+import { buildOptionsHandler } from './utils';
 
 const validParamChars = /[^A-Za-z0-9_]+/;
 const validParamName = /^[A-Za-z0-9_]+$/;
@@ -420,7 +421,18 @@ function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>)
         target: end.payload,
         params: buildObject(end.paramNames as Array<string>, paramValues),
       };
-    } else {
+    } 
+    else if (method === 'OPTIONS'){
+      const payload = buildOptionsHandler(Object.keys(node.methodToPayload));
+      node.methodToPayload['OPTIONS'] = { payload: [payload as T], paramNames: [] };
+      return {
+        target: [payload],
+        params: {}
+      };
+
+        // methodToPayload?: { [method: string]: { payload: T; paramNames: Array<string> } };
+    } 
+    else {
       return false;
     }
   } else {
