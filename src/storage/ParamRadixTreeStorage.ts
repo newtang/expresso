@@ -27,6 +27,10 @@ const DEFAULT_OPTIONS: ParamStorageOptions = {
 
 type ParamHash = { [param: string]: RequestParamHandler };
 
+function buildParamOptionsHandler(methods: Array<string>): Array<NextHandleFunction> {
+  return [buildOptionsHandler(methods)];
+}
+
 /**
  * This functions as a Radix Tree of nodes. If a node has
  * payload set, it is the end of a full, legitimate path
@@ -50,7 +54,7 @@ export default class ParamRadixTreeStorage implements ParamStorage {
   }
 
   find(method: string, path: string): FoundRouteData | false {
-    const result = this.root.search(method, path, this.options.caseSensitive);
+    const result = this.root.search(method, path, this.options.caseSensitive, buildParamOptionsHandler);
     if (result) {
       const paramHandlers = getParamHandlers(result.params, this.paramHash);
       if (paramHandlers && paramHandlers.length) {
@@ -129,7 +133,12 @@ export class Node<T> {
     this.hasStandardTerminus = false;
   }
 
-  search(method: string, searchPath: string, caseSensitive = false): ReturnValue<T> | false {
+  search(
+    method: string,
+    searchPath: string,
+    caseSensitive = false,
+    buildOptionsResponseHandler: null | ((methods: Array<string>) => T) = null
+  ): ReturnValue<T> | false {
     const fallbackStack: Array<Fallback<T>> = [
       {
         pathToCompare: caseSensitive ? searchPath : searchPath.toLowerCase(),
@@ -226,7 +235,7 @@ export class Node<T> {
         }
       }
       if (!pathToCompare) {
-        const endValue = endOfPath<T>(method, currentNode, paramValues);
+        const endValue = endOfPath<T>(method, currentNode, paramValues, buildOptionsResponseHandler);
         if (endValue) {
           return endValue;
         }
@@ -413,7 +422,12 @@ function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [stri
   return ['', ''];
 }
 
-function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>): ReturnValue<T> | false {
+function endOfPath<T>(
+  method: string,
+  node: Node<T>,
+  paramValues: Array<string>,
+  optionsBuilder: null | ((methods: Array<string>) => T)
+): ReturnValue<T> | false {
   if (node.methodToPayload) {
     const end = node.methodToPayload[method] || node.methodToPayload[method === 'HEAD' ? 'GET' : ''];
     if (end) {
@@ -421,18 +435,14 @@ function endOfPath<T>(method: string, node: Node<T>, paramValues: Array<string>)
         target: end.payload,
         params: buildObject(end.paramNames as Array<string>, paramValues),
       };
-    } 
-    else if (method === 'OPTIONS'){
-      const payload = buildOptionsHandler(Object.keys(node.methodToPayload));
-      node.methodToPayload['OPTIONS'] = { payload: [payload as T], paramNames: [] };
+    } else if (method === 'OPTIONS' && optionsBuilder) {
+      const payload = optionsBuilder(Object.keys(node.methodToPayload));
+      node.methodToPayload['OPTIONS'] = { payload, paramNames: [] };
       return {
-        target: [payload],
-        params: {}
+        target: payload,
+        params: {},
       };
-
-        // methodToPayload?: { [method: string]: { payload: T; paramNames: Array<string> } };
-    } 
-    else {
+    } else {
       return false;
     }
   } else {
