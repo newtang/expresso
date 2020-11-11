@@ -90,16 +90,87 @@ describe('HEAD', () => {
     expect(res.status).toBe(200);
   });
 
-  /**
-   * static
-   * check headers
-   * static multiple verbs
-   * static multiple alphetical order
-   * static override
-   * param
-   * param override
-   * check twice
-   **/
+  test('param', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.get('/:id', () => jest.fn());
+    app.use(router);
+
+    const methods = 'GET, HEAD';
+    let res = await request(app).options('/1234');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+
+    //test twice, because results get cached internally
+    res = await request(app).options('/5678');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+  });
+
+  test('param - non GET', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.post('/:id', () => jest.fn());
+    app.use(router);
+
+    const methods = 'POST';
+    let res = await request(app).options('/1234');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+
+    //test twice, because results get cached internally
+    res = await request(app).options('/5678');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+  });
+
+  test('param - multiple', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.post('/:id', () => jest.fn());
+    router.get('/:id', () => jest.fn());
+    router.patch('/:id', () => jest.fn());
+    app.use(router);
+
+    const methods = 'GET, HEAD, PATCH, POST';
+    let res = await request(app).options('/1234');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+
+    //test twice, because results get cached internally
+    res = await request(app).options('/1234');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+  });
+
+  test('param - options override', async () => {
+    const app = express();
+    const router = expresso();
+
+    const message = 'hello!';
+    router.options('/:id', (req: Request, res: Response) => res.send(message));
+    router.post('/:id', () => jest.fn());
+    router.get('/:id', () => jest.fn());
+    router.patch('/:id', () => jest.fn());
+    app.use(router);
+
+    let res = await request(app).options('/api');
+    expect(res.text).toBe(message);
+    expect(res.status).toBe(200);
+
+    res = await request(app).options('/api');
+    expect(res.text).toBe(message);
+    expect(res.status).toBe(200);
+  });
 });
 
 function expectHeaders(headers: { [key: string]: string }, methods: string): void {
