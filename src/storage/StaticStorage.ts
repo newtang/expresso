@@ -1,5 +1,6 @@
 import { Storage, FoundRouteData } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
+import { buildOptionsHandler } from './utils';
 
 interface RouteMap {
   [key: string]: { [key: string]: FoundRouteData };
@@ -42,7 +43,19 @@ export default class StaticStorage implements Storage {
 
     const pathRoutes = this.routes[path];
     // return (pathRoutes && pathRoutes[method]) || false;
-    return (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
+    const result =
+      (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
+    if (result) {
+      return result;
+    } else {
+      if (method === 'OPTIONS' && pathRoutes) {
+        const handlers = [buildOptionsHandler(Object.keys(pathRoutes))];
+        this.add('OPTIONS', path, handlers);
+        return { target: handlers };
+      }
+
+      return false;
+    }
   }
 }
 
