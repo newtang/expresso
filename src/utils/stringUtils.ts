@@ -11,8 +11,16 @@ export type ValidatePathOptions = {
   allowColon: boolean;
 };
 
-export function validatePath(path: string, options: ValidatePathOptions): void {
-  if (!path || typeof path !== 'string') {
+export function validatePath(path: string | RegExp, options: ValidatePathOptions): void {
+  if (!path) {
+    throw new Error(`Invalid path: ${path}`);
+  }
+
+  if (path instanceof RegExp) {
+    return;
+  }
+
+  if (typeof path !== 'string') {
     throw new Error(`Invalid path: ${path}`);
   }
 

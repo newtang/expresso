@@ -134,7 +134,7 @@ function executeHandlers(
 }
 
 function buildRouterMethods(
-  routeStorage: Storage,
+  routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
@@ -152,7 +152,7 @@ function buildRouterMethods(
 
 function addRoute(
   method: string,
-  routeStorage: Storage,
+  routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
   path: string | Array<string>,

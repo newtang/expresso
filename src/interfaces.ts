@@ -1,8 +1,8 @@
 import type { NextHandleFunction } from 'connect';
 
 export interface Storage {
-  add(method: string, path: string, handlers: Array<NextHandleFunction>): void;
   find(method: string, path: string): FoundRouteData | false;
+  add(method: string, path: string | RegExp, handlers: Array<NextHandleFunction>): void;
 }
 
 export interface ParamStorage extends Storage {

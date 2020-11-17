@@ -6,51 +6,50 @@ interface RouteMap {
   [key: string]: { [key: string]: FoundRouteData };
 }
 
-interface StaticStorageOptions {
+interface RegexStorageOptions {
   allowDuplicatePaths: boolean;
-  caseSensitive: boolean;
 }
 
-const DEFAULT_OPTIONS: StaticStorageOptions = { allowDuplicatePaths: false, caseSensitive: false };
+const DEFAULT_OPTIONS: RegexStorageOptions = { allowDuplicatePaths: false };
 
 export default class RegexStorage implements Storage {
-  readonly regexMap: Map<RegExp, {[method:string]: Array<NextHandleFunction>}>;
-  readonly regexStringToRegex: {[regexString:string]: RegExp};
-  readonly options: StaticStorageOptions;
-  constructor(options: StaticStorageOptions = DEFAULT_OPTIONS) {
+  readonly regexMap: Map<RegExp, { [method: string]: Array<NextHandleFunction> }>;
+  readonly regexStringToRegex: { [regexString: string]: RegExp };
+  readonly options: RegexStorageOptions;
+  constructor(options: RegexStorageOptions = DEFAULT_OPTIONS) {
     this.regexMap = new Map();
+    this.regexStringToRegex = {};
     this.options = options;
   }
 
   add(method: string, pathRegex: RegExp, handlers: Array<NextHandleFunction>): void {
     const regexString = pathRegex.toString();
-    if(!regexStringToRegex[regexString]){
-      regexStringToRegex[regexString] = pathRegex;
-    }
-    
-    pathRegex = regexStringToRegex[regexString];
-
-    if(!regexMap.has(pathRegex)){
-      regexMap.set(pathRegex, {});
+    if (!this.regexStringToRegex[regexString]) {
+      this.regexStringToRegex[regexString] = pathRegex;
     }
 
-    const methodToHandlers = regexMap.get(pathRegex);
-    if(methodToHandlers[method]){
-      if(this.options.allowDuplicatePaths){
+    pathRegex = this.regexStringToRegex[regexString];
+
+    if (!this.regexMap.has(pathRegex)) {
+      this.regexMap.set(pathRegex, {});
+    }
+
+    const methodToHandlers = this.regexMap.get(pathRegex) as Record<string, Array<NextHandleFunction>>;
+    if (methodToHandlers[method]) {
+      if (this.options.allowDuplicatePaths) {
         methodToHandlers[method].push(...handlers);
+      } else {
+        //needs tests
+        throw new Error(
+          `Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${regexString}`
+        );
       }
-      else{
-        throw new Error(`Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${regexString}`);
-      }
-    }
-    else{
+    } else {
       methodToHandlers[method] = handlers;
     }
-    
   }
 
   find(method: string, path: string): FoundRouteData | false {
-    
+    return false;
   }
 }
-
