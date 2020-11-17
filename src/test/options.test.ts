@@ -208,7 +208,7 @@ describe('options tests', () => {
     expect(res.status).toBe(404);
   });
 
-  test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id'])(
+  test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id', /api/gi])(
     'allowDuplicatePaths: false',
     async (path) => {
       const router = expresso({ allowDuplicatePaths: false });
