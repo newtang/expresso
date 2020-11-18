@@ -2,10 +2,6 @@ import { Storage, FoundRouteData } from '../interfaces';
 import type { NextHandleFunction } from 'connect';
 import { buildOptionsHandler } from './utils';
 
-interface RouteMap {
-  [key: string]: { [key: string]: FoundRouteData };
-}
-
 interface RegexStorageOptions {
   allowDuplicatePaths: boolean;
 }
@@ -13,7 +9,7 @@ interface RegexStorageOptions {
 const DEFAULT_OPTIONS: RegexStorageOptions = { allowDuplicatePaths: false };
 
 export default class RegexStorage implements Storage {
-  readonly regexMap: Map<RegExp, { [method: string]: Array<NextHandleFunction> }>;
+  readonly regexMap: Map<RegExp, { [method: string]: FoundRouteData }>;
   readonly regexStringToRegex: { [regexString: string]: RegExp };
   readonly options: RegexStorageOptions;
   constructor(options: RegexStorageOptions = DEFAULT_OPTIONS) {
@@ -34,22 +30,26 @@ export default class RegexStorage implements Storage {
       this.regexMap.set(pathRegex, {});
     }
 
-    const methodToHandlers = this.regexMap.get(pathRegex) as Record<string, Array<NextHandleFunction>>;
+    const methodToHandlers = this.regexMap.get(pathRegex) as Record<string, FoundRouteData>;
     if (methodToHandlers[method]) {
       if (this.options.allowDuplicatePaths) {
-        methodToHandlers[method].push(...handlers);
+        methodToHandlers[method].target.push(...handlers);
       } else {
-        //needs tests
         throw new Error(
           `Duplicate path prohibited with allowDuplicatePaths=false. ${method}: ${regexString}`
         );
       }
     } else {
-      methodToHandlers[method] = handlers;
+      methodToHandlers[method] = { target: handlers };
     }
   }
 
   find(method: string, path: string): FoundRouteData | false {
+    for (const [regex, methodToHandlers] of this.regexMap) {
+      if (methodToHandlers[method] && regex.test(path)) {
+        return methodToHandlers[method];
+      }
+    }
     return false;
   }
 }
