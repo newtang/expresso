@@ -31,9 +31,8 @@ describe('regex tests', () => {
     const app = express();
     const router = expresso();
 
-
-    router.get(/^\/test\/$/, (req: Request, res: Response) => res.send("getSuccess"));
-    router.post(/^\/test\/$/, (req: Request, res: Response) => res.send("postSuccess"));
+    router.get(/^\/test\/$/, (req: Request, res: Response) => res.send('getSuccess'));
+    router.post(/^\/test\/$/, (req: Request, res: Response) => res.send('postSuccess'));
     app.use(router);
 
     let res = await request(app).get('/test/');
@@ -52,9 +51,8 @@ describe('regex tests', () => {
     const app = express();
     const router = expresso();
 
-
-    router.get(/^\/tests?\/$/, (req: Request, res: Response) => res.send("getSuccess"));
-    router.post(/^\/tests\/$/, (req: Request, res: Response) => res.send("postSuccess"));
+    router.get(/^\/tests?\/$/, (req: Request, res: Response) => res.send('getSuccess'));
+    router.post(/^\/tests\/$/, (req: Request, res: Response) => res.send('postSuccess'));
     app.use(router);
 
     let res = await request(app).get('/test/');
@@ -78,7 +76,7 @@ describe('regex tests', () => {
 
   test('same regex multiple handlers', async () => {
     const app = express();
-    const router = expresso({allowDuplicatePaths: true});
+    const router = expresso({ allowDuplicatePaths: true });
     const msg = 'success';
 
     let handler1 = false;
@@ -86,28 +84,29 @@ describe('regex tests', () => {
     let handler3 = false;
     let handler4 = false;
 
+    router.get(
+      /^\/api\/$/,
+      (req: Request, res: Response, next: NextFunction) => {
+        handler1 = true;
+        next();
+      },
+      (req: Request, res: Response, next: NextFunction) => {
+        handler2 = true;
+        next();
+      }
+    );
 
-    router.get(/^\/api\/$/, 
-		(req: Request, res: Response, next: NextFunction) => {
-			handler1 = true;
-			next();
-		},
-		(req: Request, res: Response, next: NextFunction) => {
-			handler2 = true;
-			next();
-		}
-	);
-
-    router.get(/^\/api\/$/, 
-		(req: Request, res: Response, next: NextFunction) => {
-			handler3 = true;
-			next();
-		},
-		(req: Request, res: Response) => {
-			handler4 = true;
-			res.send(msg);
-		}
-	);
+    router.get(
+      /^\/api\/$/,
+      (req: Request, res: Response, next: NextFunction) => {
+        handler3 = true;
+        next();
+      },
+      (req: Request, res: Response) => {
+        handler4 = true;
+        res.send(msg);
+      }
+    );
 
     app.use(router);
 
@@ -121,6 +120,4 @@ describe('regex tests', () => {
     expect(res.text).toBe(msg);
     expect(res.status).toBe(200);
   });
-
-
 });

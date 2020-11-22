@@ -46,8 +46,9 @@ export default class RegexStorage implements Storage {
 
   find(method: string, path: string): FoundRouteData | false {
     for (const [regex, methodToHandlers] of this.regexMap) {
-      if (methodToHandlers[method] && regex.test(path)) {
-        return methodToHandlers[method];
+      const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''];
+      if (result && regex.test(path)) {
+        return result;
       }
     }
     return false;

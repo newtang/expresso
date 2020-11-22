@@ -113,4 +113,57 @@ describe('HEAD', () => {
     expect(res.status).toBe(200);
     expect(headCalled).toBe(true);
   });
+
+  test('regex', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    router.get(/^\/api\/$/, (req: Request, res: Response) => res.send(msg));
+    app.use(router);
+
+    const res = await request(app).head('/api/');
+    expect(res.text).toBeUndefined();
+    expect(res.status).toBe(200);
+  });
+
+  test('regex head override', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let headCalled = false;
+    router.get(/^\/api$/, (req: Request, res: Response) => res.send(msg));
+    router.head(/^\/api$/, (req: Request, res: Response) => {
+      headCalled = true;
+      res.send(msg);
+    });
+
+    app.use(router);
+
+    const res = await request(app).head('/api');
+    expect(res.text).toBeUndefined();
+    expect(res.status).toBe(200);
+    expect(headCalled).toBe(true);
+  });
+
+  test('regex head override - order reversed.', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let headCalled = false;
+    router.head(/^\/api$/, (req: Request, res: Response) => {
+      headCalled = true;
+      res.send(msg);
+    });
+    router.get(/^\/api$/, (req: Request, res: Response) => res.send(msg));
+
+    app.use(router);
+
+    const res = await request(app).head('/api');
+    expect(res.text).toBeUndefined();
+    expect(res.status).toBe(200);
+    expect(headCalled).toBe(true);
+  });
 });
