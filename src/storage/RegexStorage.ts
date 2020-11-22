@@ -45,6 +45,9 @@ export default class RegexStorage implements Storage {
   }
 
   find(method: string, path: string): FoundRouteData | false {
+    if (method === 'OPTIONS') {
+      return optionsFind(this, path);
+    }
     for (const [regex, methodToHandlers] of this.regexMap) {
       const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''];
       if (result && regex.test(path)) {
@@ -53,4 +56,19 @@ export default class RegexStorage implements Storage {
     }
     return false;
   }
+}
+
+function optionsFind(storage: RegexStorage, path: string): FoundRouteData | false {
+  for (const [regex, methodToHandlers] of storage.regexMap) {
+    if (regex.test(path)) {
+      if (methodToHandlers['OPTIONS']) {
+        return methodToHandlers['OPTIONS'];
+      } else {
+        const handlers = [buildOptionsHandler(Object.keys(methodToHandlers))];
+        storage.add('OPTIONS', regex, handlers);
+        return { target: handlers };
+      }
+    }
+  }
+  return false;
 }
