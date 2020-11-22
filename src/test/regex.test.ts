@@ -1,7 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 describe('regex tests', () => {
   beforeAll(() => {
@@ -76,14 +76,51 @@ describe('regex tests', () => {
     expect(res.status).toBe(404);
   });
 
+  test('same regex multiple handlers', async () => {
+    const app = express();
+    const router = expresso({allowDuplicatePaths: true});
+    const msg = 'success';
+
+    let handler1 = false;
+    let handler2 = false;
+    let handler3 = false;
+    let handler4 = false;
 
 
-  /**
-   * x Same regexes but different verbs
-   * Similar regexes, but different verbs
-   * combining handlers?
-   * making sure all handlers are called?
-   * order of regexes matter
-  **/
+    router.get(/^\/api\/$/, 
+		(req: Request, res: Response, next: NextFunction) => {
+			handler1 = true;
+			next();
+		},
+		(req: Request, res: Response, next: NextFunction) => {
+			handler2 = true;
+			next();
+		}
+	);
+
+    router.get(/^\/api\/$/, 
+		(req: Request, res: Response, next: NextFunction) => {
+			handler3 = true;
+			next();
+		},
+		(req: Request, res: Response) => {
+			handler4 = true;
+			res.send(msg);
+		}
+	);
+
+    app.use(router);
+
+    const res = await request(app).get('/api/');
+
+    expect(handler1).toBe(true);
+    expect(handler2).toBe(true);
+    expect(handler3).toBe(true);
+    expect(handler4).toBe(true);
+
+    expect(res.text).toBe(msg);
+    expect(res.status).toBe(200);
+  });
+
 
 });
