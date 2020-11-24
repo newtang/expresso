@@ -6,9 +6,27 @@ import CompositeStorage from './storage/CompositeStorage';
 import { validatePath } from './utils/stringUtils';
 
 type UseHandler = {
-  pathStart: string;
+  pathStart: string,
+  pathTest: UseHandlerTest;
   handlers: Array<NextHandleFunction>;
 };
+
+type UseHandlerTest = (path:string) => boolean;
+
+function useHandlerStringTest(pathStart: string): UseHandlerTest {
+  return function(path:string): boolean {
+     return path === pathStart ||
+      (path.startsWith(pathStart) && path.startsWith(`${pathStart}/`))
+  }
+}
+
+function useHandlerRegexTest(regex:RegExp): UseHandlerTest {
+  return function(path:string): boolean {
+    return regex.test(path);
+  }
+}
+
+
 
 type Router = {
   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
@@ -64,10 +82,10 @@ function routeFxn(
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | NextHandleFunction,
+  handlerOrPathStart: string | RegExp | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
 ): Router {
-  let pathStart = '/';
+  let pathStart: string | RegExp = '/';
 
   if (typeof handlerOrPathStart === 'function') {
     handlers.unshift(handlerOrPathStart);
@@ -77,12 +95,17 @@ function buildUse(
 
   validatePath(pathStart, { allowColon: false });
 
-  if (pathStart.charAt(pathStart.length - 1) === '/') {
+  // consider making the useHandler stuff classes with interfaces
+  // the constructor for the string one, can do this mutation.
+  if (typeof pathStart === 'string' && pathStart.charAt(pathStart.length - 1) === '/') {
     pathStart = pathStart.slice(0, pathStart.length - 1);
   }
 
   useHandlers.push({
-    pathStart,
+    pathStart: pathStart.toString(),
+    pathTest: typeof pathStart === 'string'
+      ? useHandlerStringTest(pathStart)
+      : useHandlerRegexTest(pathStart),
     handlers,
   });
 
@@ -103,6 +126,7 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
+    // 404s go through all relevant use handlers
     const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
@@ -193,10 +217,7 @@ function getRelevantUseHandlers(
 
     */
 
-    if (
-      path === useHandler.pathStart ||
-      (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
-    ) {
+    if (useHandler.pathTest(path)) {
       arr.push(
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
