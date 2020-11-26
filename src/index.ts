@@ -14,22 +14,16 @@ type Router = {
   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
 };
 
-interface RouterUserOptions {
-  allowDuplicateParams?: boolean;
-  allowDuplicatePaths?: boolean;
-  strict?: boolean;
-  caseSensitive?: boolean;
-}
-
 const defaultOptions: RouterOptions = {
   allowDuplicateParams: false,
   allowDuplicatePaths: false,
-  strict: false,
+  allowRegex: false,
   caseSensitive: false,
+  strict: false,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRouter(userOptions?: RouterUserOptions): any {
+function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const options = Object.assign({}, defaultOptions, userOptions);
   const routeStorage = new CompositeStorage(options);
 
@@ -75,7 +69,7 @@ function buildUse(
     pathStart = handlerOrPathStart;
   }
 
-  validatePath(pathStart, { allowColon: false });
+  validatePath(pathStart, { allowColon: false, allowRegex: false });
 
   if (pathStart.charAt(pathStart.length - 1) === '/') {
     pathStart = pathStart.slice(0, pathStart.length - 1);

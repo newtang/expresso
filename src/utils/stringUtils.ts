@@ -1,3 +1,5 @@
+import isSafeRegex from 'safe-regex';
+
 export function lowercaseStaticParts(path: string): string {
   return path
     .split('/')
@@ -9,7 +11,24 @@ export function lowercaseStaticParts(path: string): string {
 
 export type ValidatePathOptions = {
   allowColon: boolean;
+  allowRegex: false | 'safe' | 'all';
 };
+
+function validateRegexPath(path: RegExp, { allowRegex }: ValidatePathOptions): void {
+  if (!allowRegex) {
+    throw new Error(`Regular expressions are prohibited when allowRegex option is false: ${path}`);
+  }
+
+  if (allowRegex === 'safe') {
+    if (!isSafeRegex(path)) {
+      throw new Error(`Unsafe regex ${path}`);
+    }
+  } else if (allowRegex === 'all') {
+    return;
+  } else {
+    throw new Error(`invalid value of allowRegex option: ${allowRegex}`);
+  }
+}
 
 export function validatePath(path: string | RegExp, options: ValidatePathOptions): void {
   if (!path) {
@@ -17,7 +36,7 @@ export function validatePath(path: string | RegExp, options: ValidatePathOptions
   }
 
   if (path instanceof RegExp) {
-    return;
+    return validateRegexPath(path, options);
   }
 
   if (typeof path !== 'string') {

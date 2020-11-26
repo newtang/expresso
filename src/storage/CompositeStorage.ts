@@ -21,7 +21,7 @@ export default class CompositeStorage implements ParamStorage {
   }
 
   add(method: string, path: string | RegExp, handlers: Array<NextHandleFunction>): void {
-    validatePath(path, { allowColon: true });
+    validatePath(path, { allowColon: true, allowRegex: this.options.allowRegex });
     validateHandlers(path, handlers);
 
     const storage =

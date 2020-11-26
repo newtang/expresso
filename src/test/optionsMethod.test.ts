@@ -174,7 +174,7 @@ describe('HEAD', () => {
 
   test('regex', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router.get(/^\/api$/, () => jest.fn());
     app.use(router);
@@ -194,7 +194,7 @@ describe('HEAD', () => {
 
   test('regex - non GET', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router.post(/^\/api$/, () => jest.fn());
     app.use(router);
@@ -214,7 +214,7 @@ describe('HEAD', () => {
 
   test('regex - multiple', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router.post(/^\/api$/, () => jest.fn());
     router.get(/^\/api$/, () => jest.fn());
@@ -236,7 +236,7 @@ describe('HEAD', () => {
 
   test('regex - options override', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     const message = 'hello!';
     router.options(/^\/api$/, (req: Request, res: Response) => res.send(message));

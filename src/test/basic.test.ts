@@ -12,7 +12,7 @@ describe('basic tests', () => {
 
   test('slash route', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get('/', (req: Request, res: Response) => res.send(msg));
@@ -28,7 +28,7 @@ describe('basic tests', () => {
 
   test.each(['/test', /^\/test/])('basic route', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get(path, (req: Request, res: Response) => res.send(msg));
@@ -44,7 +44,7 @@ describe('basic tests', () => {
 
   test.each(['/test', /^\/test/])('same routes, different verb', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const getMsg = 'success';
     const patchMsg = 'patchSuccess';
 
@@ -63,7 +63,7 @@ describe('basic tests', () => {
 
   test.each(['/test', /^\/test/])('with error handler', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get(path, (req: Request, res: Response) => res.send(msg));
@@ -80,7 +80,7 @@ describe('basic tests', () => {
 
   test.each(['/test', /^\/test/])('with middlewares', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     let middleware1Called = false;
@@ -112,7 +112,7 @@ describe('basic tests', () => {
       return;
     }
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
     const regexMsg = 'success-regex';
 
@@ -136,7 +136,7 @@ describe('basic tests', () => {
 
   test.each(['/api', /^\/api/])('.route basic', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router
       .route(path)
@@ -174,7 +174,7 @@ describe('basic tests', () => {
     { paths: [/^\/$/, /^\/api/, '/api/:id'] },
   ])('path array', async ({ paths }) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get(paths, (req: Request, res: Response) => res.send(msg));
@@ -196,7 +196,7 @@ describe('basic tests', () => {
     { paths: [/^\/$/, /^\/api/, '/api/:id'] },
   ])('path array in .route', async ({ paths }) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router
       .route(paths)

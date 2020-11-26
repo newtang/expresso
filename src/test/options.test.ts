@@ -211,7 +211,7 @@ describe('options tests', () => {
   test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id', /api/gi])(
     'allowDuplicatePaths: false',
     async (path) => {
-      const router = expresso({ allowDuplicatePaths: false });
+      const router = expresso({ allowDuplicatePaths: false, allowRegex: 'safe' });
 
       router.get(path, (req: Request, res: Response) => res.send({}));
       expect(() => {
@@ -269,5 +269,45 @@ describe('options tests', () => {
     expect(firstCalled).toBe(true);
     expect(res.status).toBe(200);
     expect(res.text).toBe(msg);
+  });
+
+  test('allowRegex: default', async () => {
+    const router = expresso();
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError('Regular expressions are prohibited when allowRegex option is false: /test/');
+  });
+
+  test('allowRegex: false', async () => {
+    const router = expresso({ allowRegex: false });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError('Regular expressions are prohibited when allowRegex option is false: /test/');
+  });
+
+  test('allowRegex: safe', async () => {
+    const router = expresso({ allowRegex: 'safe' });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
+
+    expect(() => {
+      router.get(/(a+){10}/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError(`Unsafe regex /(a+){10}/`);
+  });
+
+  test('allowRegex: all', async () => {
+    const router = expresso({ allowRegex: 'all' });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
+
+    expect(() => {
+      router.get(/(a+){10}/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
   });
 });

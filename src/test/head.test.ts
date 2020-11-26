@@ -116,7 +116,7 @@ describe('HEAD', () => {
 
   test('regex', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get(/^\/api\/$/, (req: Request, res: Response) => res.send(msg));
@@ -129,7 +129,7 @@ describe('HEAD', () => {
 
   test('regex head override', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     let headCalled = false;
@@ -149,7 +149,7 @@ describe('HEAD', () => {
 
   test('regex head override - order reversed.', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     let headCalled = false;

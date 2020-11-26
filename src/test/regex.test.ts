@@ -10,7 +10,7 @@ describe('regex tests', () => {
 
   test('basic regex test', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get(/^\/api\/$/, (req: Request, res: Response) => res.send(msg));
@@ -29,7 +29,7 @@ describe('regex tests', () => {
 
   test('same regex - different verbs', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router.get(/^\/test\/$/, (req: Request, res: Response) => res.send('getSuccess'));
     router.post(/^\/test\/$/, (req: Request, res: Response) => res.send('postSuccess'));
@@ -49,7 +49,7 @@ describe('regex tests', () => {
 
   test('similar regex - different verbs', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router.get(/^\/tests?\/$/, (req: Request, res: Response) => res.send('getSuccess'));
     router.post(/^\/tests\/$/, (req: Request, res: Response) => res.send('postSuccess'));
@@ -76,7 +76,7 @@ describe('regex tests', () => {
 
   test('same regex multiple handlers', async () => {
     const app = express();
-    const router = expresso({ allowDuplicatePaths: true });
+    const router = expresso({ allowDuplicatePaths: true, allowRegex: 'safe' });
     const msg = 'success';
 
     let handler1 = false;
