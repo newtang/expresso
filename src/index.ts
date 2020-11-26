@@ -48,13 +48,13 @@ export = buildRouter;
 
 function routeFxn(
   routerObj,
-  path: string
+  path: string | RegExp
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
       ...handlers: Array<NextHandleFunction>
-    ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+    ): { [key: string]: (path: string | RegExp, ...handlers: Array<NextHandleFunction>) => void } {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
@@ -150,12 +150,13 @@ function buildRouterMethods(
   return routerObj;
 }
 
+//router.get(...), router.post(...)
 function addRoute(
   method: string,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string | Array<string>,
+  path: string | Array<string> | RegExp | Array<RegExp>,
   ...handlers: Array<NextHandleFunction>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const paths = Array.isArray(path) ? path : [path];
@@ -172,11 +173,16 @@ function addRoute(
 }
 
 function getRelevantUseHandlers(
-  path: string,
+  path: string | RegExp,
   useHandlers: Array<UseHandler>,
   reset: boolean
 ): Array<NextHandleFunction> {
   const arr: Array<NextHandleFunction> = [];
+
+  if (path instanceof RegExp) {
+    return arr;
+  }
+
   for (const useHandler of useHandlers) {
     /*
       use(/v1/api)
