@@ -48,7 +48,7 @@ export = buildRouter;
 
 function routeFxn(
   routerObj,
-  path: string | RegExp
+  path: string | RegExp | Array<string | RegExp>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
