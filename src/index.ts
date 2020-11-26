@@ -156,7 +156,7 @@ function addRoute(
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string | Array<string> | RegExp | Array<RegExp>,
+  path: string | RegExp | Array<string | RegExp>,
   ...handlers: Array<NextHandleFunction>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const paths = Array.isArray(path) ? path : [path];
