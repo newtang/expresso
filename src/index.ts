@@ -25,6 +25,7 @@ const defaultOptions: RouterOptions = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const options = Object.assign({}, defaultOptions, userOptions);
+  validateOptions(options);
   const routeStorage = new CompositeStorage(options);
 
   const useHandlers: Array<UseHandler> = [];
@@ -39,6 +40,26 @@ function buildRouter(userOptions?: Partial<RouterOptions>): any {
 }
 
 export = buildRouter;
+
+function validateOptions(options: RouterOptions): void {
+  for (const opt in options) {
+    if (opt in defaultOptions) {
+      if (opt === 'allowRegex') {
+        if (![false, 'safe', 'all'].includes(options[opt])) {
+          throw new Error(
+            `Unexpected value found for ${opt}: ${options[opt]}. Allowed values are false, 'safe', 'all'.`
+          );
+        }
+      } else {
+        if (typeof options[opt] !== 'boolean') {
+          throw new Error(`Unexpected value found for boolean ${opt}: ${options[opt]}`);
+        }
+      }
+    } else {
+      throw new Error(`Unexpected options: opt`);
+    }
+  }
+}
 
 function routeFxn(
   routerObj,

@@ -8,6 +8,28 @@ describe('options tests', () => {
     console.error = jest.fn();
   });
 
+  test.each([3, 'str', /abc/, [], {}, jest.fn(), [false]])('invalid options', async (invalid) => {
+    const options = ['allowDuplicateParams', 'allowDuplicatePaths', 'caseSensitive', 'strict'];
+
+    for (const opt of options) {
+      expect(() => {
+        expresso({ [opt]: invalid });
+      }).toThrowError(`Unexpected value found for boolean ${opt}: ${invalid}`);
+    }
+
+    expect(() => {
+      expresso({ allowRegex: (invalid as unknown) as false });
+    }).toThrowError(
+      `Unexpected value found for allowRegex: ${invalid}. Allowed values are false, 'safe', 'all'.`
+    );
+  });
+
+  test('invalid option "true" for allowRegex', async () => {
+    expect(() => {
+      expresso({ allowRegex: (true as unknown) as false });
+    }).toThrowError(`Unexpected value found for allowRegex: true. Allowed values are false, 'safe', 'all'.`);
+  });
+
   test.each([{ strict: false }, undefined])('strict:false', async (options) => {
     const app = express();
     const router = expresso(options);
