@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
-import { validatePath } from './utils/stringUtils';
+import { defaultOptions, validatePath, validateOptions } from './utils/validators';
 
 type UseHandler = {
   pathStart: string;
@@ -12,14 +12,6 @@ type UseHandler = {
 
 type Router = {
   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
-};
-
-const defaultOptions: RouterOptions = {
-  allowDuplicateParams: false,
-  allowDuplicatePaths: false,
-  allowRegex: false,
-  caseSensitive: false,
-  strict: false,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,26 +32,6 @@ function buildRouter(userOptions?: Partial<RouterOptions>): any {
 }
 
 export = buildRouter;
-
-function validateOptions(options: RouterOptions): void {
-  for (const opt in options) {
-    if (opt in defaultOptions) {
-      if (opt === 'allowRegex') {
-        if (![false, 'safe', 'all'].includes(options[opt])) {
-          throw new Error(
-            `Unexpected value found for ${opt}: ${options[opt]}. Allowed values are false, 'safe', 'all'.`
-          );
-        }
-      } else {
-        if (typeof options[opt] !== 'boolean') {
-          throw new Error(`Unexpected value found for boolean ${opt}: ${options[opt]}`);
-        }
-      }
-    } else {
-      throw new Error(`Unexpected options: opt`);
-    }
-  }
-}
 
 function routeFxn(
   routerObj,

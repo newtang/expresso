@@ -3,7 +3,7 @@ import { FoundRouteData, Storage, ParamStorage, RouterOptions } from '../interfa
 import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';
 import RegexStorage from './RegexStorage';
-import { validatePath } from '../utils/stringUtils';
+import { validatePath } from '../utils/validators';
 
 export default class CompositeStorage implements ParamStorage {
   readonly staticStorage: Storage;
