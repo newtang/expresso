@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
 import type { Request, Response, NextFunction } from 'express';
+import type { RouterOptions } from '../interfaces';
 
 describe('options tests', () => {
   beforeAll(() => {
@@ -29,6 +30,13 @@ describe('options tests', () => {
       expresso({ allowRegex: (true as unknown) as false });
     }).toThrowError(`Unexpected value found for allowRegex: true. Allowed values are false, 'safe', 'all'.`);
   });
+
+  test('invalid option key', async () => {
+    expect(() => {
+      expresso({ something: false } as unknown as RouterOptions);
+    }).toThrowError('Unexpected options: something');
+  });
+
 
   test.each([{ strict: false }, undefined])('strict:false', async (options) => {
     const app = express();

@@ -29,7 +29,7 @@ export function validateOptions(options: RouterOptions): void {
         }
       }
     } else {
-      throw new Error(`Unexpected options: opt`);
+      throw new Error(`Unexpected options: ${opt}`);
     }
   }
 }
