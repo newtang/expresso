@@ -159,17 +159,46 @@ function addRoute(
   return routerObj;
 }
 
+function getRelevantUseHandlersForRegex(
+  path: RegExp,
+  useHandlers: Array<UseHandler>,
+  reset: boolean
+): Array<NextHandleFunction> {
+  const arr: Array<NextHandleFunction> = [];
+  for (const useHandler of useHandlers) {
+    arr.push(
+      (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
+      (((req: Request, res: Response, done: NextHandleFunction) => {
+        if (
+          req.path === useHandler.pathStart ||
+          (req.path.startsWith(useHandler.pathStart) && req.path.startsWith(`${useHandler.pathStart}/`))
+        ) {
+          executeHandlers(req, res, done as NextFunction, useHandler.handlers);
+        } else {
+          (done as NextFunction)();
+        }
+      }) as any) as NextHandleFunction
+    );
+  }
+
+  //reset properties before verb handlers.
+  if (arr.length && reset) {
+    arr.push(resetPathPrefix as NextHandleFunction);
+  }
+
+  return arr;
+}
+
 function getRelevantUseHandlers(
   path: string | RegExp,
   useHandlers: Array<UseHandler>,
   reset: boolean
 ): Array<NextHandleFunction> {
-  const arr: Array<NextHandleFunction> = [];
-
   if (path instanceof RegExp) {
-    return arr;
+    return getRelevantUseHandlersForRegex(path, useHandlers, reset);
   }
 
+  const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
     /*
       use(/v1/api)

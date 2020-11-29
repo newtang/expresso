@@ -33,10 +33,9 @@ describe('options tests', () => {
 
   test('invalid option key', async () => {
     expect(() => {
-      expresso({ something: false } as unknown as RouterOptions);
+      expresso(({ something: false } as unknown) as RouterOptions);
     }).toThrowError('Unexpected options: something');
   });
-
 
   test.each([{ strict: false }, undefined])('strict:false', async (options) => {
     const app = express();
