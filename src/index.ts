@@ -170,8 +170,8 @@ function getRelevantUseHandlersForRegex(
       (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
       (((req: Request, res: Response, done: NextHandleFunction) => {
         if (
-          req.path === useHandler.pathStart ||
-          (req.path.startsWith(useHandler.pathStart) && req.path.startsWith(`${useHandler.pathStart}/`))
+          req.originalUrl === useHandler.pathStart ||
+          (req.originalUrl.startsWith(useHandler.pathStart) && req.originalUrl.startsWith(`${useHandler.pathStart}/`))
         ) {
           executeHandlers(req, res, done as NextFunction, useHandler.handlers);
         } else {
