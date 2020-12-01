@@ -267,9 +267,6 @@ describe('router.use', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  /**regex start here **/
-
-
   test('specified path - non strict', async () => {
     const app = express();
     const router = expresso();
@@ -329,7 +326,7 @@ describe('router.use', () => {
   });
 
   test('mounted router', async () => {
-    const mountedRouter = expresso();
+    const mountedRouter = expresso({allowRegex:'safe'});
     const baseRouter = expresso();
     const app = express();
 
@@ -337,6 +334,11 @@ describe('router.use', () => {
     mountedRouter.get('/id/:id/settings', (req, res) => {
       mountedRouterProps = cloneUrlProps(req);
       res.send('success');
+    });
+
+    mountedRouter.get(/^\/regex\/$/, (req, res) => {
+      mountedRouterProps = cloneUrlProps(req);
+      res.send('success2');
     });
 
     let baseRouterProps;
@@ -375,6 +377,7 @@ describe('router.use', () => {
       baseUrl: '/api',
     });
 
+    mountedRouterProps = null
     res = await request(app).get('/otherapi/test');
     expect(res.text).toBe('other success');
     expect(res.status).toBe(200);
@@ -384,10 +387,22 @@ describe('router.use', () => {
       baseUrl: '',
       path: '/otherapi/test',
     });
+    expect(mountedRouterProps).toBeNull();
+
+
+    res = await request(app).get('/api/regex/');
+    expect(res.text).toBe('success2');
+    expect(res.status).toBe(200);
+    expect(mountedRouterProps).toStrictEqual({
+      originalUrl: '/api/regex/',
+      url: '/regex/',
+      baseUrl: '/api',
+      path: '/regex/',
+    });
   });
 
   test('multi-level, mounted router', async () => {
-    const specificDessertRouter = expresso();
+    const specificDessertRouter = expresso({allowRegex:'safe'});
     const specificEntreeRouter = expresso();
     const dessertRouter = expresso();
     const entreeRouter = expresso();
@@ -409,6 +424,11 @@ describe('router.use', () => {
     specificDessertRouter.get('/cupcakes', (req, res) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('cupcakes!');
+    });
+
+    specificDessertRouter.get(/^\/cupcakes\/chocolate$/, (req, res) => {
+      currentRouteReqProps = cloneUrlProps(req);
+      res.send('chocolate cupcakes!');
     });
 
     specificDessertRouter.get('/cookies/chocolatechip', (req, res) => {
@@ -449,7 +469,34 @@ describe('router.use', () => {
 
     app.use(baseRouter);
 
-    let res = await request(app).get('/api/v1/desserts/cupcakes');
+
+    let res = await request(app).get('/api/v1/desserts/cupcakes/chocolate');
+    expect(res.text).toBe('chocolate cupcakes!');
+    expect(res.status).toBe(200);
+    expect(baseRouterProps).toStrictEqual({
+      path: '/desserts/cupcakes/chocolate',
+      originalUrl: '/api/v1/desserts/cupcakes/chocolate',
+      url: '/desserts/cupcakes/chocolate',
+      baseUrl: '/api/v1',
+    });
+
+    expect(dessertRouterProps).toStrictEqual({
+      path: '/cupcakes/chocolate',
+      originalUrl: '/api/v1/desserts/cupcakes/chocolate',
+      url: '/cupcakes/chocolate',
+      baseUrl: '/api/v1/desserts',
+    });
+
+    expect(entreeRouterProps).toBeUndefined();
+
+    expect(currentRouteReqProps).toStrictEqual({
+      path: '/cupcakes/chocolate',
+      originalUrl: '/api/v1/desserts/cupcakes/chocolate',
+      url: '/cupcakes/chocolate',
+      baseUrl: '/api/v1/desserts',
+    });
+
+    res = await request(app).get('/api/v1/desserts/cupcakes');
     expect(res.text).toBe('cupcakes!');
     expect(res.status).toBe(200);
     expect(baseRouterProps).toStrictEqual({
