@@ -53,7 +53,7 @@ describe('router.use', () => {
 
   test('all paths', async () => {
     const app = express();
-    const router = expresso({allowRegex:'safe'});
+    const router = expresso({ allowRegex: 'safe' });
 
     let useCalled = false;
     router.use(function (req: Request, res: Response, next: NextFunction) {
@@ -79,14 +79,13 @@ describe('router.use', () => {
     expect(res.status).toBe(200);
     expect(useCalled).toBe(true);
 
-
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
 
   test('all paths - multiple functions', async () => {
     const app = express();
-    const router = expresso({allowRegex:'safe'});
+    const router = expresso({ allowRegex: 'safe' });
 
     let useUrlProps1;
     let useUrlProps2;
@@ -111,7 +110,7 @@ describe('router.use', () => {
     });
     router.get(/^\/api\/v1\/$/gi, (req: Request, res: Response) => {
       regexGetUrlProps = cloneUrlProps(req);
-      res.send(msg2)
+      res.send(msg2);
     });
     app.use(router);
 
@@ -142,7 +141,6 @@ describe('router.use', () => {
 
     expect(regexGetUrlProps).toBeUndefined();
 
-
     useUrlProps1 = null;
     useUrlProps2 = null;
     getUrlProps = null;
@@ -172,8 +170,7 @@ describe('router.use', () => {
       url: '/api/v1/',
       baseUrl: '',
       path: '/api/v1/',
-    })
-
+    });
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
@@ -181,7 +178,7 @@ describe('router.use', () => {
 
   test('specified path', async () => {
     const app = express();
-    const router = expresso({allowRegex: 'safe'});
+    const router = expresso({ allowRegex: 'safe' });
 
     let useUrlProps: null | { [key: string]: string } = null;
     router.use('/v1/', function (req: Request, res: Response, next: NextFunction) {
@@ -192,7 +189,7 @@ describe('router.use', () => {
     let getUrlProps;
     router.get('/', (req: Request, res: Response) => res.send('success'));
     router.get('/v2/api', (req: Request, res: Response) => res.send('success2'));
-    router.get(/^\/v3\/api$/, (req: Request, res: Response) => res.send('success_regex'))
+    router.get(/^\/v3\/api$/, (req: Request, res: Response) => res.send('success_regex'));
     router.get('/v1/api', (req: Request, res: Response) => {
       getUrlProps = cloneUrlProps(req);
       res.send('success3');
@@ -202,7 +199,6 @@ describe('router.use', () => {
       getUrlProps = cloneUrlProps(req);
       res.send('success4');
     });
-
 
     app.use(router);
 
@@ -220,7 +216,6 @@ describe('router.use', () => {
     expect(res.text).toBe('success_regex');
     expect(res.status).toBe(200);
     expect(useUrlProps).toBeNull();
-
 
     res = await request(app).get('/v1/api');
     expect(res.text).toBe('success3');
@@ -240,7 +235,7 @@ describe('router.use', () => {
       baseUrl: '',
     });
 
-    useUrlProps = null;
+    useUrlProps = null; //eslint-disable-line  require-atomic-updates
     getUrlProps = null;
 
     res = await request(app).get('/v1/api/regex/test/');
@@ -260,8 +255,6 @@ describe('router.use', () => {
       url: '/v1/api/regex/test/',
       baseUrl: '',
     });
-
-
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
@@ -326,7 +319,7 @@ describe('router.use', () => {
   });
 
   test('mounted router', async () => {
-    const mountedRouter = expresso({allowRegex:'safe'});
+    const mountedRouter = expresso({ allowRegex: 'safe' });
     const baseRouter = expresso();
     const app = express();
 
@@ -377,7 +370,7 @@ describe('router.use', () => {
       baseUrl: '/api',
     });
 
-    mountedRouterProps = null
+    mountedRouterProps = null;
     res = await request(app).get('/otherapi/test');
     expect(res.text).toBe('other success');
     expect(res.status).toBe(200);
@@ -388,7 +381,6 @@ describe('router.use', () => {
       path: '/otherapi/test',
     });
     expect(mountedRouterProps).toBeNull();
-
 
     res = await request(app).get('/api/regex/');
     expect(res.text).toBe('success2');
@@ -402,7 +394,7 @@ describe('router.use', () => {
   });
 
   test('multi-level, mounted router', async () => {
-    const specificDessertRouter = expresso({allowRegex:'safe'});
+    const specificDessertRouter = expresso({ allowRegex: 'safe' });
     const specificEntreeRouter = expresso();
     const dessertRouter = expresso();
     const entreeRouter = expresso();
@@ -468,7 +460,6 @@ describe('router.use', () => {
     );
 
     app.use(baseRouter);
-
 
     let res = await request(app).get('/api/v1/desserts/cupcakes/chocolate');
     expect(res.text).toBe('chocolate cupcakes!');
@@ -615,9 +606,6 @@ describe('router.use', () => {
       baseUrl: '/api/v1/entrees',
     });
   });
-
-
-
 });
 
 function cloneProps(obj: { [key: string]: string }, props: Array<string>): { [key: string]: string } {

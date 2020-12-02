@@ -168,17 +168,18 @@ function getRelevantUseHandlersForRegex(
   const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
     arr.push(
-      (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
+      trimPathPrefix.bind(null, useHandler.pathStart) as NextHandleFunction,
       (((req: Request, res: Response, done: NextHandleFunction) => {
         if (
           req.originalUrl === useHandler.pathStart ||
-          (req.originalUrl.startsWith(useHandler.pathStart) && req.originalUrl.startsWith(`${useHandler.pathStart}/`))
+          (req.originalUrl.startsWith(useHandler.pathStart) &&
+            req.originalUrl.startsWith(`${useHandler.pathStart}/`))
         ) {
           executeHandlers(req, res, done as NextFunction, useHandler.handlers);
         } else {
           (done as NextFunction)();
         }
-      }) as any) as NextHandleFunction
+      }) as unknown) as NextHandleFunction
     );
   }
 
