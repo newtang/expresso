@@ -170,11 +170,7 @@ function getRelevantUseHandlersForRegex(
     arr.push(
       trimPathPrefix.bind(null, useHandler.pathStart) as NextHandleFunction,
       (((req: Request, res: Response, done: NextHandleFunction) => {
-        if (
-          req.originalUrl === useHandler.pathStart ||
-          (req.originalUrl.startsWith(useHandler.pathStart) &&
-            req.originalUrl.startsWith(`${useHandler.pathStart}/`))
-        ) {
+        if (validStartsWith(req.originalUrl, useHandler.pathStart)) {
           executeHandlers(req, res, done as NextFunction, useHandler.handlers);
         } else {
           (done as NextFunction)();
@@ -189,6 +185,10 @@ function getRelevantUseHandlersForRegex(
   }
 
   return arr;
+}
+
+function validStartsWith(path: string, pathStart: string): boolean {
+  return path === pathStart || (path.startsWith(pathStart) && path.startsWith(`${pathStart}/`));
 }
 
 function getRelevantUseHandlers(
@@ -217,10 +217,7 @@ function getRelevantUseHandlers(
 
     */
 
-    if (
-      path === useHandler.pathStart ||
-      (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
-    ) {
+    if (validStartsWith(path, useHandler.pathStart)) {
       arr.push(
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
