@@ -62,6 +62,7 @@ function buildUse(
     pathStart = handlerOrPathStart;
   }
 
+  //we don't support regex in use quite yet.
   validatePath(pathStart, { allowColon: false, allowRegex: false });
 
   if (pathStart.charAt(pathStart.length - 1) === '/') {
