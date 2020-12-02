@@ -2,10 +2,39 @@ import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
 import type { Request, Response, NextFunction } from 'express';
+import type { RouterOptions } from '../interfaces';
 
 describe('options tests', () => {
   beforeAll(() => {
     console.error = jest.fn();
+  });
+
+  test.each([3, 'str', /abc/, [], {}, jest.fn(), [false]])('invalid options', async (invalid) => {
+    const options = ['allowDuplicateParams', 'allowDuplicatePaths', 'caseSensitive', 'strict'];
+
+    for (const opt of options) {
+      expect(() => {
+        expresso({ [opt]: invalid });
+      }).toThrowError(`Unexpected value found for boolean ${opt}: ${invalid}`);
+    }
+
+    expect(() => {
+      expresso({ allowRegex: (invalid as unknown) as false });
+    }).toThrowError(
+      `Unexpected value found for allowRegex: ${invalid}. Allowed values are false, 'safe', 'all'.`
+    );
+  });
+
+  test('invalid option "true" for allowRegex', async () => {
+    expect(() => {
+      expresso({ allowRegex: (true as unknown) as false });
+    }).toThrowError(`Unexpected value found for allowRegex: true. Allowed values are false, 'safe', 'all'.`);
+  });
+
+  test('invalid option key', async () => {
+    expect(() => {
+      expresso(({ something: false } as unknown) as RouterOptions);
+    }).toThrowError('Unexpected options: something');
   });
 
   test.each([{ strict: false }, undefined])('strict:false', async (options) => {
@@ -208,10 +237,10 @@ describe('options tests', () => {
     expect(res.status).toBe(404);
   });
 
-  test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id'])(
+  test.each(['/', '/test', '/abc/123/', '/:test', '/v1/api/:id', /api/gi])(
     'allowDuplicatePaths: false',
     async (path) => {
-      const router = expresso({ allowDuplicatePaths: false });
+      const router = expresso({ allowDuplicatePaths: false, allowRegex: 'safe' });
 
       router.get(path, (req: Request, res: Response) => res.send({}));
       expect(() => {
@@ -269,5 +298,45 @@ describe('options tests', () => {
     expect(firstCalled).toBe(true);
     expect(res.status).toBe(200);
     expect(res.text).toBe(msg);
+  });
+
+  test('allowRegex: default', async () => {
+    const router = expresso();
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError('Regular expressions are prohibited when allowRegex option is false: /test/');
+  });
+
+  test('allowRegex: false', async () => {
+    const router = expresso({ allowRegex: false });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError('Regular expressions are prohibited when allowRegex option is false: /test/');
+  });
+
+  test('allowRegex: safe', async () => {
+    const router = expresso({ allowRegex: 'safe' });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
+
+    expect(() => {
+      router.get(/(a+){10}/, (req: Request, res: Response) => res.send({}));
+    }).toThrowError(`Unsafe regex /(a+){10}/`);
+  });
+
+  test('allowRegex: all', async () => {
+    const router = expresso({ allowRegex: 'all' });
+
+    expect(() => {
+      router.get(/test/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
+
+    expect(() => {
+      router.get(/(a+){10}/, (req: Request, res: Response) => res.send({}));
+    }).not.toThrowError();
   });
 });

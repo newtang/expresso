@@ -22,7 +22,7 @@ describe('basic tests', () => {
     }).not.toThrow();
   });
 
-  test.each([undefined, null, '', true, false, jest.fn(), [], {}, /api/gi])('invalid routes %s', (path) => {
+  test.each([undefined, null, '', true, false, jest.fn(), [], {}])('invalid routes %s', (path) => {
     //eslint-disable-line no-unexpected-multiline
     expect(() => {
       expresso().get(path, jest.fn());

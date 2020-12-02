@@ -12,7 +12,7 @@ describe('basic tests', () => {
 
   test('slash route', async () => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     router.get('/', (req: Request, res: Response) => res.send(msg));
@@ -26,12 +26,12 @@ describe('basic tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('basic route', async () => {
+  test.each(['/test', /^\/test/])('basic route', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
-    router.get('/test', (req: Request, res: Response) => res.send(msg));
+    router.get(path, (req: Request, res: Response) => res.send(msg));
     app.use(router);
 
     const res = await request(app).get('/test');
@@ -42,14 +42,14 @@ describe('basic tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('same routes, different verb', async () => {
+  test.each(['/test', /^\/test/])('same routes, different verb', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const getMsg = 'success';
     const patchMsg = 'patchSuccess';
 
-    router.get('/test', (req: Request, res: Response) => res.send(getMsg));
-    router.patch('/test', (req: Request, res: Response) => res.send(patchMsg));
+    router.get(path, (req: Request, res: Response) => res.send(getMsg));
+    router.patch(path, (req: Request, res: Response) => res.send(patchMsg));
     app.use(router);
 
     const getRes = await request(app).get('/test');
@@ -61,12 +61,12 @@ describe('basic tests', () => {
     expect(patchRes.status).toBe(200);
   });
 
-  test('with error handler', async () => {
+  test.each(['/test', /^\/test/])('with error handler', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
-    router.get('/test', (req: Request, res: Response) => res.send(msg));
+    router.get(path, (req: Request, res: Response) => res.send(msg));
     app.use(router);
 
     //eslint-disable-next-line  @typescript-eslint/no-unused-vars
@@ -78,16 +78,16 @@ describe('basic tests', () => {
     expect(res.status).toBe(404);
   });
 
-  test('with middlewares', async () => {
+  test.each(['/test', /^\/test/])('with middlewares', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
     let middleware1Called = false;
     let middleware2Called = false;
 
     router.get(
-      '/test',
+      path,
       (req: Request, res: Response, next: NextFunction) => {
         middleware1Called = true;
         next();
@@ -107,33 +107,39 @@ describe('basic tests', () => {
     expect(res.status).toBe(200);
   });
 
-  test.each(METHODS)('all methods %s', async (capsMethod) => {
+  test.each(METHODS)('string - all methods %s', async (capsMethod) => {
     if (capsMethod === 'CONNECT') {
       return;
     }
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
+    const regexMsg = 'success-regex';
 
     const method = capsMethod.toLowerCase();
     router[method]('/test', (req: Request, res: Response) => res.send(msg));
+    router[method](/^\/abc/, (req: Request, res: Response) => res.send(regexMsg));
     app.use(router);
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    const res = await (request(app)[method as keyof SuperTest<Test>] as Function)('/test');
-    if (method !== 'head') {
-      expect(res.text).toBe(msg);
+    for (const [path, response] of [
+      ['/test', msg],
+      ['/abc', regexMsg],
+    ]) {
+      // eslint-disable-next-line @typescript-eslint/ban-types
+      const res = await (request(app)[method as keyof SuperTest<Test>] as Function)(path);
+      if (method !== 'head') {
+        expect(res.text).toBe(response);
+      }
+      expect(res.status).toBe(200);
     }
-
-    expect(res.status).toBe(200);
   });
 
-  test('.route basic', async () => {
+  test.each(['/api', /^\/api/])('.route basic', async (path) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router
-      .route('/api')
+      .route(path)
       .get((req: Request, res: Response) => {
         res.send('get success');
       })
@@ -162,12 +168,16 @@ describe('basic tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('path array', async () => {
+  test.each([
+    { paths: ['/', '/api', '/api/:id'] },
+    { paths: [/^\/$/, /^\/api/, /^\/api\/foo$/] },
+    { paths: [/^\/$/, /^\/api/, '/api/:id'] },
+  ])('path array', async ({ paths }) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
     const msg = 'success';
 
-    router.get(['/', '/api', '/api/:id'], (req: Request, res: Response) => res.send(msg));
+    router.get(paths, (req: Request, res: Response) => res.send(msg));
     app.use(router);
 
     for (const path of ['/', '/api', '/api/foo']) {
@@ -180,12 +190,16 @@ describe('basic tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('path array in .route', async () => {
+  test.each([
+    { paths: ['/', '/api', '/api/:id'] },
+    { paths: [/^\/$/, /^\/api/, /^\/api\/foo$/] },
+    { paths: [/^\/$/, /^\/api/, '/api/:id'] },
+  ])('path array in .route', async ({ paths }) => {
     const app = express();
-    const router = expresso();
+    const router = expresso({ allowRegex: 'safe' });
 
     router
-      .route(['/', '/api', '/api/:id'])
+      .route(paths)
       .get((req: Request, res: Response) => {
         res.send('get success');
       })

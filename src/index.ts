@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { Storage, RouterOptions } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
-import { validatePath } from './utils/stringUtils';
+import { defaultOptions, validatePath, validateOptions } from './utils/validators';
 
 type UseHandler = {
   pathStart: string;
@@ -14,23 +14,10 @@ type Router = {
   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
 };
 
-interface RouterUserOptions {
-  allowDuplicateParams?: boolean;
-  allowDuplicatePaths?: boolean;
-  strict?: boolean;
-  caseSensitive?: boolean;
-}
-
-const defaultOptions: RouterOptions = {
-  allowDuplicateParams: false,
-  allowDuplicatePaths: false,
-  strict: false,
-  caseSensitive: false,
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRouter(userOptions?: RouterUserOptions): any {
+function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const options = Object.assign({}, defaultOptions, userOptions);
+  validateOptions(options);
   const routeStorage = new CompositeStorage(options);
 
   const useHandlers: Array<UseHandler> = [];
@@ -48,13 +35,13 @@ export = buildRouter;
 
 function routeFxn(
   routerObj,
-  path: string
+  path: string | RegExp | Array<string | RegExp>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
       ...handlers: Array<NextHandleFunction>
-    ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+    ): { [key: string]: (path: string | RegExp, ...handlers: Array<NextHandleFunction>) => void } {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
@@ -75,7 +62,8 @@ function buildUse(
     pathStart = handlerOrPathStart;
   }
 
-  validatePath(pathStart, { allowColon: false });
+  //we don't support regex in use quite yet.
+  validatePath(pathStart, { allowColon: false, allowRegex: false });
 
   if (pathStart.charAt(pathStart.length - 1) === '/') {
     pathStart = pathStart.slice(0, pathStart.length - 1);
@@ -134,7 +122,7 @@ function executeHandlers(
 }
 
 function buildRouterMethods(
-  routeStorage: Storage,
+  routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
@@ -150,12 +138,13 @@ function buildRouterMethods(
   return routerObj;
 }
 
+//router.get(...), router.post(...)
 function addRoute(
   method: string,
-  routeStorage: Storage,
+  routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string | Array<string>,
+  path: string | RegExp | Array<string | RegExp>,
   ...handlers: Array<NextHandleFunction>
 ): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
   const paths = Array.isArray(path) ? path : [path];
@@ -171,11 +160,46 @@ function addRoute(
   return routerObj;
 }
 
-function getRelevantUseHandlers(
-  path: string,
+function getRelevantUseHandlersForRegex(
+  path: RegExp,
   useHandlers: Array<UseHandler>,
   reset: boolean
 ): Array<NextHandleFunction> {
+  const arr: Array<NextHandleFunction> = [];
+  for (const useHandler of useHandlers) {
+    arr.push(
+      trimPathPrefix.bind(null, useHandler.pathStart) as NextHandleFunction,
+      (((req: Request, res: Response, done: NextHandleFunction) => {
+        if (validStartsWith(req.originalUrl, useHandler.pathStart)) {
+          executeHandlers(req, res, done as NextFunction, useHandler.handlers);
+        } else {
+          (done as NextFunction)();
+        }
+      }) as unknown) as NextHandleFunction
+    );
+  }
+
+  //reset properties before verb handlers.
+  if (arr.length && reset) {
+    arr.push(resetPathPrefix as NextHandleFunction);
+  }
+
+  return arr;
+}
+
+function validStartsWith(path: string, pathStart: string): boolean {
+  return path === pathStart || (path.startsWith(pathStart) && path.startsWith(`${pathStart}/`));
+}
+
+function getRelevantUseHandlers(
+  path: string | RegExp,
+  useHandlers: Array<UseHandler>,
+  reset: boolean
+): Array<NextHandleFunction> {
+  if (path instanceof RegExp) {
+    return getRelevantUseHandlersForRegex(path, useHandlers, reset);
+  }
+
   const arr: Array<NextHandleFunction> = [];
   for (const useHandler of useHandlers) {
     /*
@@ -193,10 +217,7 @@ function getRelevantUseHandlers(
 
     */
 
-    if (
-      path === useHandler.pathStart ||
-      (path.startsWith(useHandler.pathStart) && path.startsWith(`${useHandler.pathStart}/`))
-    ) {
+    if (validStartsWith(path, useHandler.pathStart)) {
       arr.push(
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
