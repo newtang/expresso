@@ -1,6 +1,6 @@
 import { NextHandleFunction } from 'connect';
-import type { Request, Response, NextFunction } from 'express';
-import { Storage, RouterOptions } from './interfaces';
+import type { Request, Response, NextFunction, Router, RequestParamHandler } from 'express';
+import { Storage, RouterOptions/*, Methods*/ } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 import { defaultOptions, validatePath, validateOptions } from './utils/validators';
@@ -10,9 +10,9 @@ type UseHandler = {
   handlers: Array<NextHandleFunction>;
 };
 
-type Router = {
-  use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
-};
+// type Router = {
+//   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
+// };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: Partial<RouterOptions>): any {
@@ -23,12 +23,20 @@ function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const useHandlers: Array<UseHandler> = [];
   const handler = handleRequest.bind(null, routeStorage, useHandlers, options);
 
-  const param = routeStorage.param.bind(routeStorage);
+  // const param = routeStorage.param.bind(routeStorage);
+  const param = buildParam.bind(handler, routeStorage);
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
   const route = routeFxn.bind(null, routerObj);
 
-  return Object.assign(handler, { use, param, route }, routerObj);
+  //to do remove stack?
+
+  return Object.assign(handler, { use, param, route, stack: [] }, routerObj);
+}
+
+function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler) {
+  routeStorage.param(name, callback);
+  return this;
 }
 
 export = buildRouter;
@@ -53,7 +61,7 @@ function buildUse(
   useHandlers: Array<UseHandler>,
   handlerOrPathStart: string | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
-): Router {
+): any {
   let pathStart = '/';
 
   if (typeof handlerOrPathStart === 'function') {
@@ -124,7 +132,7 @@ function executeHandlers(
 function buildRouterMethods(
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>
-): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+)/*: Methods*/ : any {
   const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
   for (const capsMethod of METHODS) {
     const method = capsMethod.toLowerCase();
@@ -135,7 +143,7 @@ function buildRouterMethods(
      **/
     routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers, routerObj);
   }
-  return routerObj;
+  return (routerObj as unknown) as any;
 }
 
 //router.get(...), router.post(...)

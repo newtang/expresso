@@ -1,4 +1,5 @@
 import type { NextHandleFunction } from 'connect';
+import type { RequestParamHandler } from 'express'; 
 import { FoundRouteData, Storage, ParamStorage, RouterOptions } from '../interfaces';
 import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';
@@ -46,7 +47,7 @@ export default class CompositeStorage implements ParamStorage {
     );
   }
 
-  param(name: string, callback: NextHandleFunction): void {
+  param(name: string, callback: RequestParamHandler): void {
     return this.paramStorage.param(name, callback);
   }
 }

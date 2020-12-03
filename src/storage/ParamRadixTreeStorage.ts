@@ -1,7 +1,6 @@
 import { FoundRouteData, ParamStorage } from '../interfaces';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction, RequestParamHandler } from 'express';
 import type { NextHandleFunction } from 'connect';
-import type { RequestParamHandler } from 'express';
 import { lowercaseStaticParts } from '../utils/stringUtils';
 import { buildOptionsHandler } from './utils';
 
@@ -65,7 +64,7 @@ export default class ParamRadixTreeStorage implements ParamStorage {
     return false;
   }
 
-  param(originalName: string, callback: NextHandleFunction): void {
+  param(originalName: string, callback: RequestParamHandler): void {
     if (!originalName || typeof originalName !== 'string') {
       throw new Error(`Expected name to be a string`);
     }

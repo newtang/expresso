@@ -91,8 +91,8 @@ describe('param trigger tests', () => {
     router.param('id', function (req, res, next, value, name) {
       paramValues.push({ value, name });
       next();
-    });
-    router.param('value', function (req, res, next, value, name) {
+    })
+    .param('value', function (req, res, next, value, name) {
       paramValues.push({ value, name });
       next();
     });
@@ -117,8 +117,8 @@ describe('param trigger tests', () => {
     router.param('id', function (req, res, next, value, name) {
       paramValues.push({ value, name });
       next();
-    });
-    router.param('value', function (req, res, next, value, name) {
+    })
+    .param('value', function (req, res, next, value, name) {
       paramValues.push({ value, name });
       next();
     });
