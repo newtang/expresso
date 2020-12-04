@@ -88,14 +88,15 @@ describe('param trigger tests', () => {
     const router = expresso();
 
     const paramValues: Array<{ value: string; name: string }> = [];
-    router.param('id', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    })
-    .param('value', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
+    router
+      .param('id', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      })
+      .param('value', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      });
 
     router.get('/api/:value/:id', (req: Request, res: Response) => res.send(req.params.value));
     app.use(router);
@@ -114,14 +115,15 @@ describe('param trigger tests', () => {
     const router = expresso();
 
     const paramValues: Array<{ value: string; name: string }> = [];
-    router.param('id', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    })
-    .param('value', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
+    router
+      .param('id', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      })
+      .param('value', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      });
 
     router.get('/api/:value/:cool', (req: Request, res: Response) => res.send(req.params.value));
     app.use(router);

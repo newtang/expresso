@@ -1,6 +1,6 @@
 import { NextHandleFunction } from 'connect';
-import type { Request, Response, NextFunction, Router, RequestParamHandler } from 'express';
-import { Storage, RouterOptions/*, Methods*/ } from './interfaces';
+import type { Request, Response, NextFunction, RequestParamHandler } from 'express';
+import { Storage, RouterOptions, Router /*, Methods*/ } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 import { defaultOptions, validatePath, validateOptions } from './utils/validators';
@@ -15,7 +15,7 @@ type UseHandler = {
 // };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRouter(userOptions?: Partial<RouterOptions>): any {
+function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const options = Object.assign({}, defaultOptions, userOptions);
   validateOptions(options);
   const routeStorage = new CompositeStorage(options);
@@ -24,14 +24,15 @@ function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const handler = handleRequest.bind(null, routeStorage, useHandlers, options);
 
   // const param = routeStorage.param.bind(routeStorage);
-  const param = buildParam.bind(handler, routeStorage);
+  const param: (name: string, callback: RequestParamHandler) => Router = buildParam.bind(
+    handler,
+    routeStorage
+  );
   const use = buildUse.bind(handler, useHandlers);
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
   const route = routeFxn.bind(null, routerObj);
 
-  //to do remove stack?
-
-  return Object.assign(handler, { use, param, route, stack: [] }, routerObj);
+  return Object.assign(handler, { use, param, route }, routerObj);
 }
 
 function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler) {
@@ -129,10 +130,7 @@ function executeHandlers(
   }
 }
 
-function buildRouterMethods(
-  routeStorage: CompositeStorage,
-  useHandlers: Array<UseHandler>
-)/*: Methods*/ : any {
+function buildRouterMethods(routeStorage: CompositeStorage, useHandlers: Array<UseHandler>): any {
   const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
   for (const capsMethod of METHODS) {
     const method = capsMethod.toLowerCase();

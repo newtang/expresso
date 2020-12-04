@@ -1,5 +1,5 @@
 import type { NextHandleFunction } from 'connect';
-import type { RequestParamHandler } from 'express'; 
+import type { RequestParamHandler } from 'express';
 import { FoundRouteData, Storage, ParamStorage, RouterOptions } from '../interfaces';
 import StaticStorage from './StaticStorage';
 import ParamRadixTreeStorage from './ParamRadixTreeStorage';

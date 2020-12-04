@@ -1,5 +1,5 @@
 import type { NextHandleFunction } from 'connect';
-import type { IRouterMatcher } from 'express';
+import type { RequestHandler, RequestParamHandler } from 'express';
 
 export interface Storage {
   find(method: string, path: string): FoundRouteData | false;
@@ -23,38 +23,48 @@ export interface RouterOptions {
   strict: boolean;
 }
 
+type PathParams = string | RegExp | Array<string | RegExp>;
 
-// export interface Methods {
-// 	/**
-//      * Special-cased "all" method, applying the given route `path`,
-//      * middleware, and callback to _every_ HTTP method.
-//      */
-//     all: IRouterMatcher<this, 'all'>;
-//     get: IRouterMatcher<this, 'get'>;
-//     post: IRouterMatcher<this, 'post'>;
-//     put: IRouterMatcher<this, 'put'>;
-//     delete: IRouterMatcher<this, 'delete'>;
-//     patch: IRouterMatcher<this, 'patch'>;
-//     options: IRouterMatcher<this, 'options'>;
-//     head: IRouterMatcher<this, 'head'>;
+export interface Router extends NextHandleFunction {
+  /**
+   * Special-cased "all" method, applying the given route `path`,
+   * middleware, and callback to _every_ HTTP method.
+   */
+  /*
+    all: IRouterMatcher<this, 'all'>;
+    */
 
-//     checkout: IRouterMatcher<this>;
-//     connect: IRouterMatcher<this>;
-//     copy: IRouterMatcher<this>;
-//     lock: IRouterMatcher<this>;
-//     merge: IRouterMatcher<this>;
-//     mkactivity: IRouterMatcher<this>;
-//     mkcol: IRouterMatcher<this>;
-//     move: IRouterMatcher<this>;
-//     "m-search": IRouterMatcher<this>;
-//     notify: IRouterMatcher<this>;
-//     propfind: IRouterMatcher<this>;
-//     proppatch: IRouterMatcher<this>;
-//     purge: IRouterMatcher<this>;
-//     report: IRouterMatcher<this>;
-//     search: IRouterMatcher<this>;
-//     subscribe: IRouterMatcher<this>;
-//     trace: IRouterMatcher<this>;
-//     unlock: IRouterMatcher<this>;
-//     unsubscribe: IRouterMatcher<this>;
-// }
+  get: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  post: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  put: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  delete: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  patch: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  options: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  head: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+
+  /*
+    checkout: IRouterMatcher<this>;
+    connect: IRouterMatcher<this>;
+    copy: IRouterMatcher<this>;
+    lock: IRouterMatcher<this>;
+    merge: IRouterMatcher<this>;
+    mkactivity: IRouterMatcher<this>;
+    mkcol: IRouterMatcher<this>;
+    move: IRouterMatcher<this>;
+    "m-search": IRouterMatcher<this>;
+    notify: IRouterMatcher<this>;
+    propfind: IRouterMatcher<this>;
+    proppatch: IRouterMatcher<this>;
+    purge: IRouterMatcher<this>;
+    report: IRouterMatcher<this>;
+    search: IRouterMatcher<this>;
+    subscribe: IRouterMatcher<this>;
+    trace: IRouterMatcher<this>;
+    unlock: IRouterMatcher<this>;
+    unsubscribe: IRouterMatcher<this>;
+    */
+
+  use: (handlerOrPathStart: string | RequestHandler, ...handlers: Array<RequestHandler>) => Router;
+  param: (name: string, callback: RequestParamHandler) => Router;
+  // route: (path: PathParams)
+}
