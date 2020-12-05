@@ -10,10 +10,6 @@ type UseHandler = {
   handlers: Array<NextHandleFunction>;
 };
 
-// type Router = {
-//   use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
-// };
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const options = Object.assign({}, defaultOptions, userOptions);
@@ -35,7 +31,7 @@ function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   return Object.assign(handler, { use, param, route }, routerObj);
 }
 
-function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler) {
+function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler): Router {
   routeStorage.param(name, callback);
   return this;
 }
@@ -62,7 +58,7 @@ function buildUse(
   useHandlers: Array<UseHandler>,
   handlerOrPathStart: string | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
-): any {
+): Router {
   let pathStart = '/';
 
   if (typeof handlerOrPathStart === 'function') {

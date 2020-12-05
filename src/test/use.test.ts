@@ -12,8 +12,8 @@ describe('router.use', () => {
   test.each(['', [], '/:param', '/api/#hash'])('invalid use paths', (path) => {
     const router = expresso();
     expect(() => {
-      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
-      router.use(path, jest.fn());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.use(path as any, jest.fn());
     }).toThrowError(`Invalid path: ${path}`);
   });
 

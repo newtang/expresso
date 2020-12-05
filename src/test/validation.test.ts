@@ -23,20 +23,21 @@ describe('basic tests', () => {
   });
 
   test.each([undefined, null, '', true, false, jest.fn(), [], {}])('invalid routes %s', (path) => {
-    //eslint-disable-line no-unexpected-multiline
     expect(() => {
-      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
-      expresso().get(path, jest.fn());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expresso().get(path as any, jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
-      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
-      expresso().get([path], jest.fn());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expresso().get([path as any], jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
-      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
-      expresso().route(path).get(jest.fn());
+      expresso()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .route(path as any)
+        .get(jest.fn());
     }).toThrow(`Invalid path: ${path}`);
   });
 
@@ -56,7 +57,6 @@ describe('basic tests', () => {
   test.each(['/api/%percent', '/test&foo', '/v1?id=3', '/💩', '/path#hashtag'])(
     'invalid characters %s',
     (path) => {
-      //eslint-disable-line no-unexpected-multiline
       expect(() => {
         expresso().get(path, jest.fn());
       }).toThrow(`Invalid path: ${path}`);
@@ -75,13 +75,13 @@ describe('basic tests', () => {
     //eslint-disable-line no-unexpected-multiline
     const path = '/test';
     expect(() => {
-      // @ts-ignore allow invalid handlers to be passed in for validation testing purposes.
-      expresso().get(path, handler);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expresso().get(path, handler as any);
     }).toThrow(`Non function handler found for path: ${path}`);
 
     expect(() => {
-      // @ts-ignore allow invalid handlers to be passed in for validation testing purposes.
-      expresso().get(path, jest.fn(), handler);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expresso().get(path, jest.fn(), handler as any);
     }).toThrow(`Non function handler found for path: ${path}`);
   });
 });
