@@ -55,28 +55,42 @@ function routeFxn(
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | NextHandleFunction,
+  handlerOrPathStart: string | Array<string> | NextHandleFunction,
   ...handlers: Array<NextHandleFunction>
 ): Router {
-  let pathStart = '/';
+  let pathStarts = ['/'];
 
   if (typeof handlerOrPathStart === 'function') {
     handlers.unshift(handlerOrPathStart);
   } else {
-    pathStart = handlerOrPathStart;
+    if (Array.isArray(handlerOrPathStart)) {
+      pathStarts = handlerOrPathStart;
+    } else {
+      pathStarts = [handlerOrPathStart];
+    }
   }
 
-  //we don't support regex in use quite yet.
-  validatePath(pathStart, { allowColon: false, allowRegex: false });
-
-  if (pathStart.charAt(pathStart.length - 1) === '/') {
-    pathStart = pathStart.slice(0, pathStart.length - 1);
+  if (!pathStarts || !pathStarts.length) {
+    throw new Error(`Invalid path: ${pathStarts}`);
   }
 
-  useHandlers.push({
-    pathStart,
-    handlers,
-  });
+  for (let pathStart of pathStarts) {
+    //we don't support regex in use quite yet.
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((pathStart as any) instanceof RegExp) {
+      throw new Error(`router.use does not support regular expressions yet: ${pathStart}`);
+    }
+    validatePath(pathStart, { allowColon: false, allowRegex: false });
+
+    if (pathStart.charAt(pathStart.length - 1) === '/') {
+      pathStart = pathStart.slice(0, pathStart.length - 1);
+    }
+
+    useHandlers.push({
+      pathStart,
+      handlers,
+    });
+  }
 
   return this;
 }

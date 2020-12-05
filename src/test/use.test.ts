@@ -17,6 +17,14 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path: ${path}`);
   });
 
+  test('cannot use regular expressions', () => {
+    const router = expresso();
+    expect(() => {
+      //eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.use(/api/ as any, jest.fn());
+    }).toThrowError(`router.use does not support regular expressions yet: /api/`);
+  });
+
   test('invalid use paths, special error', () => {
     const router = expresso();
 
@@ -315,6 +323,70 @@ describe('router.use', () => {
       path: '/api/',
       originalUrl: '/api/',
       url: '/api/',
+      baseUrl: '',
+    });
+  });
+
+  test('multiple paths', async () => {
+    const app = express();
+    const router = expresso();
+
+    let useUrlProps: null | { [key: string]: string } = null;
+    let useCalled = false;
+    router.use(['/api/', '/abc/'], function (req: Request, res: Response, next: NextFunction) {
+      useCalled = true;
+      useUrlProps = cloneUrlProps(req);
+      next();
+    });
+
+    let getUrlProps;
+    router.get('/api', (req: Request, res: Response) => {
+      getUrlProps = cloneUrlProps(req);
+      res.send('success');
+    });
+
+    router.get('/abc', (req: Request, res: Response) => {
+      getUrlProps = cloneUrlProps(req);
+      res.send('success2');
+    });
+
+    app.use(router);
+
+    let res = await request(app).get('/api');
+    expect(res.text).toBe('success');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
+    expect(useUrlProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/api',
+      url: '/',
+      baseUrl: '/api',
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      path: '/api',
+      originalUrl: '/api',
+      url: '/api',
+      baseUrl: '',
+    });
+
+    useCalled = false;
+
+    res = await request(app).get('/abc/');
+    expect(res.text).toBe('success2');
+    expect(res.status).toBe(200);
+    expect(useCalled).toBe(true);
+    expect(useUrlProps).toStrictEqual({
+      path: '/',
+      originalUrl: '/abc/',
+      url: '/',
+      baseUrl: '/abc',
+    });
+
+    expect(getUrlProps).toStrictEqual({
+      path: '/abc/',
+      originalUrl: '/abc/',
+      url: '/abc/',
       baseUrl: '',
     });
   });
