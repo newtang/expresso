@@ -23,7 +23,7 @@ export interface RouterOptions {
   strict: boolean;
 }
 
-type PathParams = string | RegExp | Array<string | RegExp>;
+export type PathParams = string | RegExp | Array<string | RegExp>;
 
 export interface Route {
   /*
@@ -61,7 +61,7 @@ export interface Route {
     */
 }
 
-export interface Router extends NextHandleFunction {
+export interface RouteMethods {
   /**
    * Special-cased "all" method, applying the given route `path`,
    * middleware, and callback to _every_ HTTP method.
@@ -99,7 +99,9 @@ export interface Router extends NextHandleFunction {
     unlock: IRouterMatcher<this>;
     unsubscribe: IRouterMatcher<this>;
     */
+}
 
+export interface Router extends NextHandleFunction, RouteMethods {
   use: (handlerOrPathStart: string | RequestHandler, ...handlers: Array<RequestHandler>) => Router;
   param: (name: string, callback: RequestParamHandler) => Router;
   route: (path: PathParams) => Route;

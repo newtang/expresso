@@ -1,6 +1,6 @@
 import { NextHandleFunction } from 'connect';
 import type { Request, Response, NextFunction, RequestParamHandler } from 'express';
-import { Storage, RouterOptions, Router /*, Methods*/ } from './interfaces';
+import { Storage, RouterOptions, Router, RouteMethods, PathParams } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 import { defaultOptions, validatePath, validateOptions } from './utils/validators';
@@ -28,7 +28,7 @@ function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const routerObj = buildRouterMethods(routeStorage, useHandlers);
   const route = routeFxn.bind(null, routerObj);
 
-  return Object.assign(handler, { use, param, route }, routerObj);
+  return (Object.assign(handler, { use, param, route }, routerObj) as unknown) as Router;
 }
 
 function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler): Router {
@@ -126,8 +126,8 @@ function executeHandlers(
   }
 }
 
-function buildRouterMethods(routeStorage: CompositeStorage, useHandlers: Array<UseHandler>): any {
-  const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
+function buildRouterMethods(routeStorage: CompositeStorage, useHandlers: Array<UseHandler>): RouteMethods {
+  const routerObj = {};
   for (const capsMethod of METHODS) {
     const method = capsMethod.toLowerCase();
     /**
@@ -137,7 +137,7 @@ function buildRouterMethods(routeStorage: CompositeStorage, useHandlers: Array<U
      **/
     routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers, routerObj);
   }
-  return (routerObj as unknown) as any;
+  return (routerObj as unknown) as RouteMethods;
 }
 
 //router.get(...), router.post(...)
@@ -145,10 +145,10 @@ function addRoute(
   method: string,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
-  routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string | RegExp | Array<string | RegExp>,
+  routerObj: RouteMethods,
+  path: PathParams,
   ...handlers: Array<NextHandleFunction>
-): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+): RouteMethods {
   const paths = Array.isArray(path) ? path : [path];
 
   if (!paths || !paths.length) {
