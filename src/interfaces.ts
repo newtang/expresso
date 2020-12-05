@@ -37,28 +37,25 @@ export interface Route {
   patch: (...handlers: Array<RequestHandler>) => Route;
   options: (...handlers: Array<RequestHandler>) => Route;
   head: (...handlers: Array<RequestHandler>) => Route;
-
-  /*
-    checkout: IRouterMatcher<this>;
-    connect: IRouterMatcher<this>;
-    copy: IRouterMatcher<this>;
-    lock: IRouterMatcher<this>;
-    merge: IRouterMatcher<this>;
-    mkactivity: IRouterMatcher<this>;
-    mkcol: IRouterMatcher<this>;
-    move: IRouterMatcher<this>;
-    "m-search": IRouterMatcher<this>;
-    notify: IRouterMatcher<this>;
-    propfind: IRouterMatcher<this>;
-    proppatch: IRouterMatcher<this>;
-    purge: IRouterMatcher<this>;
-    report: IRouterMatcher<this>;
-    search: IRouterMatcher<this>;
-    subscribe: IRouterMatcher<this>;
-    trace: IRouterMatcher<this>;
-    unlock: IRouterMatcher<this>;
-    unsubscribe: IRouterMatcher<this>;
-    */
+  checkout: (...handlers: Array<RequestHandler>) => Route;
+  connect: (...handlers: Array<RequestHandler>) => Route;
+  copy: (...handlers: Array<RequestHandler>) => Route;
+  lock: (...handlers: Array<RequestHandler>) => Route;
+  merge: (...handlers: Array<RequestHandler>) => Route;
+  mkactivity: (...handlers: Array<RequestHandler>) => Route;
+  mkcol: (...handlers: Array<RequestHandler>) => Route;
+  move: (...handlers: Array<RequestHandler>) => Route;
+  'm-search': (...handlers: Array<RequestHandler>) => Route;
+  notify: (...handlers: Array<RequestHandler>) => Route;
+  propfind: (...handlers: Array<RequestHandler>) => Route;
+  proppatch: (...handlers: Array<RequestHandler>) => Route;
+  purge: (...handlers: Array<RequestHandler>) => Route;
+  report: (...handlers: Array<RequestHandler>) => Route;
+  search: (...handlers: Array<RequestHandler>) => Route;
+  subscribe: (...handlers: Array<RequestHandler>) => Route;
+  trace: (...handlers: Array<RequestHandler>) => Route;
+  unlock: (...handlers: Array<RequestHandler>) => Route;
+  unsubscribe: (...handlers: Array<RequestHandler>) => Route;
 }
 
 export interface RouteMethods {
@@ -77,28 +74,25 @@ export interface RouteMethods {
   patch: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
   options: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
   head: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
-
-  /*
-    checkout: IRouterMatcher<this>;
-    connect: IRouterMatcher<this>;
-    copy: IRouterMatcher<this>;
-    lock: IRouterMatcher<this>;
-    merge: IRouterMatcher<this>;
-    mkactivity: IRouterMatcher<this>;
-    mkcol: IRouterMatcher<this>;
-    move: IRouterMatcher<this>;
-    "m-search": IRouterMatcher<this>;
-    notify: IRouterMatcher<this>;
-    propfind: IRouterMatcher<this>;
-    proppatch: IRouterMatcher<this>;
-    purge: IRouterMatcher<this>;
-    report: IRouterMatcher<this>;
-    search: IRouterMatcher<this>;
-    subscribe: IRouterMatcher<this>;
-    trace: IRouterMatcher<this>;
-    unlock: IRouterMatcher<this>;
-    unsubscribe: IRouterMatcher<this>;
-    */
+  checkout: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  connect: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  copy: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  lock: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  merge: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  mkactivity: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  mkcol: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  move: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  'm-search': (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  notify: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  propfind: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  proppatch: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  purge: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  report: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  search: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  subscribe: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  trace: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  unlock: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
+  unsubscribe: (path: PathParams, ...handlers: Array<RequestHandler>) => Router;
 }
 
 export interface Router extends NextHandleFunction, RouteMethods {
