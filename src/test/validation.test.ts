@@ -25,17 +25,17 @@ describe('basic tests', () => {
   test.each([undefined, null, '', true, false, jest.fn(), [], {}])('invalid routes %s', (path) => {
     //eslint-disable-line no-unexpected-multiline
     expect(() => {
-      // @ts-ignore allow invalid handlers to be passed in for validation testing purposes.
+      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
       expresso().get(path, jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
-      // @ts-ignore allow invalid handlers to be passed in for validation testing purposes.
+      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
       expresso().get([path], jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
-      // @ts-ignore allow invalid handlers to be passed in for validation testing purposes.
+      // @ts-ignore allow invalid paths to be passed in for validation testing purposes.
       expresso().route(path).get(jest.fn());
     }).toThrow(`Invalid path: ${path}`);
   });

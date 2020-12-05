@@ -25,6 +25,42 @@ export interface RouterOptions {
 
 type PathParams = string | RegExp | Array<string | RegExp>;
 
+export interface Route {
+  /*
+    all: IRouterMatcher<this, 'all'>;
+    */
+
+  get: (...handlers: Array<RequestHandler>) => Route;
+  post: (...handlers: Array<RequestHandler>) => Route;
+  put: (...handlers: Array<RequestHandler>) => Route;
+  delete: (...handlers: Array<RequestHandler>) => Route;
+  patch: (...handlers: Array<RequestHandler>) => Route;
+  options: (...handlers: Array<RequestHandler>) => Route;
+  head: (...handlers: Array<RequestHandler>) => Route;
+
+  /*
+    checkout: IRouterMatcher<this>;
+    connect: IRouterMatcher<this>;
+    copy: IRouterMatcher<this>;
+    lock: IRouterMatcher<this>;
+    merge: IRouterMatcher<this>;
+    mkactivity: IRouterMatcher<this>;
+    mkcol: IRouterMatcher<this>;
+    move: IRouterMatcher<this>;
+    "m-search": IRouterMatcher<this>;
+    notify: IRouterMatcher<this>;
+    propfind: IRouterMatcher<this>;
+    proppatch: IRouterMatcher<this>;
+    purge: IRouterMatcher<this>;
+    report: IRouterMatcher<this>;
+    search: IRouterMatcher<this>;
+    subscribe: IRouterMatcher<this>;
+    trace: IRouterMatcher<this>;
+    unlock: IRouterMatcher<this>;
+    unsubscribe: IRouterMatcher<this>;
+    */
+}
+
 export interface Router extends NextHandleFunction {
   /**
    * Special-cased "all" method, applying the given route `path`,
@@ -66,5 +102,5 @@ export interface Router extends NextHandleFunction {
 
   use: (handlerOrPathStart: string | RequestHandler, ...handlers: Array<RequestHandler>) => Router;
   param: (name: string, callback: RequestParamHandler) => Router;
-  // route: (path: PathParams)
+  route: (path: PathParams) => Route;
 }

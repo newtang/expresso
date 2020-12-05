@@ -11,7 +11,7 @@ describe('param trigger tests', () => {
   test.each([undefined, 3])('invalid param type %p', (arg) => {
     const router = expresso();
     expect(() => {
-      router.param(arg);
+      router.param(arg as any, jest.fn());
     }).toThrowError('Expected name to be a string');
   });
 
@@ -41,7 +41,7 @@ describe('param trigger tests', () => {
   test('No function', async () => {
     const router = expresso();
     expect(() => {
-      router.param('id');
+      router.param('id', undefined as any);
     }).toThrowError('Expected callback to be a function');
   });
 
