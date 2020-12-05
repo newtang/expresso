@@ -1,6 +1,6 @@
 import { NextHandleFunction } from 'connect';
-import type { Request, Response, NextFunction } from 'express';
-import { Storage, RouterOptions } from './interfaces';
+import type { Request, Response, NextFunction, RequestParamHandler } from 'express';
+import { Storage, RouterOptions, Router, RouteMethods, PathParams } from './interfaces';
 import { METHODS } from 'http';
 import CompositeStorage from './storage/CompositeStorage';
 import { defaultOptions, validatePath, validateOptions } from './utils/validators';
@@ -10,12 +10,8 @@ type UseHandler = {
   handlers: Array<NextHandleFunction>;
 };
 
-type Router = {
-  use: (handlerOrPathStart: string | NextHandleFunction, ...handlers: Array<NextHandleFunction>) => Router;
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildRouter(userOptions?: Partial<RouterOptions>): any {
+function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const options = Object.assign({}, defaultOptions, userOptions);
   validateOptions(options);
   const routeStorage = new CompositeStorage(options);
@@ -23,12 +19,20 @@ function buildRouter(userOptions?: Partial<RouterOptions>): any {
   const useHandlers: Array<UseHandler> = [];
   const handler = handleRequest.bind(null, routeStorage, useHandlers, options);
 
-  const param = routeStorage.param.bind(routeStorage);
+  const param: (name: string, callback: RequestParamHandler) => Router = buildParam.bind(
+    handler,
+    routeStorage
+  );
   const use = buildUse.bind(handler, useHandlers);
-  const routerObj = buildRouterMethods(routeStorage, useHandlers);
+  const routerObj = buildRouterMethods(handler, routeStorage, useHandlers);
   const route = routeFxn.bind(null, routerObj);
 
-  return Object.assign(handler, { use, param, route }, routerObj);
+  return (Object.assign(handler, { use, param, route }, routerObj) as unknown) as Router;
+}
+
+function buildParam(routeStorage: CompositeStorage, name: string, callback: RequestParamHandler): Router {
+  routeStorage.param(name, callback);
+  return this;
 }
 
 export = buildRouter;
@@ -122,10 +126,11 @@ function executeHandlers(
 }
 
 function buildRouterMethods(
+  context: unknown,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>
-): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
-  const routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } = {};
+): RouteMethods {
+  const routerObj = {};
   for (const capsMethod of METHODS) {
     const method = capsMethod.toLowerCase();
     /**
@@ -133,9 +138,9 @@ function buildRouterMethods(
      * Using the capitalized method (as opposed to lowercasing it on every request)
      * is actually a relatively significant optimization
      **/
-    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers, routerObj);
+    routerObj[method] = addRoute.bind(context as Router, capsMethod, routeStorage, useHandlers);
   }
-  return routerObj;
+  return routerObj as RouteMethods;
 }
 
 //router.get(...), router.post(...)
@@ -143,10 +148,9 @@ function addRoute(
   method: string,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
-  routerObj: { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void },
-  path: string | RegExp | Array<string | RegExp>,
+  path: PathParams,
   ...handlers: Array<NextHandleFunction>
-): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+): Router {
   const paths = Array.isArray(path) ? path : [path];
 
   if (!paths || !paths.length) {
@@ -157,7 +161,7 @@ function addRoute(
     routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...handlers]);
   }
 
-  return routerObj;
+  return this as Router;
 }
 
 function getRelevantUseHandlersForRegex(

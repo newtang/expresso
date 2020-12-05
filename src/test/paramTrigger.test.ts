@@ -11,7 +11,8 @@ describe('param trigger tests', () => {
   test.each([undefined, 3])('invalid param type %p', (arg) => {
     const router = expresso();
     expect(() => {
-      router.param(arg);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.param(arg as any, jest.fn());
     }).toThrowError('Expected name to be a string');
   });
 
@@ -41,7 +42,8 @@ describe('param trigger tests', () => {
   test('No function', async () => {
     const router = expresso();
     expect(() => {
-      router.param('id');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.param('id', undefined as any);
     }).toThrowError('Expected callback to be a function');
   });
 
@@ -88,14 +90,15 @@ describe('param trigger tests', () => {
     const router = expresso();
 
     const paramValues: Array<{ value: string; name: string }> = [];
-    router.param('id', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
-    router.param('value', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
+    router
+      .param('id', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      })
+      .param('value', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      });
 
     router.get('/api/:value/:id', (req: Request, res: Response) => res.send(req.params.value));
     app.use(router);
@@ -114,14 +117,15 @@ describe('param trigger tests', () => {
     const router = expresso();
 
     const paramValues: Array<{ value: string; name: string }> = [];
-    router.param('id', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
-    router.param('value', function (req, res, next, value, name) {
-      paramValues.push({ value, name });
-      next();
-    });
+    router
+      .param('id', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      })
+      .param('value', function (req, res, next, value, name) {
+        paramValues.push({ value, name });
+        next();
+      });
 
     router.get('/api/:value/:cool', (req: Request, res: Response) => res.send(req.params.value));
     app.use(router);

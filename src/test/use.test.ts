@@ -12,7 +12,8 @@ describe('router.use', () => {
   test.each(['', [], '/:param', '/api/#hash'])('invalid use paths', (path) => {
     const router = expresso();
     expect(() => {
-      router.use(path, jest.fn());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.use(path as any, jest.fn());
     }).toThrowError(`Invalid path: ${path}`);
   });
 
@@ -324,12 +325,12 @@ describe('router.use', () => {
     const app = express();
 
     let mountedRouterProps;
-    mountedRouter.get('/id/:id/settings', (req, res) => {
+    mountedRouter.get('/id/:id/settings', (req: Request, res: Response) => {
       mountedRouterProps = cloneUrlProps(req);
       res.send('success');
     });
 
-    mountedRouter.get(/^\/regex\/$/, (req, res) => {
+    mountedRouter.get(/^\/regex\/$/, (req: Request, res: Response) => {
       mountedRouterProps = cloneUrlProps(req);
       res.send('success2');
     });
@@ -345,7 +346,7 @@ describe('router.use', () => {
     );
 
     let otherProps;
-    baseRouter.get('/otherapi/test', (req, res) => {
+    baseRouter.get('/otherapi/test', (req: Request, res: Response) => {
       otherProps = cloneUrlProps(req);
       res.send('other success');
     });
@@ -403,27 +404,27 @@ describe('router.use', () => {
 
     let currentRouteReqProps;
 
-    specificEntreeRouter.get('/', (req, res) => {
+    specificEntreeRouter.get('/', (req: Request, res: Response) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('entrees');
     });
 
-    specificEntreeRouter.get('/hamburger', (req, res) => {
+    specificEntreeRouter.get('/hamburger', (req: Request, res: Response) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('hamburger');
     });
 
-    specificDessertRouter.get('/cupcakes', (req, res) => {
+    specificDessertRouter.get('/cupcakes', (req: Request, res: Response) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('cupcakes!');
     });
 
-    specificDessertRouter.get(/^\/cupcakes\/chocolate$/, (req, res) => {
+    specificDessertRouter.get(/^\/cupcakes\/chocolate$/, (req: Request, res: Response) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('chocolate cupcakes!');
     });
 
-    specificDessertRouter.get('/cookies/chocolatechip', (req, res) => {
+    specificDessertRouter.get('/cookies/chocolatechip', (req: Request, res: Response) => {
       currentRouteReqProps = cloneUrlProps(req);
       res.send('chocolate chip cookies!');
     });
