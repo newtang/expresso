@@ -25,7 +25,28 @@ function buildRouter(userOptions?: Partial<RouterOptions>): Router {
     routeStorage
   );
   const use = buildUse.bind(handler, useHandlers);
-  const routerObj = buildRouterMethods(routeStorage, useHandlers);
+  // const routerObj = buildRouterMethods(handler, routeStorage, useHandlers);
+
+  // const get = addRoute.bind(handler, 'GET', routeStorage, useHandlers);
+  // const post = addRoute.bind(handler, 'POST', routeStorage, useHandlers);
+  // const put = addRoute.bind(handler, 'PUT', routeStorage, useHandlers);
+  // const del = addRoute.bind(handler, 'DELETE', routeStorage, useHandlers);
+  // const patch = addRoute.bind(handler, 'PATCH', routeStorage, useHandlers);
+  // const opt = addRoute.bind(handler, 'OPTIONS', routeStorage, useHandlers);
+  // const head = addRoute.bind(handler, 'HEAD', routeStorage, useHandlers);
+  // const routerObj = { get, post, put, delete: del, patch, options: opt, head };
+
+  const routerObj = {};
+  for (const capsMethod of METHODS) {
+    const method = capsMethod.toLowerCase();
+    /**
+     * The value of the method property on req always seems to be capitalized.
+     * Using the capitalized method (as opposed to lowercasing it on every request)
+     * is actually a relatively significant optimization
+     **/
+    routerObj[method] = addRoute.bind(handler, capsMethod, routeStorage, useHandlers);
+  }
+
   const route = routeFxn.bind(null, routerObj);
 
   return (Object.assign(handler, { use, param, route }, routerObj) as unknown) as Router;
@@ -126,29 +147,29 @@ function executeHandlers(
   }
 }
 
-function buildRouterMethods(routeStorage: CompositeStorage, useHandlers: Array<UseHandler>): RouteMethods {
-  const routerObj = {};
-  for (const capsMethod of METHODS) {
-    const method = capsMethod.toLowerCase();
-    /**
-     * The value of the method property on req always seems to be capitalized.
-     * Using the capitalized method (as opposed to lowercasing it on every request)
-     * is actually a relatively significant optimization
-     **/
-    routerObj[method] = addRoute.bind(null, capsMethod, routeStorage, useHandlers, routerObj);
-  }
-  return (routerObj as unknown) as RouteMethods;
-}
+// function buildRouterMethods(context: Router, routeStorage: CompositeStorage, useHandlers: Array<UseHandler>): RouteMethods {
+//   const routerObj = {};
+//   for (const capsMethod of METHODS) {
+//     const method = capsMethod.toLowerCase();
+/**
+ * The value of the method property on req always seems to be capitalized.
+ * Using the capitalized method (as opposed to lowercasing it on every request)
+ * is actually a relatively significant optimization
+ **/
+//     routerObj[method] = addRoute.bind(context, capsMethod, routeStorage, useHandlers, routerObj);
+//   }
+//   return (routerObj as unknown) as RouteMethods;
+// }
 
 //router.get(...), router.post(...)
 function addRoute(
   method: string,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
-  routerObj: RouteMethods,
+  /*routerObj: RouteMethods,*/
   path: PathParams,
   ...handlers: Array<NextHandleFunction>
-): RouteMethods {
+): Router {
   const paths = Array.isArray(path) ? path : [path];
 
   if (!paths || !paths.length) {
@@ -159,7 +180,7 @@ function addRoute(
     routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...handlers]);
   }
 
-  return routerObj;
+  return this as Router;
 }
 
 function getRelevantUseHandlersForRegex(
