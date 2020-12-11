@@ -458,10 +458,9 @@ function buildObject(keys: Array<string>, values: Array<string>): { [key: string
 }
 
 function decodeValue(value: string): string {
-  try{
+  try {
     return decodeURIComponent(value);
-  }
-  catch(err){
+  } catch (err) {
     return value;
   }
 }
