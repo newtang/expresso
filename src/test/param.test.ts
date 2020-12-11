@@ -239,4 +239,19 @@ describe('param tests', () => {
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
+
+  test('should automatically decode path value', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.get('/user/:id', function (req, res) {
+      res.send('encode ' + req.params.id)
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/user/%22abc%2Fefgh%22');
+    expect(res.text).toBe('encode "abc/efgh"');
+    expect(res.status).toBe(200);
+  });
 });

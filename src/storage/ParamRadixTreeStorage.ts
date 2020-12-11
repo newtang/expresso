@@ -452,9 +452,18 @@ function endOfPath<T>(
 function buildObject(keys: Array<string>, values: Array<string>): { [key: string]: string } {
   const obj: { [key: string]: string } = {};
   for (let i = 0; i < keys.length; ++i) {
-    obj[keys[i]] = values[i];
+    obj[keys[i]] = decodeValue(values[i]);
   }
   return obj;
+}
+
+function decodeValue(value: string): string {
+  try{
+    return decodeURIComponent(value);
+  }
+  catch(err){
+    return value;
+  }
 }
 
 function splitAtIndex(str: string, index: number): [string, string] {
