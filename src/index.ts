@@ -101,10 +101,12 @@ function handleRequest(
   options: RouterOptions,
   req: Request,
   res: Response,
-  done: NextFunction
+  callback: NextFunction
 ): void {
   const verb = req.method;
-  const payload = routeStorage.find(verb, req.path);
+  const payload = routeStorage.find(verb, req.path || req.url);
+  // const done = callback;
+  const done = restore(req, callback, 'baseUrl', 'next', 'params');
   if (payload && payload.target) {
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
@@ -112,6 +114,20 @@ function handleRequest(
     const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
+}
+
+function restore(target, callback, ...props): () => void {
+  const saved = {};
+  for (const prop of props) {
+    saved[prop] = target[prop];
+  }
+
+  return function (...args): void {
+    for (const prop in saved) {
+      target[prop] = saved[prop];
+    }
+    callback(...args);
+  };
 }
 
 function executeHandlers(

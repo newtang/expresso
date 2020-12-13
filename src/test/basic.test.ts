@@ -12,7 +12,7 @@ describe('basic tests', () => {
 
   test('slash route', async () => {
     const app = express();
-    const router = expresso({ allowRegex: 'safe' });
+    const router = expresso();
     const msg = 'success';
 
     router.get('/', (req: Request, res: Response) => res.send(msg));

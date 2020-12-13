@@ -245,7 +245,7 @@ describe('param tests', () => {
     const router = expresso();
 
     router.get('/user/:id', function (req, res) {
-      res.send('encode ' + req.params.id)
+      res.send('encode ' + req.params.id);
     });
 
     app.use(router);

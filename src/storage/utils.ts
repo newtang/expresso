@@ -14,6 +14,6 @@ export function buildOptionsHandler(methods: Array<string>): NextHandleFunction 
     res.setHeader('Content-Length', Buffer.byteLength(sortedMethods));
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.send(sortedMethods);
+    res.end(sortedMethods);
   }) as unknown) as NextHandleFunction;
 }

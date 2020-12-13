@@ -1,5 +1,8 @@
 # expresso
 
+A faster, safer, backwards compatible router for Expesss
+
+
 Goals of this project
 
 Speed
