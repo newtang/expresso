@@ -158,15 +158,14 @@ export class Node<T> {
       let { pathToCompare, path, currentNode, paramValues, terminiValues } = fallbackStack.pop() as Fallback<
         T
       >;
-      // console.log("popping the stack. Termini values", terminiValues);
 
       walk: while (pathToCompare) {
-        // console.log('pathToCompare', pathToCompare);
 
         for (const [key, node] of currentNode.edges) {
           if (key !== ':' && pathToCompare.startsWith(key)) {
             currentNode = node;
             pathToCompare = pathToCompare.slice(key.length);
+
             path = path.slice(key.length);
             continue walk;
           }
@@ -252,6 +251,7 @@ export class Node<T> {
     originalPath?: string
   ): void {
     originalPath = originalPath || path;
+
     if (!path) {
       if (!this.methodToPayload) {
         this.methodToPayload = {};
@@ -322,7 +322,7 @@ export class Node<T> {
         existingNode.insert(method, suffix, payload, options, paramNames, originalPath);
         addTerminus<T>(terminus, existingNode);
       } else {
-        const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, this.edges);
+        const [commonPrefix, similarEdge] = longestCommonPrefix(prefix, Array.from(this.edges.keys()));
 
         if (commonPrefix) {
           if (this.edges.has(commonPrefix)) {
@@ -406,19 +406,23 @@ function addTerminus<T>(terminus: string | undefined, node: Node<T>): void {
   }
 }
 
-function longestCommonPrefix<T>(str: string, edges: Map<string, Node<T>>): [string, string] {
-  while (str && str !== '/') {
-    // go slash by slash
-    str = str.slice(0, str.lastIndexOf('/', str.length - 2) + 1);
-    for (const [edge] of edges) {
-      if (edge.startsWith(str)) {
-        return [str, edge];
-      }
+function longestCommonPrefix(str:string, arr:Array<string>): [string, string]{
+  let longestPrefix = '';
+  let longestChoice = '';
+  for(const word of arr){
+    let prefix = [];
+    let i = 0;
+    while(i < word.length && i < str.length && str.charAt(i) === word.charAt(i)){
+      ++i;
     }
+    if(i > longestPrefix.length){
+      longestPrefix = word.slice(0, i);
+      longestChoice = word;
+    }
+    
   }
-
-  //I think we never get here. At some point `str` is "" which is valid
-  return ['', ''];
+  
+  return [longestPrefix, longestChoice];
 }
 
 function endOfPath<T>(

@@ -518,6 +518,61 @@ describe('param radix tree storage tests', () => {
       node.insert('get', '/api/v1/:value/a', 'jackpot2', options);
     }).toThrowError(`Unable to combine duplicates. /api/v1/:value/a`);
   });
+
+
+  test('similar routes suffixes', () => {
+    const node = new ParamRadixTreeStorage<string>()
+    node.insert('get', '/:user/test', 'jackpot1');
+    node.insert('get', '/:user/tests', 'jackpot2');
+    expect(node.search('get', '/jon/tests')).toStrictEqual({
+      target: 'jackpot2',
+      params: { user: 'jon' },
+    });
+  });
+
+
+  test('similar routes suffixes 2', () => {
+    const node = new ParamRadixTreeStorage<string>()
+    node.insert('get', '/user/:user/test', 'jackpot1');
+    node.insert('get', '/user/:user/tests', 'jackpot2');
+
+    /*
+     creation:
+        nodes:
+        /user/
+          :
+            /
+              test
+              tests
+
+        why isn't it:
+            /test
+                s
+
+            OR
+
+            /
+              test
+                 s 
+
+
+      search:
+        /user/jon/tests
+          jon/tests
+          /tests
+          tests
+          s
+
+
+
+    */
+
+    expect(node.search('get', '/user/jon/tests')).toStrictEqual({
+      target: 'jackpot2',
+      params: { user: 'jon' },
+    });
+  })
+
 });
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
