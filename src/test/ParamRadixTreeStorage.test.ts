@@ -519,9 +519,8 @@ describe('param radix tree storage tests', () => {
     }).toThrowError(`Unable to combine duplicates. /api/v1/:value/a`);
   });
 
-
   test('similar routes suffixes', () => {
-    const node = new ParamRadixTreeStorage<string>()
+    const node = new ParamRadixTreeStorage<string>();
     node.insert('get', '/:user/test', 'jackpot1');
     node.insert('get', '/:user/tests', 'jackpot2');
     expect(node.search('get', '/jon/tests')).toStrictEqual({
@@ -530,9 +529,8 @@ describe('param radix tree storage tests', () => {
     });
   });
 
-
   test('similar routes suffixes 2', () => {
-    const node = new ParamRadixTreeStorage<string>()
+    const node = new ParamRadixTreeStorage<string>();
     node.insert('get', '/user/:user/test', 'jackpot1');
     node.insert('get', '/user/:user/tests', 'jackpot2');
 
@@ -543,7 +541,7 @@ describe('param radix tree storage tests', () => {
   });
 
   test('similar routes suffixes 3', () => {
-    const node = new ParamRadixTreeStorage<string>()
+    const node = new ParamRadixTreeStorage<string>();
     node.insert('get', '/user/:user/cart', 'jackpot1');
     node.insert('get', '/user/:user/car', 'jackpot2');
     node.insert('get', '/user/:user/carto', 'jackpot3');
@@ -575,8 +573,7 @@ describe('param radix tree storage tests', () => {
       target: 'jackpot6',
       params: { user: 'jon' },
     });
-  })
-
+  });
 });
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any

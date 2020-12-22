@@ -1,4 +1,4 @@
-import { NextHandleFunction } from 'connect';
+import { NextHandleFunction, HandleFunction, ErrorHandleFunction } from 'connect';
 import type { Request, Response, NextFunction, RequestParamHandler } from 'express';
 import { Storage, RouterOptions, Router, RouteMethods, PathParams } from './interfaces';
 import { METHODS } from 'http';
@@ -7,7 +7,7 @@ import { defaultOptions, validatePath, validateOptions } from './utils/validator
 
 type UseHandler = {
   pathStart: string;
-  handlers: Array<NextHandleFunction>;
+  handlers: Array<HandleFunction>;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,12 +40,12 @@ export = buildRouter;
 function routeFxn(
   routerObj,
   path: string | RegExp | Array<string | RegExp>
-): { [key: string]: (path: string, ...handlers: Array<NextHandleFunction>) => void } {
+): { [key: string]: (path: string, ...handlers: Array<HandleFunction>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
-      ...handlers: Array<NextHandleFunction>
-    ): { [key: string]: (path: string | RegExp, ...handlers: Array<NextHandleFunction>) => void } {
+      ...handlers: Array<HandleFunction>
+    ): { [key: string]: (path: string | RegExp, ...handlers: Array<HandleFunction>) => void } {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
@@ -55,8 +55,8 @@ function routeFxn(
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | Array<string> | NextHandleFunction,
-  ...handlers: Array<NextHandleFunction>
+  handlerOrPathStart: string | Array<string> | HandleFunction,
+  ...handlers: Array<HandleFunction>
 ): Router {
   let pathStarts = ['/'];
 
@@ -107,6 +107,7 @@ function handleRequest(
   const payload = routeStorage.find(verb, req.path || req.url);
   // const done = callback;
   const done = restore(req, callback, 'baseUrl', 'next', 'params');
+
   if (payload && payload.target) {
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
@@ -130,28 +131,72 @@ function restore(target, callback, ...props): () => void {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleNextError(handle: HandleFunction, error: any, req: Request, res: Response, next): void {
+  if (handle.length !== 4) {
+    // not a standard error handler
+    return next(error);
+  }
+
+  try {
+    (handle as ErrorHandleFunction)(error, req, res, next);
+  } catch (err) {
+    next(err);
+  }
+}
+
+function handleNextRequest(
+  handle: HandleFunction,
+  req: Request,
+  res: Response,
+  next: (err?: any) => void // eslint-disable-line @typescript-eslint/no-explicit-any
+): void {
+  if (handle.length > 3) {
+    // not a standard request handler
+    return next();
+  }
+
+  try {
+    (handle as NextHandleFunction)(req, res, next);
+  } catch (err) {
+    next(err);
+  }
+}
+
 function executeHandlers(
   req: Request,
   res: Response,
   done: NextFunction,
-  handlerStack: Array<NextHandleFunction>
+  handlerStack: Array<HandleFunction>
 ): void {
   let index = 0;
   next();
-  function next(err?: Error): void {
-    if (err) {
-      return done(err);
-    }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function next(err?: any): void {
     const nextHandler = handlerStack[index++];
     if (nextHandler) {
-      try {
-        nextHandler(req, res, next);
-      } catch (handlerException) {
-        return done(handlerException);
+      if (err) {
+        return handleNextError(nextHandler, err, req, res, next);
+      } else {
+        return handleNextRequest(nextHandler, req, res, next);
       }
     } else {
-      done();
+      return done(err);
     }
+
+    // if (err) {
+    //   return done(err);
+    // }
+    // const nextHandler = handlerStack[index++];
+    // if (nextHandler) {
+    //   try {
+    //     nextHandler(req, res, next);
+    //   } catch (handlerException) {
+    //     return done(handlerException);
+    //   }
+    // } else {
+    //   done();
+    // }
   }
 }
 
@@ -179,7 +224,7 @@ function addRoute(
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   path: PathParams,
-  ...handlers: Array<NextHandleFunction>
+  ...handlers: Array<HandleFunction>
 ): Router {
   const paths = Array.isArray(path) ? path : [path];
 
@@ -198,24 +243,24 @@ function getRelevantUseHandlersForRegex(
   path: RegExp,
   useHandlers: Array<UseHandler>,
   reset: boolean
-): Array<NextHandleFunction> {
-  const arr: Array<NextHandleFunction> = [];
+): Array<HandleFunction> {
+  const arr: Array<HandleFunction> = [];
   for (const useHandler of useHandlers) {
     arr.push(
-      trimPathPrefix.bind(null, useHandler.pathStart) as NextHandleFunction,
-      (((req: Request, res: Response, done: NextHandleFunction) => {
+      trimPathPrefix.bind(null, useHandler.pathStart) as HandleFunction,
+      (((req: Request, res: Response, done: HandleFunction) => {
         if (validStartsWith(req.originalUrl, useHandler.pathStart)) {
           executeHandlers(req, res, done as NextFunction, useHandler.handlers);
         } else {
           (done as NextFunction)();
         }
-      }) as unknown) as NextHandleFunction
+      }) as unknown) as HandleFunction
     );
   }
 
   //reset properties before verb handlers.
   if (arr.length && reset) {
-    arr.push(resetPathPrefix as NextHandleFunction);
+    arr.push(resetPathPrefix as HandleFunction);
   }
 
   return arr;
@@ -229,12 +274,12 @@ function getRelevantUseHandlers(
   path: string | RegExp,
   useHandlers: Array<UseHandler>,
   reset: boolean
-): Array<NextHandleFunction> {
+): Array<HandleFunction> {
   if (path instanceof RegExp) {
     return getRelevantUseHandlersForRegex(path, useHandlers, reset);
   }
 
-  const arr: Array<NextHandleFunction> = [];
+  const arr: Array<HandleFunction> = [];
   for (const useHandler of useHandlers) {
     /*
       use(/v1/api)
@@ -254,7 +299,7 @@ function getRelevantUseHandlers(
     if (validStartsWith(path, useHandler.pathStart)) {
       arr.push(
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (trimPathPrefix.bind(null, useHandler.pathStart) as any) as NextHandleFunction,
+        (trimPathPrefix.bind(null, useHandler.pathStart) as any) as HandleFunction,
         ...useHandler.handlers
       );
     }
@@ -262,7 +307,7 @@ function getRelevantUseHandlers(
 
   //reset properties before verb handlers.
   if (arr.length && reset) {
-    arr.push(resetPathPrefix as NextHandleFunction);
+    arr.push(resetPathPrefix as HandleFunction);
   }
 
   return arr;

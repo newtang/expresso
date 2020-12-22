@@ -19,7 +19,7 @@ describe('basic tests', () => {
     app.use(router);
 
     const res = await request(app).get('/');
-    // expect(res.text).toBe(msg);
+    expect(res.text).toBe(msg);
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/error');

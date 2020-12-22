@@ -1,5 +1,5 @@
 import { Storage, FoundRouteData } from '../interfaces';
-import type { NextHandleFunction } from 'connect';
+import type { HandleFunction } from 'connect';
 import { buildOptionsHandler } from './utils';
 
 interface RegexStorageOptions {
@@ -18,7 +18,7 @@ export default class RegexStorage implements Storage {
     this.options = options;
   }
 
-  add(method: string, pathRegex: RegExp, handlers: Array<NextHandleFunction>): void {
+  add(method: string, pathRegex: RegExp, handlers: Array<HandleFunction>): void {
     const regexString = pathRegex.toString();
     if (!this.regexStringToRegex[regexString]) {
       this.regexStringToRegex[regexString] = pathRegex;

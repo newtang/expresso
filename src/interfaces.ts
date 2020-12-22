@@ -1,17 +1,17 @@
-import type { NextHandleFunction } from 'connect';
+import type { NextHandleFunction, HandleFunction } from 'connect';
 import type { RequestHandler, RequestParamHandler } from 'express';
 
 export interface Storage {
   find(method: string, path: string): FoundRouteData | false;
-  add(method: string, path: string | RegExp, handlers: Array<NextHandleFunction>): void;
+  add(method: string, path: string | RegExp, handlers: Array<HandleFunction>): void;
 }
 
 export interface ParamStorage extends Storage {
-  param(name: string, callback: NextHandleFunction): void;
+  param(name: string, callback: RequestParamHandler): void;
 }
 
 export interface FoundRouteData {
-  target: Array<NextHandleFunction>;
+  target: Array<HandleFunction>;
   params?: { [param: string]: string };
 }
 

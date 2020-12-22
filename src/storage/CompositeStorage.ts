@@ -1,4 +1,4 @@
-import type { NextHandleFunction } from 'connect';
+import type { HandleFunction } from 'connect';
 import type { RequestParamHandler } from 'express';
 import { FoundRouteData, Storage, ParamStorage, RouterOptions } from '../interfaces';
 import StaticStorage from './StaticStorage';
@@ -11,7 +11,7 @@ export default class CompositeStorage implements ParamStorage {
   readonly paramStorage: ParamRadixTreeStorage;
   readonly regexStorage: RegexStorage;
   readonly options: RouterOptions;
-  readonly useHandlers: Array<{ pathStart: string; handlers: Array<NextHandleFunction> }>;
+  readonly useHandlers: Array<{ pathStart: string; handlers: Array<HandleFunction> }>;
 
   constructor(options: RouterOptions) {
     this.options = options;
@@ -21,7 +21,7 @@ export default class CompositeStorage implements ParamStorage {
     this.useHandlers = [];
   }
 
-  add(method: string, path: string | RegExp, handlers: Array<NextHandleFunction>): void {
+  add(method: string, path: string | RegExp, handlers: Array<HandleFunction>): void {
     validatePath(path, { allowColon: true, allowRegex: this.options.allowRegex });
     validateHandlers(path, handlers);
 
@@ -52,7 +52,7 @@ export default class CompositeStorage implements ParamStorage {
   }
 }
 
-function validateHandlers(path: string | RegExp, handlers: Array<NextHandleFunction>): void {
+function validateHandlers(path: string | RegExp, handlers: Array<HandleFunction>): void {
   for (const handler of handlers) {
     if (typeof handler !== 'function') {
       throw new Error(`Non function handler found for path: ${path}`);
