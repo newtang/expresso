@@ -22,10 +22,10 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
-      (((req: Request, res: Response, next: NextFunction) => {
+      (err: any, req: Request, res: Response, next: NextFunction) => {
         errCalled = true;
         next();
-      }) as ErrorHandleFunction),
+      },
       (req: Request, res: Response, next: NextFunction) => {
         res.send(msg);
       }
@@ -36,6 +36,36 @@ describe('error tests', () => {
     expect(res.text).toBe(msg);
     expect(res.status).toBe(200);
     expect(errCalled).toBe(false);
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
+
+  test('handler skipped', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let called = false;
+
+    router.get(
+      '/',
+      (req: Request, res: Response, next: NextFunction) => {
+        next('some error');
+      },
+      (req: Request, res: Response, next: NextFunction) => {
+        called = true;
+      },
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        res.send(`${msg}_${err}`);
+      }
+    );
+    app.use(router);
+
+    const res = await request(app).get('/');
+    expect(res.text).toBe('success_some error');
+    expect(res.status).toBe(200);
+    expect(called).toBe(false);
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
