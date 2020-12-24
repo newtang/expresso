@@ -1,9 +1,7 @@
-import request, { SuperTest, Test } from 'supertest';
+import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
 import type { Request, Response, NextFunction } from 'express';
-import { NextHandleFunction, HandleFunction, ErrorHandleFunction } from 'connect';
-import { METHODS } from 'http';
 
 describe('error tests', () => {
   beforeAll(() => {
@@ -80,17 +78,19 @@ describe('error tests', () => {
     let errCalled = false;
     let useErrCalled = false;
 
-    router.use('/',
+    router.use(
+      '/',
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
       (err: any, req: Request, res: Response, next: NextFunction) => {
         useErrCalled = true;
         next();
-      },
+      }
     );
 
-    router.get('/',
+    router.get(
+      '/',
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
@@ -137,7 +137,6 @@ describe('error tests', () => {
       }
     );
 
-
     router.get(
       '/',
       (req: Request, res: Response, next: NextFunction) => {
@@ -163,8 +162,6 @@ describe('error tests', () => {
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
-
-
 });
 
 /**
