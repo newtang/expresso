@@ -96,10 +96,7 @@ export interface RouteMethods {
 }
 
 export interface Router extends NextHandleFunction, RouteMethods {
-  use: (
-    handlerOrPathStart: string | Array<string> | RequestHandler,
-    ...handlers: Array<RequestHandler>
-  ) => Router;
+  use: IRouterHandler<Router> & IRouterMatcher<Router>;
   param: (name: string, callback: RequestParamHandler) => Router;
   route: (path: PathParams) => Route;
 }
