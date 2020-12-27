@@ -162,6 +162,65 @@ describe('error tests', () => {
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
+
+   test('error = router', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let errCalled = false;
+
+    router.get(
+      '/',
+      (req: Request, res: Response, next: NextFunction) => {
+        next('router');
+      },
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        errCalled = true;
+        next();
+      },
+      (req: Request, res: Response, next: NextFunction) => {
+        res.send(msg);
+      }
+    );
+    app.use(router);
+
+    const res = await request(app).get('/');
+    expect(res.text).not.toBe(msg);
+    expect(res.status).toBe(404);
+    expect(errCalled).toBe(false);
+  });
+
+   test('error = route', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let errCalled = false;
+
+    router.get(
+      '/',
+      (req: Request, res: Response, next: NextFunction) => {
+        next('route');
+      },
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        errCalled = true;
+        next();
+      },
+      (req: Request, res: Response, next: NextFunction) => {
+        res.send(msg);
+      }
+    );
+    app.use(router);
+
+    const res = await request(app).get('/');
+    expect(res.text).not.toBe(msg);
+    expect(res.status).toBe(404);
+    expect(errCalled).toBe(false);
+  });
+
+
+
 });
 
 /**

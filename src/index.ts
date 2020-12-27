@@ -105,7 +105,6 @@ function handleRequest(
 ): void {
   const verb = req.method;
   const payload = routeStorage.find(verb, req.path || req.url);
-  // const done = callback;
   const done = restore(req, callback, 'baseUrl', 'next', 'params');
 
   if (payload && payload.target) {
@@ -173,6 +172,24 @@ function executeHandlers(
   next();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function next(err?: any): void {
+
+    
+    /**
+     * This should exit the current route handler, then go to the next valid route handler
+     * However, since we sort of merge all the route handlers, this doesn't work as it should
+     * Requires some reworking to enable this functionality.
+     * Issue #15
+     * 
+    **/
+    if(err === 'route'){
+      return done();
+    }
+
+    // exit router
+    if (err === 'router') {
+      return done();
+    }
+
     const nextHandler = handlerStack[index++];
     if (nextHandler) {
       if (err) {
