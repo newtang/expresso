@@ -40,7 +40,7 @@ describe('error tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('handler skipped', async () => {
+  test('handler skipped xyz', async () => {
     const app = express();
     const router = expresso();
     const msg = 'success';
@@ -57,16 +57,16 @@ describe('error tests', () => {
         next();
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (err: any, req: Request, res: Response) => {
+      (err: any, req: Request, res: Response, next: NextFunction) => {
         res.send(`${msg}_${err}`);
       }
     );
     app.use(router);
 
     const res = await request(app).get('/');
+    expect(called).toBe(false);
     expect(res.text).toBe('success_some error');
     expect(res.status).toBe(200);
-    expect(called).toBe(false);
 
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
@@ -152,7 +152,7 @@ describe('error tests', () => {
         next();
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (err: any, req: Request, res: Response) => {
+      (err: any, req: Request, res: Response, next: NextFunction) => {
         res.send(`${msg}_${err}`);
       }
     );

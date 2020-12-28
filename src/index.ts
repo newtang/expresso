@@ -40,12 +40,14 @@ export = buildRouter;
 function routeFxn(
   routerObj,
   path: PathParams
-): { [key: string]: (path: string, ...handlers: Array<HandleFunction | Array<HandleFunction>>) => void } | {path:string} {
-  const routerObjBindClone = {path:path.toString()};
+):
+  | { [key: string]: (path: string, ...handlers: Array<HandleFunction | Array<HandleFunction>>) => void }
+  | { path: string } {
+  const routerObjBindClone = { path: path && path.toString() };
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
       ...handlers: Array<HandleFunction>
-    ): { [key: string]: (path: PathParams, ...handlers: Array<HandleFunction>) => void } | {path:string} {
+    ): { [key: string]: (path: PathParams, ...handlers: Array<HandleFunction>) => void } | { path: string } {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
@@ -104,14 +106,15 @@ function handleRequest(
   callback: NextFunction
 ): void {
   const verb = req.method;
-  const payload = routeStorage.find(verb, req.path || req.url);
+  const path = req.path || req.url;
+  const payload = routeStorage.find(verb, path);
   const done = restore(req, callback, 'baseUrl', 'next', 'params');
 
   if (payload && payload.target) {
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
-    const useHandlerFunctions = getRelevantUseHandlers(req.path, useHandlers, false);
+    const useHandlerFunctions = getRelevantUseHandlers(path, useHandlers, true);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
 }
@@ -318,15 +321,19 @@ function getRelevantUseHandlers(
       arr.push(
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (trimPathPrefix.bind(null, useHandler.pathStart) as any) as HandleFunction,
-        ...useHandler.handlers
+        ...useHandler.handlers,
+        resetPathPrefix as HandleFunction
       );
     }
   }
 
-  //reset properties before verb handlers.
-  if (arr.length && reset) {
-    arr.push(resetPathPrefix as HandleFunction);
-  }
+  // console.log("reset", reset, arr.length);
+
+  // //reset properties before verb handlers.
+  // if (arr.length && reset) {
+  //   console.log('adding resetPathPrefix')
+  //   arr.push(resetPathPrefix as HandleFunction);
+  // }
 
   return arr;
 }

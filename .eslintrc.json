@@ -46,7 +46,7 @@
         "@typescript-eslint/explicit-module-boundary-types": ["error"],
         "@typescript-eslint/member-delimiter-style": ["error"],
         "@typescript-eslint/no-explicit-any": ["error"],
-        "@typescript-eslint/no-unused-vars": ["error"],
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "next" }],
         "@typescript-eslint/no-unused-expressions": ["error"]
     }
 }

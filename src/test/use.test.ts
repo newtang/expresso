@@ -37,6 +37,50 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path. Contains consecutive '//', /v1//api`);
   });
 
+  test('should restore req.url', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.use('/foo', function (req, res, next) {
+      res.setHeader('x-header-1', req.method + ' ' + req.url);
+      next();
+    });
+    router.use(function (req, res, next) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end(`resp ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/foo/bar');
+    expect(res.status).toBe(200);
+    expect(res.header['x-header-1']).toBe('GET /bar');
+    expect(res.text).toBe('resp GET /foo/bar');
+  });
+
+  test('should strip/restore with trailing stash', async () => {
+    const app = express();
+    const router = expresso({ allowDuplicatePaths: true });
+
+    router.use('/foo', function (req, res, next) {
+      res.setHeader('x-header-1', req.method + ' ' + req.url);
+      next();
+    });
+    router.use(function (req, res, next) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end(`resp ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/foo/');
+    expect(res.status).toBe(200);
+    expect(res.header['x-header-1']).toBe('GET /');
+    expect(res.text).toBe('resp GET /foo/');
+  });
+
   test('use added after route', async () => {
     const app = express();
     const router = expresso();
