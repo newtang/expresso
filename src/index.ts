@@ -40,12 +40,12 @@ export = buildRouter;
 function routeFxn(
   routerObj,
   path: PathParams
-): { [key: string]: (path: string, ...handlers: Array<HandleFunction | Array<HandleFunction>>) => void } {
-  const routerObjBindClone = {};
+): { [key: string]: (path: string, ...handlers: Array<HandleFunction | Array<HandleFunction>>) => void } | {path:string} {
+  const routerObjBindClone = {path:path.toString()};
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
       ...handlers: Array<HandleFunction>
-    ): { [key: string]: (path: PathParams, ...handlers: Array<HandleFunction>) => void } {
+    ): { [key: string]: (path: PathParams, ...handlers: Array<HandleFunction>) => void } | {path:string} {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
