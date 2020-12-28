@@ -39,13 +39,13 @@ export = buildRouter;
 
 function routeFxn(
   routerObj,
-  path: string | RegExp | Array<string | RegExp>
-): { [key: string]: (path: string, ...handlers: Array<HandleFunction>) => void } {
+  path: PathParams
+): { [key: string]: (path: string, ...handlers: Array<HandleFunction | Array<HandleFunction>>) => void } {
   const routerObjBindClone = {};
   for (const method in routerObj) {
     routerObjBindClone[method] = function (
       ...handlers: Array<HandleFunction>
-    ): { [key: string]: (path: string | RegExp, ...handlers: Array<HandleFunction>) => void } {
+    ): { [key: string]: (path: PathParams, ...handlers: Array<HandleFunction>) => void } {
       routerObj[method](path, ...handlers);
       return routerObjBindClone;
     };
@@ -172,16 +172,15 @@ function executeHandlers(
   next();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function next(err?: any): void {
-
-    
     /**
      * This should exit the current route handler, then go to the next valid route handler
      * However, since we sort of merge all the route handlers, this doesn't work as it should
      * Requires some reworking to enable this functionality.
      * Issue #15
-     * 
-    **/
-    if(err === 'route'){
+     *
+     **/
+
+    if (err === 'route') {
       return done();
     }
 
@@ -241,7 +240,7 @@ function addRoute(
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
   path: PathParams,
-  ...handlers: Array<HandleFunction>
+  ...handlers: Array<HandleFunction | Array<HandleFunction>>
 ): Router {
   const paths = Array.isArray(path) ? path : [path];
 
@@ -249,8 +248,10 @@ function addRoute(
     throw new Error(`Invalid path: ${path}`);
   }
 
+  const allhandlers = handlers.flat();
+
   for (const p of paths) {
-    routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...handlers]);
+    routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...allhandlers]);
   }
 
   return this as Router;

@@ -53,6 +53,9 @@ export default class CompositeStorage implements ParamStorage {
 }
 
 function validateHandlers(path: string | RegExp, handlers: Array<HandleFunction>): void {
+  if (!handlers || !handlers.length) {
+    throw new Error(`Non function handler found for path: ${path}`);
+  }
   for (const handler of handlers) {
     if (typeof handler !== 'function') {
       throw new Error(`Non function handler found for path: ${path}`);

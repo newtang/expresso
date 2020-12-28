@@ -229,4 +229,64 @@ describe('basic tests', () => {
     const resWithError = await request(app).get('/error');
     expect(resWithError.status).toBe(404);
   });
+
+  test('array of handlers', async () => {
+    const app = express();
+    const router = expresso({ allowRegex: 'safe' });
+    const msg = 'success';
+
+    let middleware1Called = false;
+    let middleware2Called = false;
+
+    router.get('/test', [
+      (req: Request, res: Response, next: NextFunction): void => {
+        middleware1Called = true;
+        next();
+      },
+      (req: Request, res: Response, next: NextFunction): void => {
+        middleware2Called = true;
+        next();
+      },
+      (req: Request, res: Response): void => {
+        res.send(msg);
+      },
+    ]);
+    app.use(router);
+
+    const res = await request(app).get('/test');
+    expect(middleware1Called).toBe(true);
+    expect(middleware2Called).toBe(true);
+    expect(res.text).toBe(msg);
+    expect(res.status).toBe(200);
+  });
+
+  test('array of handlers - route', async () => {
+    const app = express();
+    const router = expresso({ allowRegex: 'safe' });
+    const msg = 'success';
+
+    let middleware1Called = false;
+    let middleware2Called = false;
+
+    router.route('/test').get([
+      (req: Request, res: Response, next: NextFunction): void => {
+        middleware1Called = true;
+        next();
+      },
+      (req: Request, res: Response, next: NextFunction): void => {
+        middleware2Called = true;
+        next();
+      },
+      (req: Request, res: Response): void => {
+        res.send(msg);
+      },
+    ]);
+    app.use(router);
+
+    const res = await request(app).get('/test');
+    expect(middleware1Called).toBe(true);
+    expect(middleware2Called).toBe(true);
+    expect(res.text).toBe(msg);
+    expect(res.status).toBe(200);
+  });
 });

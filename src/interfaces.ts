@@ -1,5 +1,5 @@
-import type { NextHandleFunction, HandleFunction, ErrorHandleFunction } from 'connect';
-import type { RequestHandler, RequestParamHandler, IRouterMatcher, IRouterHandler } from 'express';
+import type { NextHandleFunction, HandleFunction } from 'connect';
+import type { RequestParamHandler, IRouterMatcher, IRouterHandler } from 'express';
 
 export interface Storage {
   find(method: string, path: string): FoundRouteData | false;

@@ -20,11 +20,12 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         errCalled = true;
         next();
       },
-      (req: Request, res: Response, next: NextFunction) => {
+      (req: Request, res: Response) => {
         res.send(msg);
       }
     );
@@ -55,7 +56,8 @@ describe('error tests', () => {
         called = true;
         next();
       },
-      (err: any, req: Request, res: Response, next: NextFunction) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err: any, req: Request, res: Response) => {
         res.send(`${msg}_${err}`);
       }
     );
@@ -83,6 +85,7 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         useErrCalled = true;
         next();
@@ -94,11 +97,12 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next();
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         errCalled = true;
         next();
       },
-      (req: Request, res: Response, next: NextFunction) => {
+      (req: Request, res: Response) => {
         res.send(msg);
       }
     );
@@ -131,6 +135,7 @@ describe('error tests', () => {
         useFxnCalled = true;
         next();
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         useErrCalled = true;
         next();
@@ -146,7 +151,8 @@ describe('error tests', () => {
         called = true;
         next();
       },
-      (err: any, req: Request, res: Response, next: NextFunction) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err: any, req: Request, res: Response) => {
         res.send(`${msg}_${err}`);
       }
     );
@@ -163,7 +169,7 @@ describe('error tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-   test('error = router', async () => {
+  test('error = router', async () => {
     const app = express();
     const router = expresso();
     const msg = 'success';
@@ -175,11 +181,12 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next('router');
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         errCalled = true;
         next();
       },
-      (req: Request, res: Response, next: NextFunction) => {
+      (req: Request, res: Response) => {
         res.send(msg);
       }
     );
@@ -191,7 +198,7 @@ describe('error tests', () => {
     expect(errCalled).toBe(false);
   });
 
-   test('error = route', async () => {
+  test('error = route', async () => {
     const app = express();
     const router = expresso();
     const msg = 'success';
@@ -203,11 +210,12 @@ describe('error tests', () => {
       (req: Request, res: Response, next: NextFunction) => {
         next('route');
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, req: Request, res: Response, next: NextFunction) => {
         errCalled = true;
         next();
       },
-      (req: Request, res: Response, next: NextFunction) => {
+      (req: Request, res: Response) => {
         res.send(msg);
       }
     );
@@ -218,9 +226,6 @@ describe('error tests', () => {
     expect(res.status).toBe(404);
     expect(errCalled).toBe(false);
   });
-
-
-
 });
 
 /**

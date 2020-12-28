@@ -1,6 +1,6 @@
 import expresso from '../index';
 
-describe('basic tests', () => {
+describe('validation tests', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
@@ -77,11 +77,6 @@ describe('basic tests', () => {
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expresso().get(path, handler as any);
-    }).toThrow(`Non function handler found for path: ${path}`);
-
-    expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expresso().get(path, jest.fn(), handler as any);
     }).toThrow(`Non function handler found for path: ${path}`);
   });
 });
