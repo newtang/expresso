@@ -248,7 +248,7 @@ function addRoute(
     throw new Error(`Invalid path: ${path}`);
   }
 
-  const allhandlers = handlers.flat();
+  const allhandlers = handlers.flat(2);
 
   for (const p of paths) {
     routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...allhandlers]);
