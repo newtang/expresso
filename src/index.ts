@@ -108,7 +108,7 @@ function handleRequest(
   const verb = req.method;
   const path = req.path || req.url;
   const payload = routeStorage.find(verb, path);
-  const done = restore(req, callback, 'baseUrl', 'next', 'params');
+  const done = restore(req, callback, 'baseUrl', 'next', 'params', 'originalUrl');
 
   if (payload && payload.target) {
     req.params = payload.params || {};
@@ -275,7 +275,8 @@ function getRelevantUseHandlersForRegex(
         } else {
           (done as NextFunction)();
         }
-      }) as unknown) as HandleFunction
+      }) as unknown) as HandleFunction,
+      resetPathPrefix as HandleFunction
     );
   }
 
@@ -319,21 +320,12 @@ function getRelevantUseHandlers(
 
     if (validStartsWith(path, useHandler.pathStart)) {
       arr.push(
-        //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (trimPathPrefix.bind(null, useHandler.pathStart) as any) as HandleFunction,
+        trimPathPrefix.bind(null, useHandler.pathStart) as HandleFunction,
         ...useHandler.handlers,
         resetPathPrefix as HandleFunction
       );
     }
   }
-
-  // console.log("reset", reset, arr.length);
-
-  // //reset properties before verb handlers.
-  // if (arr.length && reset) {
-  //   console.log('adding resetPathPrefix')
-  //   arr.push(resetPathPrefix as HandleFunction);
-  // }
 
   return arr;
 }
@@ -345,6 +337,7 @@ function resetPathPrefix(req: Request, res: Response, next: NextFunction): void 
 }
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
+  req.originalUrl = req.originalUrl || req.url;
   req.url = req.url.slice(prefix.length) || '/';
   req.baseUrl = `${req.baseUrl}${prefix}`;
   next();
