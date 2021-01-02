@@ -276,7 +276,7 @@ function getRelevantUseHandlersForRegex(
           (done as NextFunction)();
         }
       }) as unknown) as HandleFunction,
-      resetPathPrefix as HandleFunction
+      resetPathPrefix.bind(null, useHandler.pathStart) as HandleFunction
     );
   }
 
@@ -322,7 +322,7 @@ function getRelevantUseHandlers(
       arr.push(
         trimPathPrefix.bind(null, useHandler.pathStart) as HandleFunction,
         ...useHandler.handlers,
-        resetPathPrefix as HandleFunction
+        resetPathPrefix.bind(null, useHandler.pathStart) as HandleFunction
       );
     }
   }
@@ -330,15 +330,26 @@ function getRelevantUseHandlers(
   return arr;
 }
 
-function resetPathPrefix(req: Request, res: Response, next: NextFunction): void {
-  req.url = req.originalUrl;
-  req.baseUrl = '';
+function resetPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
+  if (req.url === '/') {
+    req.url = prefix;
+    req.baseUrl = req.baseUrl.slice(0, req.baseUrl.length - prefix.length);
+  } else {
+    req.url = `${prefix}${req.url}`;
+    req.baseUrl = req.baseUrl.slice(0, req.baseUrl.length - prefix.length);
+  }
+
+  //to restore to a non-strict route if necessary
+  if (`${req.url}/` === req.originalUrl) {
+    req.url = `${req.url}/`;
+  }
+
   next();
 }
 
 function trimPathPrefix(prefix: string, req: Request, res: Response, next: NextFunction): void {
   req.originalUrl = req.originalUrl || req.url;
   req.url = req.url.slice(prefix.length) || '/';
-  req.baseUrl = `${req.baseUrl}${prefix}`;
+  req.baseUrl = `${req.baseUrl || ''}${prefix}`;
   next();
 }
