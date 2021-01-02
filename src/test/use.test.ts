@@ -37,6 +37,50 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path. Contains consecutive '//', /v1//api`);
   });
 
+  it('caseSensitive is true', async () => {
+    const app = express();
+    const router = expresso({ caseSensitive: true });
+
+    router.use('/foo', (req, res, next) => {
+      res.send(`saw ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    let response = await request(app).get('/foo/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/bar');
+    expect(response.status).toBe(404);
+
+    response = await request(app).get('/FOO/BAR');
+    expect(response.status).toBe(404);
+  });
+
+  it('caseSensitive is false', async () => {
+    const app = express();
+    const router = expresso({ caseSensitive: false });
+
+    router.use('/foo', (req, res, next) => {
+      res.send(`saw ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    let response = await request(app).get('/foo/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/BAR');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /BAR');
+  });
+
   test('should restore req.url', async () => {
     const app = express();
     const router = expresso();

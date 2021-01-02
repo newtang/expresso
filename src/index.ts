@@ -24,7 +24,7 @@ function buildRouter(userOptions?: Partial<RouterOptions>): Router {
     routeStorage
   );
   const use = buildUse.bind(handler, useHandlers);
-  const routerObj = buildRouterMethods(handler, routeStorage, useHandlers);
+  const routerObj = buildRouterMethods(handler, routeStorage, useHandlers, options);
   const route = routeFxn.bind(null, routerObj);
 
   return (Object.assign(handler, { use, param, route }, routerObj) as unknown) as Router;
@@ -114,7 +114,7 @@ function handleRequest(
     req.params = payload.params || {};
     executeHandlers(req, res, done, payload.target);
   } else {
-    const useHandlerFunctions = getRelevantUseHandlers(path, useHandlers, true);
+    const useHandlerFunctions = getRelevantUseHandlers(path, useHandlers, options.caseSensitive);
     executeHandlers(req, res, done, useHandlerFunctions);
   }
 }
@@ -222,7 +222,8 @@ function executeHandlers(
 function buildRouterMethods(
   context: unknown,
   routeStorage: CompositeStorage,
-  useHandlers: Array<UseHandler>
+  useHandlers: Array<UseHandler>,
+  options: RouterOptions
 ): RouteMethods {
   const routerObj = {};
   for (const capsMethod of METHODS) {
@@ -232,7 +233,7 @@ function buildRouterMethods(
      * Using the capitalized method (as opposed to lowercasing it on every request)
      * is actually a relatively significant optimization
      **/
-    routerObj[method] = addRoute.bind(context as Router, capsMethod, routeStorage, useHandlers);
+    routerObj[method] = addRoute.bind(context as Router, capsMethod, routeStorage, useHandlers, options);
   }
   return routerObj as RouteMethods;
 }
@@ -242,6 +243,7 @@ function addRoute(
   method: string,
   routeStorage: CompositeStorage,
   useHandlers: Array<UseHandler>,
+  options: RouterOptions,
   path: PathParams,
   ...handlers: Array<HandleFunction | Array<HandleFunction>>
 ): Router {
@@ -254,7 +256,10 @@ function addRoute(
   const allhandlers = handlers.flat(2);
 
   for (const p of paths) {
-    routeStorage.add(method, p, [...getRelevantUseHandlers(p, useHandlers, true), ...allhandlers]);
+    routeStorage.add(method, p, [
+      ...getRelevantUseHandlers(p, useHandlers, options.caseSensitive),
+      ...allhandlers,
+    ]);
   }
 
   return this as Router;
@@ -263,14 +268,14 @@ function addRoute(
 function getRelevantUseHandlersForRegex(
   path: RegExp,
   useHandlers: Array<UseHandler>,
-  reset: boolean
+  caseSensitive: boolean
 ): Array<HandleFunction> {
   const arr: Array<HandleFunction> = [];
   for (const useHandler of useHandlers) {
     arr.push(
       trimPathPrefix.bind(null, useHandler.pathStart) as HandleFunction,
       (((req: Request, res: Response, done: HandleFunction) => {
-        if (validStartsWith(req.originalUrl, useHandler.pathStart)) {
+        if (validStartsWith(req.originalUrl, useHandler.pathStart, caseSensitive)) {
           executeHandlers(req, res, done as NextFunction, useHandler.handlers);
         } else {
           (done as NextFunction)();
@@ -280,25 +285,25 @@ function getRelevantUseHandlersForRegex(
     );
   }
 
-  //reset properties before verb handlers.
-  if (arr.length && reset) {
-    arr.push(resetPathPrefix as HandleFunction);
-  }
-
   return arr;
 }
 
-function validStartsWith(path: string, pathStart: string): boolean {
+function validStartsWith(path: string, pathStart: string, caseSensitive: boolean): boolean {
+  if (!caseSensitive) {
+    path = path.toLowerCase();
+    pathStart = pathStart.toLowerCase();
+  }
+
   return path === pathStart || (path.startsWith(pathStart) && path.startsWith(`${pathStart}/`));
 }
 
 function getRelevantUseHandlers(
   path: string | RegExp,
   useHandlers: Array<UseHandler>,
-  reset: boolean
+  caseSensitive: boolean
 ): Array<HandleFunction> {
   if (path instanceof RegExp) {
-    return getRelevantUseHandlersForRegex(path, useHandlers, reset);
+    return getRelevantUseHandlersForRegex(path, useHandlers, caseSensitive);
   }
 
   const arr: Array<HandleFunction> = [];
@@ -318,7 +323,7 @@ function getRelevantUseHandlers(
 
     */
 
-    if (validStartsWith(path, useHandler.pathStart)) {
+    if (validStartsWith(path, useHandler.pathStart, caseSensitive)) {
       arr.push(
         trimPathPrefix.bind(null, useHandler.pathStart) as HandleFunction,
         ...useHandler.handlers,

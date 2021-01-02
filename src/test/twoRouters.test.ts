@@ -51,7 +51,7 @@ describe('two routers', () => {
     sub1.use('/', setsawBase(2));
 
     sub1.use('/bar', sub2);
-    sub1.use('/bar', setsawBase(3))
+    sub1.use('/bar', setsawBase(3));
 
     //a
     router.use(setsawBase(4));
