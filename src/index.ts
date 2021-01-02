@@ -57,7 +57,7 @@ function routeFxn(
 
 function buildUse(
   useHandlers: Array<UseHandler>,
-  handlerOrPathStart: string | Array<string> | HandleFunction,
+  handlerOrPathStart: string | Array<string> | HandleFunction | Array<HandleFunction | Array<HandleFunction>>,
   ...handlers: Array<HandleFunction>
 ): Router {
   let pathStarts = ['/'];
@@ -66,7 +66,17 @@ function buildUse(
     handlers.unshift(handlerOrPathStart);
   } else {
     if (Array.isArray(handlerOrPathStart)) {
-      pathStarts = handlerOrPathStart;
+      handlerOrPathStart = handlerOrPathStart.flat(2) as Array<HandleFunction> | Array<string>;
+
+      if (!handlerOrPathStart.length) {
+        throw new Error(`Invalid path: ${handlerOrPathStart}`);
+      }
+
+      if (typeof handlerOrPathStart[0] === 'string') {
+        pathStarts = handlerOrPathStart as Array<string>;
+      } else if (typeof handlerOrPathStart[0] === 'function') {
+        handlers.unshift(...(handlerOrPathStart as Array<HandleFunction>));
+      }
     } else {
       pathStarts = [handlerOrPathStart];
     }

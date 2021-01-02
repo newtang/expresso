@@ -37,7 +37,7 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path. Contains consecutive '//', /v1//api`);
   });
 
-  it('caseSensitive is true', async () => {
+  test('caseSensitive is true', async () => {
     const app = express();
     const router = expresso({ caseSensitive: true });
 
@@ -58,7 +58,7 @@ describe('router.use', () => {
     expect(response.status).toBe(404);
   });
 
-  it('caseSensitive is false', async () => {
+  test('caseSensitive is false', async () => {
     const app = express();
     const router = expresso({ caseSensitive: false });
 
@@ -79,6 +79,31 @@ describe('router.use', () => {
     response = await request(app).get('/FOO/BAR');
     expect(response.status).toBe(200);
     expect(response.text).toBe('saw GET /BAR');
+  });
+
+  test('should accept single array of middleware', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.use([
+      (req, res, next) => {
+        res.set('x-header-1', 'hit 1');
+        next();
+      },
+      (req, res, next) => {
+        res.set('x-header-2', 'hit 2');
+        next();
+      },
+      (req, res) => res.send('success'),
+    ]);
+
+    app.use(router);
+
+    const response = await request(app).get('/');
+    expect(response.header['x-header-1']).toBe('hit 1');
+    expect(response.header['x-header-2']).toBe('hit 2');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('success');
   });
 
   test('should restore req.url', async () => {
