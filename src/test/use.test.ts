@@ -17,6 +17,14 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path: ${path}`);
   });
 
+  test.each(['yo', null, undefined, 12, ['test']])('invalid handlers', (handler) => {
+    const router = expresso();
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.use('/', handler as any);
+    }).toThrowError(`Handler must be a function`);
+  });
+
   test('cannot use regular expressions', () => {
     const router = expresso();
     expect(() => {

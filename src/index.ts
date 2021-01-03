@@ -86,6 +86,8 @@ function buildUse(
     throw new Error(`Invalid path: ${pathStarts}`);
   }
 
+  validateUseHandlers(handlers);
+
   for (let pathStart of pathStarts) {
     //we don't support regex in use quite yet.
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,6 +107,18 @@ function buildUse(
   }
 
   return this;
+}
+
+function validateUseHandlers(handlers: Array<HandleFunction>): void {
+  if (!handlers || !handlers.length) {
+    throw new Error('Handler must be a function');
+  }
+
+  for (const handler of handlers) {
+    if (typeof handler !== 'function') {
+      throw new Error('Handler must be a function');
+    }
+  }
 }
 
 function handleRequest(
