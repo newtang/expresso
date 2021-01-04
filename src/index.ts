@@ -226,20 +226,6 @@ function executeHandlers(
     } else {
       return done(err);
     }
-
-    // if (err) {
-    //   return done(err);
-    // }
-    // const nextHandler = handlerStack[index++];
-    // if (nextHandler) {
-    //   try {
-    //     nextHandler(req, res, next);
-    //   } catch (handlerException) {
-    //     return done(handlerException);
-    //   }
-    // } else {
-    //   done();
-    // }
   }
 }
 
