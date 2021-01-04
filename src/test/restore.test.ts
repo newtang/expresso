@@ -1,15 +1,15 @@
 import request from 'supertest';
 import expresso from '../index';
-import { createServer, Server } from 'http';
+import { createBasicServer } from './utils';
 
-describe('basic tests', () => {
+describe('restore tests - express', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
 
   test('restore previous value outside the router', async () => {
     const router = expresso();
-    const server = buildServer(function (req, res, next) {
+    const server = createBasicServer(function (req, res, next) {
       req.params = { foo: 'bar' };
 
       router(req, res, function (err) {
@@ -33,7 +33,7 @@ describe('basic tests', () => {
 
   test('should not exist outside the router', async () => {
     const router = expresso();
-    const server = buildServer(function (req, res, next) {
+    const server = createBasicServer(function (req, res, next) {
       router(req, res, function (err) {
         if (err) return next(err);
         res.statusCode = 200;
@@ -55,7 +55,7 @@ describe('basic tests', () => {
 
   test('should overwrite value outside the router', async () => {
     const router = expresso();
-    const server = buildServer(function (req, res, next) {
+    const server = createBasicServer(function (req, res, next) {
       req.params = { foo: 'bar' };
       router(req, res, next);
     });
@@ -71,9 +71,3 @@ describe('basic tests', () => {
     expect(res.status).toBe(200);
   });
 });
-
-function buildServer(router): Server {
-  return createServer(function (req, res) {
-    router(req, res, jest.fn());
-  });
-}
