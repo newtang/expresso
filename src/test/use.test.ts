@@ -94,15 +94,15 @@ describe('router.use', () => {
     const router = expresso();
 
     router.use([
-      (req, res, next) => {
+      (req, res, next): void => {
         res.set('x-header-1', 'hit 1');
         next();
       },
-      (req, res, next) => {
+      (req, res, next): void => {
         res.set('x-header-2', 'hit 2');
         next();
       },
-      (req, res) => res.send('success'),
+      (req, res): void => res.send('success'),
     ]);
 
     app.use(router);

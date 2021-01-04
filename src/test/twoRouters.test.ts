@@ -1,6 +1,7 @@
 import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
+import type { HandleFunction } from 'connect';
 import type { Request, Response } from 'express';
 import { createBasicServer } from './utils';
 
@@ -123,9 +124,9 @@ describe('two routers', () => {
   */
 });
 
-function setsawBase(num) {
+function setsawBase(num: number): HandleFunction {
   const name = 'x-saw-base-' + String(num);
-  return function sawBase(req, res, next) {
+  return function sawBase(req, res, next): void {
     res.setHeader(name, String(req.baseUrl));
     next();
   };

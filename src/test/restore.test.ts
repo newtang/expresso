@@ -1,6 +1,7 @@
 import request from 'supertest';
 import expresso from '../index';
 import { createBasicServer } from './utils';
+import type { Request } from 'express';
 
 describe('restore tests - express', () => {
   beforeAll(() => {
@@ -10,13 +11,13 @@ describe('restore tests - express', () => {
   test('restore previous value outside the router', async () => {
     const router = expresso();
     const server = createBasicServer(function (req, res, next) {
-      req.params = { foo: 'bar' };
+      (req as Request).params = { foo: 'bar' };
 
       router(req, res, function (err) {
         if (err) return next(err);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(req.params));
+        res.end(JSON.stringify((req as Request).params));
       });
     });
 
@@ -38,7 +39,7 @@ describe('restore tests - express', () => {
         if (err) return next(err);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(req.params));
+        res.end(JSON.stringify((req as Request).params));
       });
     });
 
@@ -56,7 +57,7 @@ describe('restore tests - express', () => {
   test('should overwrite value outside the router', async () => {
     const router = expresso();
     const server = createBasicServer(function (req, res, next) {
-      req.params = { foo: 'bar' };
+      (req as Request).params = { foo: 'bar' };
       router(req, res, next);
     });
 
