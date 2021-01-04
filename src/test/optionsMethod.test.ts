@@ -2,8 +2,9 @@ import request from 'supertest';
 import express from 'express';
 import expresso from '../index';
 import type { Request, Response } from 'express';
+import { createBasicServer } from './utils';
 
-describe('HEAD', () => {
+describe('OPTIONS', () => {
   beforeAll(() => {
     console.error = jest.fn();
   });
@@ -14,6 +15,25 @@ describe('HEAD', () => {
 
     router.get('/', () => jest.fn());
     app.use(router);
+
+    const methods = 'GET, HEAD';
+    let res = await request(app).options('/');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+
+    //test twice, because results get cached internally
+    res = await request(app).options('/');
+    expect(res.text).toBe(methods);
+    expect(res.status).toBe(200);
+    expectHeaders(res.header, methods);
+  });
+
+  test('static - basic server', async () => {
+    const router = expresso();
+    const app = createBasicServer(router);
+
+    router.get('/', () => jest.fn());
 
     const methods = 'GET, HEAD';
     let res = await request(app).options('/');

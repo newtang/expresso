@@ -1,5 +1,5 @@
 import { Storage, FoundRouteData } from '../interfaces';
-import type { NextHandleFunction } from 'connect';
+import type { HandleFunction } from 'connect';
 import { buildOptionsHandler } from './utils';
 
 interface RouteMap {
@@ -21,7 +21,7 @@ export default class StaticStorage implements Storage {
     this.options = options;
   }
 
-  add(method: string, path: string, handlers: Array<NextHandleFunction>): void {
+  add(method: string, path: string, handlers: Array<HandleFunction>): void {
     path = modifyPath(path, this.options);
     if (!this.routes[path]) {
       this.routes[path] = {};

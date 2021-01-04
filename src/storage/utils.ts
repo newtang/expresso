@@ -12,8 +12,8 @@ export function buildOptionsHandler(methods: Array<string>): NextHandleFunction 
   return (((req: Request, res: Response) => {
     res.setHeader('Allow', sortedMethods);
     res.setHeader('Content-Length', Buffer.byteLength(sortedMethods));
-    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.send(sortedMethods);
+    res.end(sortedMethods);
   }) as unknown) as NextHandleFunction;
 }

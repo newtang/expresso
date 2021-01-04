@@ -17,6 +17,14 @@ describe('router.use', () => {
     }).toThrowError(`Invalid path: ${path}`);
   });
 
+  test.each(['yo', null, undefined, 12, ['test']])('invalid handlers', (handler) => {
+    const router = expresso();
+    expect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      router.use('/', handler as any);
+    }).toThrowError(`Handler must be a function`);
+  });
+
   test('cannot use regular expressions', () => {
     const router = expresso();
     expect(() => {
@@ -35,6 +43,119 @@ describe('router.use', () => {
     expect(() => {
       router.use('/v1//api', jest.fn());
     }).toThrowError(`Invalid path. Contains consecutive '//', /v1//api`);
+  });
+
+  test('caseSensitive is true', async () => {
+    const app = express();
+    const router = expresso({ caseSensitive: true });
+
+    router.use('/foo', (req, res, next) => {
+      res.send(`saw ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    let response = await request(app).get('/foo/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/bar');
+    expect(response.status).toBe(404);
+
+    response = await request(app).get('/FOO/BAR');
+    expect(response.status).toBe(404);
+  });
+
+  test('caseSensitive is false', async () => {
+    const app = express();
+    const router = expresso({ caseSensitive: false });
+
+    router.use('/foo', (req, res, next) => {
+      res.send(`saw ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    let response = await request(app).get('/foo/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/bar');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /bar');
+
+    response = await request(app).get('/FOO/BAR');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('saw GET /BAR');
+  });
+
+  test('should accept single array of middleware', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.use([
+      (req, res, next): void => {
+        res.set('x-header-1', 'hit 1');
+        next();
+      },
+      (req, res, next): void => {
+        res.set('x-header-2', 'hit 2');
+        next();
+      },
+      (req, res): void => res.send('success'),
+    ]);
+
+    app.use(router);
+
+    const response = await request(app).get('/');
+    expect(response.header['x-header-1']).toBe('hit 1');
+    expect(response.header['x-header-2']).toBe('hit 2');
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('success');
+  });
+
+  test('should restore req.url', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.use('/foo', function (req, res, next) {
+      res.setHeader('x-header-1', req.method + ' ' + req.url);
+      next();
+    });
+    router.use(function (req, res, next) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end(`resp ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/foo/bar');
+    expect(res.status).toBe(200);
+    expect(res.header['x-header-1']).toBe('GET /bar');
+    expect(res.text).toBe('resp GET /foo/bar');
+  });
+
+  test('should strip/restore with trailing stash', async () => {
+    const app = express();
+    const router = expresso({ allowDuplicatePaths: true });
+
+    router.use('/foo', function (req, res, next) {
+      res.setHeader('x-header-1', req.method + ' ' + req.url);
+      next();
+    });
+    router.use(function (req, res, next) {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end(`resp ${req.method} ${req.url}`);
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/foo/');
+    expect(res.status).toBe(200);
+    expect(res.header['x-header-1']).toBe('GET /');
+    expect(res.text).toBe('resp GET /foo/');
   });
 
   test('use added after route', async () => {
