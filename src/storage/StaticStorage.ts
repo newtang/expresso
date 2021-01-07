@@ -43,7 +43,9 @@ export default class StaticStorage implements Storage {
 
     const pathRoutes = this.routes[path];
     const result =
-      (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''] || pathRoutes['ALL'])) || false;
+      (pathRoutes &&
+        (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''] || pathRoutes['ALL'])) ||
+      false;
     if (result) {
       return result;
     } else {

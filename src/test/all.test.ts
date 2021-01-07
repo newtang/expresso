@@ -17,18 +17,17 @@ describe(' "all" tests - express', () => {
     const paramMsg = 'success-param';
     const regexMsg = 'success-regex';
 
-    // router.all('/test', (req: Request, res: Response) => res.send(msg));
-    // router.all('/user/:userId', (req: Request, res: Response) => res.send(paramMsg));
+    router.all('/test', (req: Request, res: Response) => res.send(msg));
+    router.all('/user/:userId', (req: Request, res: Response) => res.send(paramMsg));
     router.all(/^\/abc/, (req: Request, res: Response) => res.send(regexMsg));
     app.use(router);
 
     for (const [path, response] of [
-      // ['/test', msg],
-      // ['/user/123', paramMsg],
+      ['/test', msg],
+      ['/user/123', paramMsg],
       ['/abc', regexMsg],
     ]) {
-
-      for(const capsMethod of METHODS){
+      for (const capsMethod of METHODS) {
         if (capsMethod === 'CONNECT') {
           continue;
         }
@@ -52,6 +51,7 @@ router.all
 
 - override options
 - HEAD still defers to get
+- options should not include ALL
 
  route.all
 

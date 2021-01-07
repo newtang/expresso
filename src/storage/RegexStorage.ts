@@ -43,19 +43,20 @@ export default class RegexStorage implements Storage {
     } else {
       methodToHandlers[method] = { target: handlers };
     }
-    console.log("methodToHandlers RegexStorage", methodToHandlers)
   }
 
   find(method: string, path: string): FoundRouteData | false {
-    if (method === 'OPTIONS') {
-      return optionsFind(this, path);
-    }
     for (const [regex, methodToHandlers] of this.regexMap) {
-      const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''] || methodToHandlers['ALL'];
+      const result =
+        methodToHandlers[method] ||
+        methodToHandlers[method === 'HEAD' ? 'GET' : ''] ||
+        methodToHandlers['ALL'];
       if (result && regex.test(path)) {
-        console.log('result', result);
         return result;
       }
+    }
+    if (method === 'OPTIONS') {
+      return optionsFind(this, path);
     }
     return false;
   }
@@ -64,13 +65,9 @@ export default class RegexStorage implements Storage {
 function optionsFind(storage: RegexStorage, path: string): FoundRouteData | false {
   for (const [regex, methodToHandlers] of storage.regexMap) {
     if (regex.test(path)) {
-      if (methodToHandlers['OPTIONS']) {
-        return methodToHandlers['OPTIONS'];
-      } else {
-        const handlers = [buildOptionsHandler(Object.keys(methodToHandlers))];
-        storage.add('OPTIONS', regex, handlers);
-        return { target: handlers };
-      }
+      const handlers = [buildOptionsHandler(Object.keys(methodToHandlers))];
+      storage.add('OPTIONS', regex, handlers);
+      return { target: handlers };
     }
   }
   return false;
