@@ -27,6 +27,7 @@ export type PathParams = string | RegExp | Array<string | RegExp>;
 
 export interface Route {
   acl: IRouterHandler<Route>;
+  all: IRouterHandler<Route>;
   bind: IRouterHandler<Route>;
   checkout: IRouterHandler<Route>;
   connect: IRouterHandler<Route>;
@@ -62,6 +63,7 @@ export interface Route {
 
 export interface RouteMethods {
   acl: IRouterMatcher<Router>;
+  all: IRouterMatcher<Router>;
   bind: IRouterMatcher<Router>;
   checkout: IRouterMatcher<Router>;
   connect: IRouterMatcher<Router>;

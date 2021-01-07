@@ -31,6 +31,7 @@ export default class RegexStorage implements Storage {
     }
 
     const methodToHandlers = this.regexMap.get(pathRegex) as Record<string, FoundRouteData>;
+
     if (methodToHandlers[method]) {
       if (this.options.allowDuplicatePaths) {
         methodToHandlers[method].target.push(...handlers);
@@ -42,6 +43,7 @@ export default class RegexStorage implements Storage {
     } else {
       methodToHandlers[method] = { target: handlers };
     }
+    console.log("methodToHandlers RegexStorage", methodToHandlers)
   }
 
   find(method: string, path: string): FoundRouteData | false {
@@ -49,8 +51,9 @@ export default class RegexStorage implements Storage {
       return optionsFind(this, path);
     }
     for (const [regex, methodToHandlers] of this.regexMap) {
-      const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''];
+      const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''] || methodToHandlers['ALL'];
       if (result && regex.test(path)) {
+        console.log('result', result);
         return result;
       }
     }

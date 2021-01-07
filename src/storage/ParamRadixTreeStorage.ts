@@ -429,7 +429,10 @@ function endOfPath<T>(
   optionsBuilder: null | ((methods: Array<string>) => T)
 ): ReturnValue<T> | false {
   if (node.methodToPayload) {
-    const end = node.methodToPayload[method] || node.methodToPayload[method === 'HEAD' ? 'GET' : ''];
+    const end =
+      node.methodToPayload[method] ||
+      node.methodToPayload[method === 'HEAD' ? 'GET' : ''] ||
+      node.methodToPayload['ALL'];
     if (end) {
       return {
         target: end.payload,
