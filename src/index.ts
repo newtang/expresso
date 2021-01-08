@@ -236,7 +236,7 @@ function buildRouterMethods(
   options: RouterOptions
 ): RouteMethods {
   const routerObj = {};
-  for (const capsMethod of METHODS) {
+  for (const capsMethod of ['ALL', ...METHODS]) {
     const method = capsMethod.toLowerCase();
     /**
      * The value of the method property on req always seems to be capitalized.

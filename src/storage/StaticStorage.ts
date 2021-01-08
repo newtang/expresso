@@ -42,9 +42,10 @@ export default class StaticStorage implements Storage {
     path = this.options.caseSensitive ? path : path.toLowerCase();
 
     const pathRoutes = this.routes[path];
-    // return (pathRoutes && pathRoutes[method]) || false;
     const result =
-      (pathRoutes && (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''])) || false;
+      (pathRoutes &&
+        (pathRoutes[method] || pathRoutes[method === 'HEAD' ? 'GET' : ''] || pathRoutes['ALL'])) ||
+      false;
     if (result) {
       return result;
     } else {

@@ -31,6 +31,7 @@ export default class RegexStorage implements Storage {
     }
 
     const methodToHandlers = this.regexMap.get(pathRegex) as Record<string, FoundRouteData>;
+
     if (methodToHandlers[method]) {
       if (this.options.allowDuplicatePaths) {
         methodToHandlers[method].target.push(...handlers);
@@ -45,14 +46,17 @@ export default class RegexStorage implements Storage {
   }
 
   find(method: string, path: string): FoundRouteData | false {
-    if (method === 'OPTIONS') {
-      return optionsFind(this, path);
-    }
     for (const [regex, methodToHandlers] of this.regexMap) {
-      const result = methodToHandlers[method] || methodToHandlers[method === 'HEAD' ? 'GET' : ''];
+      const result =
+        methodToHandlers[method] ||
+        methodToHandlers[method === 'HEAD' ? 'GET' : ''] ||
+        methodToHandlers['ALL'];
       if (result && regex.test(path)) {
         return result;
       }
+    }
+    if (method === 'OPTIONS') {
+      return optionsFind(this, path);
     }
     return false;
   }
@@ -61,13 +65,9 @@ export default class RegexStorage implements Storage {
 function optionsFind(storage: RegexStorage, path: string): FoundRouteData | false {
   for (const [regex, methodToHandlers] of storage.regexMap) {
     if (regex.test(path)) {
-      if (methodToHandlers['OPTIONS']) {
-        return methodToHandlers['OPTIONS'];
-      } else {
-        const handlers = [buildOptionsHandler(Object.keys(methodToHandlers))];
-        storage.add('OPTIONS', regex, handlers);
-        return { target: handlers };
-      }
+      const handlers = [buildOptionsHandler(Object.keys(methodToHandlers))];
+      storage.add('OPTIONS', regex, handlers);
+      return { target: handlers };
     }
   }
   return false;
