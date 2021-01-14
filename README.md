@@ -1,34 +1,48 @@
-# expresso
+# expresso-router
 
-A faster, safer, backwards compatible router for Expesss
+A faster, safer, backwards compatible router alternative for Expesss.
 
+```js
+const express = require('express');
+const expresso = require('expresso-router');
+const router = expresso();
 
-Goals of this project
+router.get('/', function (req, res) {
+  res.send('Hello World');
+});
 
-Speed
+app.use(router);
+
+app.listen(3000);
+```
+
+## Installation
+
+```sh
+npm install expresso-router
+```
+
+## Features
+
+**Speed**
 - significantly faster than Express' original router, especially for static and parameterized routes
 
-Compatibility and configurability
- - very compatible with Express in terms of options and apis. A drop in replacement in many cases.
- - However, not 100% perfectly compatible to minimize confusion
-  - Aim to have the same configurations that Express has. Also, allow flexibility for disabling any Expresso safety checks.
+**Compatibility**
+ - highly compatible with Express apis. A drop in replacement in many cases.
+ - also compatible with [Node's built in http Server](https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener). 
+
+**Safety**
+ - Prevents common sources of error by default by throwing easy-to-understand exceptions when creating invalid or overlapping routes
+ - Disallows suboptimal choices, such as regular expression routes, unless explicitly allowed
+ - Order independent. The order you add routes shouldn't matter. Expresso will match by specificity.
 
 
-Prevent common sources of error by default
- - Throw exceptions when creating invalid or overlapping routes
+## Documentation and migration information.
 
-Order independent
- - The order you add routes shouldn't matter. The only exception is "use". Only routes created before a use function won't see the use part called.
+[More detailed API documentation](API.md)
 
 
-There's a lot of patterns, some which are wacky, that won't work with this router. Mostly if you expect a route handler to filter down into some other route.
+## License
 
-`router.get(/^api*/, (req, res, next) => next())`
-`router.get("/api/", (req, res, next) => doSomething())//won't get called`
+[MIT](LICENSE)
 
-`router.get("/api", (req, res, next) => {
-	req.url = "/foo";
-	next()
-})
-`
-`router.get("/foo", (req, res, next) => doSomething())//won't get called`

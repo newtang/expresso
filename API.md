@@ -1,0 +1,103 @@
+# API
+
+## Config
+
+The router takes an optional configuration object. 
+
+| Property  | Description | Default |
+|---|---|---|
+| allowDuplicatePaths | Enables duplicate paths. |  Disabled by default. Two identical paths like: `/api` and `/api` or `/id/:id` and `/id/:num` are prohibited |
+| allowDuplicateParams | Allows a path to have parameters with duplicate names.  |  Disabled by default. `/api/:foo/something/:foo` is prohibited |
+| allowRegex | Enable regular expression routes. Valid values are: false, 'safe', 'all'. The value 'safe' will throw an exception if it detects a catastrophic, exponential-time regular expression, as specified by [safe-regex](https://www.npmjs.com/package/safe-regex). | Disabled by default. |
+| caseSensitive | Enable case sensitivity.  | false. Disabled by default, treating “/Foo” and “/foo” as the same. [Same as Express](https://expressjs.com/en/4x/api.html#express.router) |
+| strict | Enable strict routing. | Disabled by default, “/foo” and “/foo/” are treated the same by the router. [Same as Express](https://expressjs.com/en/4x/api.html#express.router) |
+
+```js
+const express = require('express');
+const expresso = require('expresso-router');
+
+//throws exception
+const router = expresso();
+router.get(/^api$/, (req, res) => {
+  res.send('Hello World');
+});
+```
+
+```js
+//works fine
+const router = expresso({allowRegex:'safe'});
+router.get(/^api$/, (req, res) => { 
+  res.send('Hello World');
+});
+````
+
+## Route Order Independence 
+
+Order indepenence is a big feature for Expresso. In the old Express router, this situation was possible:
+
+```js
+router.get('/api/v1/:user', (req, res) => {res.send(req.params.user)});
+
+// will never get called in Express, but will get called in Expresso-Router
+router.get('/api/v1/settings', (req, res) => {res.send('settings')});
+
+```
+
+In the above example, the second GET API ('/api/v1/settings') never gets called in Express because the previous one would technically a match a request to '/api/v1/settings' even though it's less specific. However, with Expresso-router, this is no longer a concern. Routes are order independent, and Expresso-Router will check the most specific route first.
+
+The small exception to this rule is the `use` function. `use` will only affect the valid routes defined after it.
+
+```js
+const express = require('express');
+const expresso = require('expresso-router');
+const router = expresso({allowRegex:'safe'});
+
+// use function below is not called
+router.get('/api/user/:id', (req, res) => { 
+  res.send('Hello World');
+});
+
+router.use('/api', () => {/* do something */});
+
+// above use function will be called
+router.get('/api/object/:id', (req, res) => { 
+  res.send('Hello World');
+});
+
+````
+
+
+## Examples
+
+Expresso mimics the available function calls from the Express Router. There are a few differences which are outlined in the next section.
+
+- [router.all()](https://expressjs.com/en/4x/api.html#router.all)
+- [router.METHOD()](https://expressjs.com/en/4x/api.html#router.METHOD)
+- [router.param()](https://expressjs.com/en/4x/api.html#router.param)
+- [router.route()](https://expressjs.com/en/4x/api.html#router.route)
+- [router.use()](https://expressjs.com/en/4x/api.html#router.use)
+
+## Migration
+
+If you're considering changing your router, there are a few patterns that the default Express router allows that will not function as expected in Expresso-router. These are mostly around triggering multiple routes with the same request. Here are some examples:
+
+
+Filtering one router into another [Issue](https://github.com/newtang/expresso/issues/21)
+```js
+router.get("/api/static", (req, res, next) => next()) 
+router.get("/api/:param", (req, res, next) => doSomething()) //won't get called with expresso-router
+```
+
+Changing the url mid-route 
+```js
+router.get("/api", (req, res, next) => {
+	req.url = "/foo";
+	next()
+});
+
+router.get("/foo", (req, res, next) => doSomething()) //won't get called with expresso-router
+````
+
+Additionally, there are some features that are possible, but haven't been implemented, like [wildcard support in parameterized routes](https://github.com/newtang/expresso/issues/19), or [supporting parameterized routes in `router.use`](https://github.com/newtang/expresso/issues/6). If you're excited about a feature, please leave a comment or a reaction, or a file a new issue.
+
+
