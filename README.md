@@ -1,6 +1,6 @@
 # expresso-router
 
-A faster, safer, backwards compatible router alternative for Expesss.
+A faster, safer, backwards compatible router alternative for Express.
 
 ```js
 const express = require('express');
@@ -25,11 +25,11 @@ npm install expresso-router
 ## Features
 
 **Speed**
-- significantly faster than Express' original router, especially for static and parameterized routes
+- significantly faster than the default Express original router, especially for static and parameterized routes
 
 **Compatibility**
- - highly compatible with Express apis. A drop in replacement in many cases.
- - also compatible with [Node's built in http Server](https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener). 
+ - highly compatible with Express [APIs](API.md). A drop-in replacement in many cases.
+ - also compatible with [Node's built in http server](https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener). 
 
 **Safety**
  - Prevents common sources of error by default by throwing easy-to-understand exceptions when creating invalid or overlapping routes

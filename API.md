@@ -9,13 +9,10 @@ The router takes an optional configuration object.
 | allowDuplicatePaths | Enables duplicate paths. |  Disabled by default. Two identical paths like: `/api` and `/api` or `/id/:id` and `/id/:num` are prohibited |
 | allowDuplicateParams | Allows a path to have parameters with duplicate names.  |  Disabled by default. `/api/:foo/something/:foo` is prohibited |
 | allowRegex | Enable regular expression routes. Valid values are: false, 'safe', 'all'. The value 'safe' will throw an exception if it detects a catastrophic, exponential-time regular expression, as specified by [safe-regex](https://www.npmjs.com/package/safe-regex). | Disabled by default. |
-| caseSensitive | Enable case sensitivity.  | false. Disabled by default, treating “/Foo” and “/foo” as the same. [Same as Express](https://expressjs.com/en/4x/api.html#express.router) |
+| caseSensitive | Enable case sensitivity.  | Disabled by default, treating “/Foo” and “/foo” as the same. [Same as Express](https://expressjs.com/en/4x/api.html#express.router) |
 | strict | Enable strict routing. | Disabled by default, “/foo” and “/foo/” are treated the same by the router. [Same as Express](https://expressjs.com/en/4x/api.html#express.router) |
 
 ```js
-const express = require('express');
-const expresso = require('expresso-router');
-
 //throws exception
 const router = expresso();
 router.get(/^api$/, (req, res) => {
@@ -33,7 +30,7 @@ router.get(/^api$/, (req, res) => {
 
 ## Route Order Independence 
 
-Order indepenence is a big feature for Expresso. In the old Express router, this situation was possible:
+Order independence is a big feature for Expresso. In the default Express router, this situation was possible:
 
 ```js
 router.get('/api/v1/:user', (req, res) => {res.send(req.params.user)});
@@ -43,9 +40,9 @@ router.get('/api/v1/settings', (req, res) => {res.send('settings')});
 
 ```
 
-In the above example, the second GET API ('/api/v1/settings') never gets called in Express because the previous one would technically a match a request to '/api/v1/settings' even though it's less specific. However, with Expresso-router, this is no longer a concern. Routes are order independent, and Expresso-Router will check the most specific route first.
+In the above example, a GET request to '/api/v1/settings' will never trigger the second route in Express because the previous one would technically a match a request to '/api/v1/settings' even though it's less specific. However, with Expresso-router, this is no longer a concern. Routes are order independent, and Expresso-Router will check the most specific route first.
 
-The small exception to this rule is the `use` function. `use` will only affect the valid routes defined after it.
+The minor exception to this rule is the `use` function. `use` will only affect the valid routes defined after it.
 
 ```js
 const express = require('express');
@@ -82,7 +79,7 @@ Expresso mimics the available function calls from the Express Router. There are 
 If you're considering changing your router, there are a few patterns that the default Express router allows that will not function as expected in Expresso-router. These are mostly around triggering multiple routes with the same request. Here are some examples:
 
 
-Filtering one router into another [Issue](https://github.com/newtang/expresso/issues/21)
+Filtering one router into another. [Issue](https://github.com/newtang/expresso/issues/21)
 ```js
 router.get("/api/static", (req, res, next) => next()) 
 router.get("/api/:param", (req, res, next) => doSomething()) //won't get called with expresso-router
