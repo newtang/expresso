@@ -1,21 +1,48 @@
-# expresso
+# expresso-router
 
-A faster, safer, backwards compatible router for Expesss
+A faster, safer, backwards compatible router alternative for Express.
+
+```js
+const express = require('express');
+const expresso = require('expresso-router');
+const router = expresso();
+
+router.get('/', function (req, res) {
+  res.send('Hello World');
+});
+
+app.use(router);
+
+app.listen(3000);
+```
+
+## Installation
+
+```sh
+npm install expresso-router
+```
+
+## Features
+
+**Speed**
+- significantly faster than the default Express original router, especially for static and parameterized routes
+
+**Compatibility**
+ - highly compatible with Express [APIs](API.md). A drop-in replacement in many cases.
+ - also compatible with [Node's built in http server](https://nodejs.org/api/http.html#http_http_createserver_options_requestlistener). 
+
+**Safety**
+ - Prevents common sources of error by default by throwing easy-to-understand exceptions when creating invalid or overlapping routes
+ - Disallows suboptimal choices, such as regular expression routes, unless explicitly allowed
+ - Order independent. The order you add routes shouldn't matter. Expresso will match by specificity.
 
 
-Goals of this project
+## Documentation and migration information.
 
-Speed
-- significantly faster than Express' original router, especially for static and parameterized routes
-
-Compatibility and configurability
- - very compatible with Express in terms of options and apis. A drop in replacement in many cases.
- - However, not 100% perfectly compatible to minimize confusion
-  - Aim to have the same configurations that Express has. Also, allow flexibility for disabling any Expresso safety checks.
+[More detailed API documentation](API.md)
 
 
-Prevent common sources of error by default
- - Throw exceptions when creating invalid or overlapping routes
+## License
 
-Order independent
- - The order you add routes shouldn't matter.
+[MIT](LICENSE)
+
