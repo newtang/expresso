@@ -132,8 +132,7 @@ function handleRequest(
   const verb = req.method;
   const path = req.path || req.url;
   const payload = routeStorage.find(verb, path);
-  // const done = restore(req, callback, 'baseUrl', 'next', 'params', 'originalUrl');
-  const done = callback;
+  const done = restore(req, callback);
 
   if (payload && payload.target) {
     req.params = payload.params || {};
@@ -144,16 +143,17 @@ function handleRequest(
   }
 }
 
-function restore(target, callback, ...props): () => void {
-  const saved = {};
-  for (const prop of props) {
-    saved[prop] = target[prop];
-  }
+function restore(target, callback): () => void {
+  const oldBaseUrl = target.baseUrl;
+  const oldNext = target.next;
+  const oldParams = target.params;
+  const oldOriginalUrl = target.originalUrl;
 
   return function (...args): void {
-    for (const prop in saved) {
-      target[prop] = saved[prop];
-    }
+    target.baseUrl = oldBaseUrl;
+    target.next = oldNext;
+    target.params = oldParams;
+    target.originalUrl = oldOriginalUrl;
     callback(...args);
   };
 }
@@ -208,23 +208,18 @@ function executeHandlers(
      *
      **/
 
-    // if (err === 'route') {
-    //   return done();
-    // }
-
-    // // exit router
-    // if (err === 'router') {
-    //   return done();
-    // }
+    if (err === 'route' || err === 'router') {
+      // exit router
+      return done();
+    }
 
     const nextHandler = handlerStack[index++];
     if (nextHandler) {
-      // if (err) {
-      //   return handleNextError(nextHandler, err, req, res, next);
-      // } else {
-        // return handleNextRequest(nextHandler, req, res, next);
-        return (nextHandler as NextHandleFunction)(req, res, next);
-      // }
+      if (err) {
+        return handleNextError(nextHandler, err, req, res, next);
+      } else {
+        return handleNextRequest(nextHandler, req, res, next);
+      }
     } else {
       return done(err);
     }
