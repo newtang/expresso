@@ -12,24 +12,21 @@ describe('router.use', () => {
   test.each(['', [], '/:param', '/api/#hash'])('invalid use paths', (path) => {
     const router = expresso();
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.use(path as any, jest.fn());
+      router.use(path as never, jest.fn());
     }).toThrowError(`Invalid path: ${path}`);
   });
 
   test.each(['yo', null, undefined, 12, ['test']])('invalid handlers', (handler) => {
     const router = expresso();
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.use('/', handler as any);
+      router.use('/', handler as never);
     }).toThrowError(`Handler must be a function`);
   });
 
   test('cannot use regular expressions', () => {
     const router = expresso();
     expect(() => {
-      //eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.use(/api/ as any, jest.fn());
+      router.use(/api/ as never, jest.fn());
     }).toThrowError(`router.use does not support regular expressions yet: /api/`);
   });
 

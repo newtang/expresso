@@ -11,8 +11,7 @@ describe('param trigger tests', () => {
   test.each([undefined, 3])('invalid param type %p', (arg) => {
     const router = expresso();
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.param(arg as any, jest.fn());
+      router.param(arg as never, jest.fn());
     }).toThrowError('Expected name to be a string');
   });
 
@@ -42,8 +41,7 @@ describe('param trigger tests', () => {
   test('No function', async () => {
     const router = expresso();
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.param('id', undefined as any);
+      router.param('id', undefined as never);
     }).toThrowError('Expected callback to be a function');
   });
 

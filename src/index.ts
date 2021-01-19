@@ -10,7 +10,6 @@ type UseHandler = {
   handlers: Array<HandleFunction>;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const options = Object.assign({}, defaultOptions, userOptions);
   validateOptions(options);
@@ -89,7 +88,7 @@ function buildUse(
   validateUseHandlers(handlers);
 
   for (let pathStart of pathStarts) {
-    //we don't support regex in use quite yet.
+    //we don't support regex in use yet.
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((pathStart as any) instanceof RegExp) {
       throw new Error(`router.use does not support regular expressions yet: ${pathStart}`);

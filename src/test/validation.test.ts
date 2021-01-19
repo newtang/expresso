@@ -24,19 +24,16 @@ describe('validation tests', () => {
 
   test.each([undefined, null, '', true, false, jest.fn(), [], {}])('invalid routes %s', (path) => {
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expresso().get(path as any, jest.fn());
+      expresso().get(path as never, jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expresso().get([path as any], jest.fn());
+      expresso().get([path as never], jest.fn());
     }).toThrow(`Invalid path: ${path}`);
 
     expect(() => {
       expresso()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .route(path as any)
+        .route(path as never)
         .get(jest.fn());
     }).toThrow(`Invalid path: ${path}`);
   });
@@ -75,8 +72,7 @@ describe('validation tests', () => {
     //eslint-disable-line no-unexpected-multiline
     const path = '/test';
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expresso().get(path, handler as any);
+      expresso().get(path, handler as never);
     }).toThrow(`Non function handler found for path: ${path}`);
   });
 });
