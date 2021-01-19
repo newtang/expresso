@@ -25,7 +25,7 @@ npm install expresso-router
 ## Features
 
 **Speed**
-- significantly faster than the default Express original router, especially for static and parameterized routes
+- [significantly faster than the default Express original router](API.md#Speed), especially for static and parameterized routes
 
 **Compatibility**
  - highly compatible with Express [APIs](API.md). A drop-in replacement in many cases.
@@ -34,7 +34,7 @@ npm install expresso-router
 **Safety**
  - Prevents common sources of error by default by throwing easy-to-understand exceptions when creating invalid or overlapping routes
  - Disallows suboptimal choices, such as regular expression routes, unless explicitly allowed
- - Order independent. The order you add routes shouldn't matter. Expresso will match by specificity.
+ - [Order independent](API.md#route-order-independence). The order you add routes shouldn't matter. Expresso will match by specificity.
 
 
 ## Documentation and migration information.

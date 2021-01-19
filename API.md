@@ -28,6 +28,47 @@ router.get(/^api$/, (req, res) => {
 });
 ````
 
+## Speed
+
+For several different measures of static route comparison, Expresso-router comes out ahead of the default express router.
+
+```sh
+
+====================
+ expresso benchmark
+====================
+short static: 8,375,979 ops/sec
+static with same radix: 8,533,307 ops/sec
+long static: 7,822,262 ops/sec
+
+==========================
+ express router benchmark
+==========================
+short static: 1,676,429 ops/sec
+static with same radix: 1,590,129 ops/sec
+long static: 829,426 ops/sec
+
+```
+
+For parameterized routes, Expresso-router is again faster, but the difference isn't as stark.
+
+```sh
+====================
+ expresso benchmark
+====================
+dynamic route: 928,018 ops/sec
+mixed static dynamic: 765,725 ops/sec
+
+==========================
+ express router benchmark
+==========================
+dynamic route: 743,979 ops/sec
+mixed static dynamic: 613,461 ops/sec
+```
+
+However, the default express router can get slower the more routes that are added. For example, if it has 100 parameterized routes, it would run through all of them until it found a match. Expresso-router, utilizes a tree, so it scales much more efficiently.
+
+
 ## Route Order Independence 
 
 Order independence is a big feature for Expresso. In the default Express router, this situation was possible:
