@@ -29,35 +29,9 @@ export function buildUse({ caseSensitive }: { caseSensitive: boolean }): UseLib 
         | Array<string>
         | HandleFunction
         | Array<HandleFunction | Array<HandleFunction>>,
-      ...handlers: Array<HandleFunction>
+      ...moreHandlers: Array<HandleFunction>
     ): T {
-      let pathStarts = ['/'];
-
-      if (typeof handlerOrPathStart === 'function') {
-        handlers.unshift(handlerOrPathStart);
-      } else {
-        if (Array.isArray(handlerOrPathStart)) {
-          handlerOrPathStart = handlerOrPathStart.flat(2) as Array<HandleFunction> | Array<string>;
-
-          if (!handlerOrPathStart.length) {
-            throw new Error(`Invalid path: ${handlerOrPathStart}`);
-          }
-
-          if (typeof handlerOrPathStart[0] === 'string') {
-            pathStarts = handlerOrPathStart as Array<string>;
-          } else if (typeof handlerOrPathStart[0] === 'function') {
-            handlers.unshift(...(handlerOrPathStart as Array<HandleFunction>));
-          }
-        } else {
-          pathStarts = [handlerOrPathStart];
-        }
-      }
-
-      if (!pathStarts || !pathStarts.length) {
-        throw new Error(`Invalid path: ${pathStarts}`);
-      }
-
-      validateUseHandlers(handlers);
+      const [pathStarts, handlers] = getValidUseArgs(handlerOrPathStart, ...moreHandlers);
 
       for (let pathStart of pathStarts) {
         //we don't support regex in use yet.
@@ -113,6 +87,41 @@ export function buildUse({ caseSensitive }: { caseSensitive: boolean }): UseLib 
       return arr;
     },
   };
+}
+
+function getValidUseArgs(
+  handlerOrPathStart: string | Array<string> | HandleFunction | Array<HandleFunction | Array<HandleFunction>>,
+  ...handlers: Array<HandleFunction>
+): [Array<string>, Array<HandleFunction>] {
+  let pathStarts = ['/'];
+
+  if (typeof handlerOrPathStart === 'function') {
+    handlers.unshift(handlerOrPathStart);
+  } else {
+    if (Array.isArray(handlerOrPathStart)) {
+      handlerOrPathStart = handlerOrPathStart.flat(2) as Array<HandleFunction> | Array<string>;
+
+      if (!handlerOrPathStart.length) {
+        throw new Error(`Invalid path: ${handlerOrPathStart}`);
+      }
+
+      if (typeof handlerOrPathStart[0] === 'string') {
+        pathStarts = handlerOrPathStart as Array<string>;
+      } else if (typeof handlerOrPathStart[0] === 'function') {
+        handlers.unshift(...(handlerOrPathStart as Array<HandleFunction>));
+      }
+    } else {
+      pathStarts = [handlerOrPathStart];
+    }
+  }
+
+  if (!pathStarts || !pathStarts.length) {
+    throw new Error(`Invalid path: ${pathStarts}`);
+  }
+
+  validateUseHandlers(handlers);
+
+  return [pathStarts, handlers];
 }
 
 function validateUseHandlers(handlers: Array<HandleFunction>): void {

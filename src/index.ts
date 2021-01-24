@@ -9,13 +9,12 @@ import executeHandlers from './utils/executeHandlers';
 
 function buildRouter(userOptions?: Partial<RouterOptions>): Router {
   const options = getValidOptions(userOptions);
+  const useObj = buildUse(options);
   const routeStorage = new CompositeStorage(options);
 
-  const useObj = buildUse(options);
   const handler = handleRequest.bind(null, routeStorage, useObj);
   const use = useObj.use.bind(handler);
   const param = buildParam.bind(handler, routeStorage);
-
   const routerMethods = buildRouterMethods(handler, routeStorage, useObj);
   const route = routeFxn.bind(null, routerMethods);
 
@@ -75,7 +74,7 @@ function handleRequest(
 }
 
 /**
- * I used to have a nice array of properties I would pass in and loop through, 
+ * I used to have a nice array of properties I would pass in and loop through,
  * but it was noticiably faster to just set a few variables.
  **/
 function restore(target, callback): () => void {
