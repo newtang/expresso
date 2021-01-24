@@ -1,4 +1,5 @@
 import expresso from '../index';
+import { validatePath, ValidatePathOptions } from '../utils/validators';
 
 describe('validation tests', () => {
   beforeAll(() => {
@@ -60,19 +61,26 @@ describe('validation tests', () => {
     }
   );
 
-  // eslint-disable-next-line max-len
-  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-empty-function
-  test.each([jest.fn(), async function () {}, async () => {}])('valid handlers %s', (handler) => {
-    expect(() => {
-      expresso().get('/test', handler);
-    }).not.toThrow();
-  });
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  test.each([jest.fn(), async function (): Promise<void> {}, async (): Promise<void> => {}])(
+    'valid handlers %s',
+    (handler) => {
+      expect(() => {
+        expresso().get('/test', handler);
+      }).not.toThrow();
+    }
+  );
 
   test.each([null, undefined, 'function', {}, [], true, false, /api/gi])('invalid handlers %s', (handler) => {
-    //eslint-disable-line no-unexpected-multiline
     const path = '/test';
     expect(() => {
       expresso().get(path, handler as never);
     }).toThrow(`Non function handler found for path: ${path}`);
+  });
+
+  test('validatePath', () => {
+    expect(() => {
+      validatePath(/^api/, ({ allowRegex: 'foo' } as never) as ValidatePathOptions);
+    }).toThrow('invalid value of allowRegex option: foo');
   });
 });

@@ -11,12 +11,10 @@ interface StaticStorageOptions {
   caseSensitive: boolean;
 }
 
-const DEFAULT_OPTIONS: StaticStorageOptions = { allowDuplicatePaths: false, caseSensitive: false };
-
 export default class StaticStorage implements Storage {
   readonly routes: RouteMap;
   readonly options: StaticStorageOptions;
-  constructor(options: StaticStorageOptions = DEFAULT_OPTIONS) {
+  constructor(options: StaticStorageOptions) {
     this.routes = {};
     this.options = options;
   }

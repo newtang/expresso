@@ -23,6 +23,14 @@ describe('router.use', () => {
     }).toThrowError(`Handler must be a function`);
   });
 
+  test('an array of numbers', async () => {
+    const router = expresso();
+
+    expect(() => {
+      router.use(([3] as never) as Array<string>);
+    }).toThrowError('Handler must be a function');
+  });
+
   test('cannot use regular expressions', () => {
     const router = expresso();
     expect(() => {

@@ -254,4 +254,19 @@ describe('param tests', () => {
     expect(res.text).toBe('encode "abc/efgh"');
     expect(res.status).toBe(200);
   });
+
+  test('should handle malformed uri encoding', async () => {
+    const app = express();
+    const router = expresso();
+
+    router.get('/user/:id', function (req, res) {
+      res.send('encode ' + req.params.id);
+    });
+
+    app.use(router);
+
+    const res = await request(app).get('/user/%E0%A4%A');
+    expect(res.text).toBe('encode %E0%A4%A');
+    expect(res.status).toBe(200);
+  });
 });

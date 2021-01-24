@@ -6,13 +6,11 @@ interface RegexStorageOptions {
   allowDuplicatePaths: boolean;
 }
 
-const DEFAULT_OPTIONS: RegexStorageOptions = { allowDuplicatePaths: false };
-
 export default class RegexStorage implements Storage {
   readonly regexMap: Map<RegExp, { [method: string]: FoundRouteData }>;
   readonly regexStringToRegex: { [regexString: string]: RegExp };
   readonly options: RegexStorageOptions;
-  constructor(options: RegexStorageOptions = DEFAULT_OPTIONS) {
+  constructor(options: RegexStorageOptions) {
     this.regexMap = new Map();
     this.regexStringToRegex = {};
     this.options = options;

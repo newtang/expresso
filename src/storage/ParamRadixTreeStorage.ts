@@ -41,7 +41,7 @@ export default class ParamRadixTreeStorage implements ParamStorage {
   readonly root: Node<Array<HandleFunction>>;
   readonly options: ParamStorageOptions;
   readonly paramHash: ParamHash;
-  constructor(options: ParamStorageOptions = DEFAULT_OPTIONS) {
+  constructor(options: ParamStorageOptions) {
     this.root = new Node<Array<HandleFunction>>();
     this.options = options;
     this.paramHash = {};

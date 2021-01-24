@@ -273,6 +273,17 @@ describe('OPTIONS', () => {
     expect(res.text).toBe(message);
     expect(res.status).toBe(200);
   });
+
+  test('regex - cannot find', async () => {
+    const app = express();
+    const router = expresso({ allowRegex: 'safe' });
+
+    router.get(/^\/api$/, () => jest.fn());
+    app.use(router);
+
+    const res = await request(app).options('/foo');
+    expect(res.status).toBe(404);
+  });
 });
 
 function expectHeaders(headers: { [key: string]: string }, methods: string): void {

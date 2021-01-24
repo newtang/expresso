@@ -40,7 +40,7 @@ describe('error tests', () => {
     expect(resWithError.status).toBe(404);
   });
 
-  test('handler skipped xyz', async () => {
+  test('handler skipped', async () => {
     const app = express();
     const router = expresso();
     const msg = 'success';
@@ -66,6 +66,72 @@ describe('error tests', () => {
     const res = await request(app).get('/');
     expect(called).toBe(false);
     expect(res.text).toBe('success_some error');
+    expect(res.status).toBe(200);
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
+
+  test('handler skipped - exception', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let called = false;
+
+    router.get(
+      '/',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (req: Request, res: Response, next: NextFunction) => {
+        throw 'exception';
+      },
+      (req: Request, res: Response, next: NextFunction) => {
+        called = true;
+        next();
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        res.send(`${msg}_${err}`);
+      }
+    );
+    app.use(router);
+
+    const res = await request(app).get('/');
+    expect(called).toBe(false);
+    expect(res.text).toBe('success_exception');
+    expect(res.status).toBe(200);
+
+    const resWithError = await request(app).get('/error');
+    expect(resWithError.status).toBe(404);
+  });
+
+  test('exception in error handler', async () => {
+    const app = express();
+    const router = expresso();
+    const msg = 'success';
+
+    let called = false;
+
+    router.get(
+      '/',
+      (req: Request, res: Response, next: NextFunction) => {
+        next('some error');
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        called = true;
+        throw 'exception';
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (err: any, req: Request, res: Response, next: NextFunction) => {
+        res.send(`${msg}_${err}`);
+      }
+    );
+    app.use(router);
+
+    const res = await request(app).get('/');
+    expect(called).toBe(true);
+    expect(res.text).toBe('success_exception');
     expect(res.status).toBe(200);
 
     const resWithError = await request(app).get('/error');
@@ -227,15 +293,3 @@ describe('error tests', () => {
     expect(errCalled).toBe(false);
   });
 });
-
-/**
-  error is skipped
-  non-error is skipped when in error mode
-
-  may need tests for different storages
-  may need test for use, route(), etc
-
-  test for err === 'route',
-  test for err === 'router
-
-**/

@@ -115,10 +115,6 @@ function getValidUseArgs(
     }
   }
 
-  if (!pathStarts || !pathStarts.length) {
-    throw new Error(`Invalid path: ${pathStarts}`);
-  }
-
   validateUseHandlers(handlers);
 
   return [pathStarts, handlers];
