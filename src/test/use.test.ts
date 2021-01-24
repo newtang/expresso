@@ -115,7 +115,7 @@ describe('router.use', () => {
     const response = await request(app).get('/');
     expect(response.header['x-header-1']).toBe('hit 1');
     expect(response.header['x-header-2']).toBe('hit 2');
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(200);
     expect(response.text).toBe('success');
   });
 
