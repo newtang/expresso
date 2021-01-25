@@ -24,10 +24,20 @@
   "jest": {
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
+      "/coverage",
+      "./dist",
+      "./github",
       "./node_modules",
-      "./src/tests",
-      "./dist"
+      "./src/tests"
     ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    },
     "moduleFileExtensions": [
       "js",
       "ts",
