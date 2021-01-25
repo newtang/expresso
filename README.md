@@ -1,5 +1,7 @@
 # expresso-router
 
+![example workflow name](https://github.com/newtang/expresso/workflows/Node.js%20CI/badge.svg)
+
 A faster, safer, backwards compatible router alternative for Express.
 
 ```js
