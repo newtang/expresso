@@ -35,7 +35,7 @@ export function buildUse({ caseSensitive }: { caseSensitive: boolean }): UseLib 
 
       for (let pathStart of pathStarts) {
         //we don't support regex in use yet.
-
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((pathStart as any) instanceof RegExp) {
           throw new Error(`router.use does not support regular expressions yet: ${pathStart}`);
         }
