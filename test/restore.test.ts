@@ -1,5 +1,5 @@
 import request from 'supertest';
-import expresso from '../index';
+import expresso from '../src/index';
 import { createBasicServer } from './utils';
 import type { Request } from 'express';
 

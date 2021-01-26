@@ -1,4 +1,4 @@
-import { lowercaseStaticParts } from '../utils/stringUtils';
+import { lowercaseStaticParts } from '../src/utils/stringUtils';
 
 describe('utils tests', () => {
   beforeAll(() => {

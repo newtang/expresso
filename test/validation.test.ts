@@ -1,5 +1,5 @@
-import expresso from '../index';
-import { validatePath, ValidatePathOptions } from '../utils/validators';
+import expresso from '../src/index';
+import { validatePath, ValidatePathOptions } from '../src/utils/validators';
 
 describe('validation tests', () => {
   beforeAll(() => {

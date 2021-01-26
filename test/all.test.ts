@@ -1,6 +1,6 @@
 import request, { SuperTest, Test } from 'supertest';
 import express from 'express';
-import expresso from '../index';
+import expresso from '../src/index';
 import type { Request, Response } from 'express';
 import { METHODS } from 'http';
 

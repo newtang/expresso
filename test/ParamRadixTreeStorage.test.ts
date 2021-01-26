@@ -1,4 +1,4 @@
-import { Node as ParamRadixTreeStorage } from '../storage/ParamRadixTreeStorage';
+import { Node as ParamRadixTreeStorage } from '../src/storage/ParamRadixTreeStorage';
 
 describe('param radix tree storage tests', () => {
   test('1 param in middle', () => {
