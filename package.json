@@ -1,7 +1,7 @@
 {
   "name": "expresso-router",
   "version": "0.1.0",
-  "description": "",
+  "description": "A faster, safer, backwards compatible router alternative for Express.",
   "author": "Jonathan New",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/newtang/expresso.git"
   },
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/newtang/expresso/issues"
   },
@@ -21,6 +21,12 @@
     "test": "npm run build; jest --env node",
     "prepublish": "npm run build"
   },
+  "engines": {
+    "node": ">= 12.0.0"
+  },
+  "files": [
+    "/dist"
+  ],
   "jest": {
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
