@@ -129,8 +129,8 @@ router.get("/api/:param", (req, res, next) => doSomething()) //won't get called 
 Changing the url mid-route 
 ```js
 router.get("/api", (req, res, next) => {
-	req.url = "/foo";
-	next()
+  req.url = "/foo";
+  next();
 });
 
 router.get("/foo", (req, res, next) => doSomething()) //won't get called with expresso-router
