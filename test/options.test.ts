@@ -1,8 +1,8 @@
 import request from 'supertest';
 import express from 'express';
-import expresso from '../index';
+import expresso from '../src/index';
 import type { Request, Response, NextFunction } from 'express';
-import type { RouterOptions } from '../interfaces';
+import type { RouterOptions } from '../src/interfaces';
 
 describe('options tests', () => {
   beforeAll(() => {

@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import expresso from '../index';
+import expresso from '../src/index';
 import type { Request, Response, NextFunction } from 'express';
 
 describe('regex tests', () => {

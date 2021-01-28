@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import expresso from '../index';
+import expresso from '../src/index';
 import type { Request, Response } from 'express';
 
 describe('param trigger tests', () => {
