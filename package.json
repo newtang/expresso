@@ -1,6 +1,6 @@
 {
   "name": "expresso-router",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A faster, safer, backwards compatible router alternative for Express.",
   "author": "Jonathan New",
   "main": "dist/src/index.js",
