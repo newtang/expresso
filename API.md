@@ -28,6 +28,17 @@ router.get(/^api$/, (req, res) => {
 });
 ````
 
+## API
+
+Expresso mimics the available function calls from the default Express Router, listed below. There are a few subtle differences which are outlined in the [Migration section](#Migration).
+
+- [router.all()](https://expressjs.com/en/4x/api.html#router.all)
+- [router.METHOD()](https://expressjs.com/en/4x/api.html#router.METHOD)
+- [router.param()](https://expressjs.com/en/4x/api.html#router.param)
+- [router.route()](https://expressjs.com/en/4x/api.html#router.route)
+- [router.use()](https://expressjs.com/en/4x/api.html#router.use)
+
+
 ## Speed
 
 For several different measures of static route comparison, Expresso-router comes out ahead of the default express router.
@@ -41,9 +52,9 @@ short static: 8,375,979 ops/sec
 static with same radix: 8,533,307 ops/sec
 long static: 7,822,262 ops/sec
 
-==========================
- express router benchmark
-==========================
+=================================
+ default express router benchmark
+=================================
 short static: 1,676,429 ops/sec
 static with same radix: 1,590,129 ops/sec
 long static: 829,426 ops/sec
@@ -59,9 +70,9 @@ For parameterized routes, Expresso-router is again faster, but the difference is
 dynamic route: 928,018 ops/sec
 mixed static dynamic: 765,725 ops/sec
 
-==========================
- express router benchmark
-==========================
+=================================
+ default express router benchmark
+=================================
 dynamic route: 743,979 ops/sec
 mixed static dynamic: 613,461 ops/sec
 ```
@@ -104,16 +115,6 @@ router.get('/api/object/:id', (req, res) => {
 
 ````
 
-
-## Examples
-
-Expresso mimics the available function calls from the Express Router. There are a few differences which are outlined in the next section.
-
-- [router.all()](https://expressjs.com/en/4x/api.html#router.all)
-- [router.METHOD()](https://expressjs.com/en/4x/api.html#router.METHOD)
-- [router.param()](https://expressjs.com/en/4x/api.html#router.param)
-- [router.route()](https://expressjs.com/en/4x/api.html#router.route)
-- [router.use()](https://expressjs.com/en/4x/api.html#router.use)
 
 ## Migration
 
